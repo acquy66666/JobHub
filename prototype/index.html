@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobHub — Kết nối tài năng với cơ hội</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+:root{
+  --bg-0:#07070D;
+  --bg-1:#0E0E18;
+  --bg-2:#13131E;
+  --bg-3:#1A1A28;
+  --border:#252538;
+  --p:#7C3AED;
+  --b:#3B82F6;
+  --grad:linear-gradient(135deg,#7C3AED,#3B82F6);
+  --t0:#F5F5FF;
+  --t1:#9494B0;
+  --t2:#55556A;
+  --green:#22C55E;
+  --yellow:#F59E0B;
+  --red:#EF4444;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg-0);color:var(--t0);overflow-x:hidden;line-height:1.6}
+
+/* ── Scroll animations ── */
+.r{opacity:0;transform:translateY(36px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+.r.d1{transition-delay:.1s}.r.d2{transition-delay:.2s}.r.d3{transition-delay:.3s}.r.d4{transition-delay:.4s}.r.d5{transition-delay:.5s}
+.rl{opacity:0;transform:translateX(-48px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rr{opacity:0;transform:translateX(48px);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.rs{opacity:0;transform:scale(.92);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+.on{opacity:1!important;transform:none!important}
+
+/* ── Utils ── */
+.gt{background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.tag{display:inline-flex;align-items:center;gap:7px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.22);color:#B09BF8;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:6px 14px;border-radius:100px;margin-bottom:18px}
+.tag::before{content:'';width:6px;height:6px;background:#B09BF8;border-radius:50%}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;padding:10px 22px;border-radius:10px;border:none;cursor:pointer;text-decoration:none;transition:all .2s;white-space:nowrap}
+.btn-ghost{background:transparent;color:var(--t1);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.06);color:var(--t0);border-color:rgba(255,255,255,.14)}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 4px 22px rgba(124,58,237,.35)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 32px rgba(124,58,237,.5)}
+.btn-outline{background:transparent;color:var(--t0);border:1px solid var(--border)}
+.btn-outline:hover{border-color:rgba(124,58,237,.45);background:rgba(124,58,237,.08)}
+.btn-lg{font-size:15px;padding:13px 28px;border-radius:12px}
+
+/* ── Navbar ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:999;padding:0 24px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);background:rgba(7,7,13,.8);border-bottom:1px solid rgba(37,37,56,.7);transition:background .3s}
+nav.up{background:rgba(7,7,13,.96);box-shadow:0 4px 40px rgba(0,0,0,.5)}
+.ni{max-width:1180px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.logo-box{width:36px;height:36px;background:var(--grad);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;color:#fff;box-shadow:0 0 22px rgba(124,58,237,.45);flex-shrink:0}
+.logo-name{font-size:20px;font-weight:800;letter-spacing:-.02em;color:var(--t0)}
+.nl{display:flex;align-items:center;gap:4px;list-style:none}
+.nl a{color:var(--t1);text-decoration:none;font-size:14px;font-weight:500;padding:8px 13px;border-radius:8px;transition:all .2s}
+.nl a:hover{color:var(--t0);background:rgba(255,255,255,.06)}
+.na{display:flex;align-items:center;gap:10px}
+
+/* ── Hero ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:130px 24px 80px;position:relative;overflow:hidden}
+.hbg{position:absolute;inset:0;pointer-events:none}
+.hg1{position:absolute;top:-120px;left:50%;transform:translateX(-50%);width:900px;height:700px;background:radial-gradient(ellipse,rgba(124,58,237,.18) 0%,transparent 68%)}
+.hg2{position:absolute;top:30%;right:-180px;width:520px;height:520px;background:radial-gradient(ellipse,rgba(59,130,246,.1) 0%,transparent 70%)}
+.hg3{position:absolute;bottom:-60px;left:-160px;width:480px;height:420px;background:radial-gradient(ellipse,rgba(124,58,237,.09) 0%,transparent 70%)}
+.hgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse 80% 80% at 50% 40%,black 0%,transparent 100%)}
+.hcontent{position:relative;text-align:center;max-width:780px;margin:0 auto}
+.hbadge{display:inline-flex;align-items:center;gap:9px;background:rgba(124,58,237,.09);border:1px solid rgba(124,58,237,.2);padding:8px 18px;border-radius:100px;font-size:13px;font-weight:500;color:#B09BF8;margin-bottom:30px;animation:pborder 3s ease infinite}
+@keyframes pborder{0%,100%{border-color:rgba(124,58,237,.2)}50%{border-color:rgba(124,58,237,.45)}}
+.dot-live{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green);animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.htitle{font-size:clamp(46px,7vw,74px);font-weight:900;line-height:1.05;letter-spacing:-.035em;margin-bottom:22px}
+.hsub{font-size:17px;color:var(--t1);max-width:500px;margin:0 auto 36px;line-height:1.75}
+.hsearch{display:flex;align-items:center;gap:0;background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:6px 6px 6px 18px;max-width:600px;margin:0 auto 28px;transition:border-color .2s,box-shadow .2s;box-shadow:0 10px 50px rgba(0,0,0,.35)}
+.hsearch:focus-within{border-color:rgba(124,58,237,.5);box-shadow:0 0 0 3px rgba(124,58,237,.1),0 10px 50px rgba(0,0,0,.35)}
+.hsearch input{flex:1;background:none;border:none;outline:none;color:var(--t0);font-family:'Inter',sans-serif;font-size:15px;padding:8px 0}
+.hsearch input::placeholder{color:var(--t2)}
+.hsep{width:1px;height:26px;background:var(--border);margin:0 14px}
+.hloc{display:flex;align-items:center;gap:6px;color:var(--t2);font-size:13px;white-space:nowrap}
+.sbtn{background:var(--grad);color:#fff;border:none;border-radius:10px;padding:11px 22px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px;margin-left:10px;transition:all .2s;box-shadow:0 4px 18px rgba(124,58,237,.4);flex-shrink:0}
+.sbtn:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,58,237,.55)}
+.htags{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-bottom:52px}
+.htags span{color:var(--t2);font-size:13px}
+.htag{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--t1);font-size:13px;padding:5px 12px;border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.htag:hover{border-color:rgba(124,58,237,.4);color:var(--t0);background:rgba(124,58,237,.08)}
+
+/* ── Mockup window ── */
+.hmock{position:relative;max-width:880px;margin:0 auto;width:100%}
+.mwin{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 40px 110px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.04)}
+.mtop{background:var(--bg-1);padding:13px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.md{width:12px;height:12px;border-radius:50%}
+.murl{flex:1;background:rgba(255,255,255,.04);border-radius:6px;height:26px;display:flex;align-items:center;padding:0 12px;font-size:11px;color:var(--t2);margin:0 12px}
+.mbody{padding:16px;display:grid;grid-template-columns:200px 1fr;gap:14px;min-height:320px}
+.mside{background:var(--bg-1);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.msi{padding:9px 11px;border-radius:8px;font-size:12px;color:var(--t2);display:flex;align-items:center;gap:9px;cursor:pointer}
+.msi.ac{background:rgba(124,58,237,.14);color:#B09BF8}
+.mic{width:18px;height:18px;border-radius:5px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;font-size:10px}
+.msi.ac .mic{background:rgba(124,58,237,.28)}
+.mmain{display:flex;flex-direction:column;gap:10px}
+.msbar{background:var(--bg-1);border-radius:9px;height:40px;display:flex;align-items:center;padding:0 14px;gap:9px;font-size:12px;color:var(--t2)}
+.mjg{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex:1}
+.mjc{background:var(--bg-1);border-radius:9px;padding:13px;border:1px solid var(--border);display:flex;flex-direction:column;gap:9px}
+.mjc:first-child{border-color:rgba(124,58,237,.28);background:rgba(124,58,237,.04)}
+.mcr{display:flex;align-items:center;gap:8px}
+.mlog{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff}
+.mjt{font-size:11px;font-weight:600;color:var(--t0)}
+.mjm{font-size:10px;color:var(--t2)}
+.mbs{display:flex;gap:5px;flex-wrap:wrap}
+.mb{font-size:9px;padding:2px 7px;border-radius:5px;font-weight:500}
+
+/* ── Hero stats bar ── */
+.hstats{display:flex;align-items:center;justify-content:center;gap:40px;padding:28px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-top:50px}
+.hsi{text-align:center}
+.hsn{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:4px}
+.hsl{font-size:12px;color:var(--t2)}
+
+/* ── Section base ── */
+section{padding:96px 0}
+.sh{text-align:center;margin-bottom:60px}
+.st{font-size:clamp(30px,4vw,46px);font-weight:800;letter-spacing:-.03em;line-height:1.15;margin-bottom:14px}
+.ss{font-size:16px;color:var(--t1);max-width:500px;margin:0 auto;line-height:1.75}
+
+/* ── Features ── */
+.fsec{background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.fg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--border);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.fc{background:var(--bg-1);padding:34px 30px;display:flex;flex-direction:column;gap:14px;transition:background .2s}
+.fc:hover{background:var(--bg-3)}
+.fi{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:21px;margin-bottom:2px}
+.ft{font-size:16px;font-weight:700}
+.fd{font-size:13px;color:var(--t1);line-height:1.65}
+
+/* ── How it works ── */
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.sc{background:var(--bg-2);border:1px solid var(--border);border-radius:20px;padding:34px 26px;position:relative;overflow:hidden;transition:border-color .25s}
+.sc:hover{border-color:rgba(124,58,237,.35)}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);opacity:0;transition:opacity .3s}
+.sc:hover::before{opacity:1}
+.sn{font-size:56px;font-weight:900;letter-spacing:-.04em;line-height:1;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;opacity:.28;margin-bottom:18px}
+.stit{font-size:19px;font-weight:700;margin-bottom:10px}
+.sdsc{font-size:13px;color:var(--t1);line-height:1.65}
+
+/* ── Job cards ── */
+.jg{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:36px}
+.jc{background:var(--bg-2);border:1px solid var(--border);border-radius:15px;padding:22px;display:flex;flex-direction:column;gap:14px;cursor:pointer;transition:all .22s;position:relative}
+.jc:hover{border-color:rgba(124,58,237,.38);transform:translateY(-2px);box-shadow:0 14px 48px rgba(0,0,0,.3)}
+.jct{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.ci{display:flex;align-items:center;gap:11px}
+.cl{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0}
+.cn{font-size:12px;color:var(--t2);margin-bottom:2px}
+.jt{font-size:16px;font-weight:700}
+.sv{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .2s}
+.sv:hover{background:rgba(124,58,237,.15);border-color:rgba(124,58,237,.3)}
+.jbs{display:flex;gap:7px;flex-wrap:wrap}
+.b{font-size:11px;font-weight:500;padding:4px 10px;border-radius:7px}
+.b-type{background:rgba(124,58,237,.12);color:#B09BF8;border:1px solid rgba(124,58,237,.2)}
+.b-rem{background:rgba(59,130,246,.12);color:#60A5FA;border:1px solid rgba(59,130,246,.2)}
+.b-loc{background:rgba(255,255,255,.05);color:var(--t1);border:1px solid var(--border)}
+.b-sal{background:rgba(34,197,94,.1);color:#4ADE80;border:1px solid rgba(34,197,94,.2)}
+.b-new{background:rgba(245,158,11,.12);color:#FCD34D;border:1px solid rgba(245,158,11,.2)}
+.jf{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border)}
+.jm{font-size:11px;color:var(--t2)}
+.abtn{background:var(--grad);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:12px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .2s}
+.abtn:hover{opacity:.9;transform:translateY(-1px)}
+.car{text-align:center}
+
+/* ── Employer ── */
+.esec{background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.eg{display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:center}
+.efs{display:flex;flex-direction:column;gap:18px}
+.ef{display:flex;gap:15px;align-items:flex-start}
+.efi{width:42px;height:42px;border-radius:12px;background:rgba(124,58,237,.11);border:1px solid rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.eft h4{font-size:15px;font-weight:600;margin-bottom:3px}
+.eft p{font-size:13px;color:var(--t1);line-height:1.6}
+.emock{background:var(--bg-2);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 28px 80px rgba(0,0,0,.5)}
+.emh{background:var(--bg-1);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+.emhp{font-size:13px;font-weight:600}
+.emb{padding:18px;display:flex;flex-direction:column;gap:11px}
+.esr{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.es{background:var(--bg-1);border-radius:9px;padding:13px;text-align:center}
+.esn{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.esl{font-size:10px;color:var(--t2);margin-top:2px}
+.ecs{display:flex;flex-direction:column;gap:7px}
+.ec{background:var(--bg-1);border-radius:9px;padding:10px 13px;display:flex;align-items:center;gap:10px}
+.av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.en{font-size:12px;font-weight:600}
+.er{font-size:10px;color:var(--t2)}
+.est{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:6px}
+
+/* ── Stats ── */
+.stgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:var(--border);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.stc{background:var(--bg-2);padding:38px 28px;text-align:center}
+.stnum{font-size:44px;font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:8px}
+.stlab{font-size:14px;color:var(--t1)}
+.stsub{font-size:11px;color:var(--t2);margin-top:4px}
+
+/* ── Companies ── */
+.csec{background:var(--bg-1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cg{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.cc{background:var(--bg-2);border:1px solid var(--border);border-radius:15px;padding:22px;display:flex;flex-direction:column;gap:13px;cursor:pointer;transition:all .22s}
+.cc:hover{border-color:rgba(124,58,237,.3);transform:translateY(-2px)}
+.clog{width:50px;height:50px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#fff}
+.ccn{font-size:14px;font-weight:700}
+.cci{font-size:11px;color:var(--t2)}
+.ccj{font-size:12px;color:#B09BF8;font-weight:500}
+.cop{display:flex;align-items:center;justify-content:space-between}
+
+/* ── CTA ── */
+.ctasec{background:var(--bg-0);text-align:center;padding:110px 24px;position:relative;overflow:hidden}
+.ctaglow{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(124,58,237,.18) 0%,transparent 70%);pointer-events:none}
+.ctat{font-size:clamp(38px,5.5vw,64px);font-weight:900;letter-spacing:-.04em;line-height:1.06;margin-bottom:18px;position:relative}
+.ctas{font-size:17px;color:var(--t1);margin-bottom:38px;position:relative}
+.ctabs{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;position:relative}
+
+/* ── Footer ── */
+footer{background:var(--bg-1);border-top:1px solid var(--border);padding:60px 24px 30px}
+.fi2{max-width:1180px;margin:0 auto}
+.ftop{display:grid;grid-template-columns:260px repeat(4,1fr);gap:44px;margin-bottom:44px}
+.fbrand{display:flex;flex-direction:column;gap:14px}
+.fdesc{font-size:13px;color:var(--t2);line-height:1.72}
+.fsoc{display:flex;gap:9px;margin-top:6px}
+.fsb{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t2);cursor:pointer;font-size:12px;transition:all .2s;text-decoration:none;font-weight:700}
+.fsb:hover{background:rgba(124,58,237,.14);border-color:rgba(124,58,237,.3);color:#B09BF8}
+.fcol h5{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--t2);margin-bottom:14px}
+.fcol ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+.fcol ul li a{color:var(--t1);text-decoration:none;font-size:13px;transition:color .2s}
+.fcol ul li a:hover{color:var(--t0)}
+.fbot{border-top:1px solid var(--border);padding-top:22px;display:flex;align-items:center;justify-content:space-between}
+.fbot p{font-size:12px;color:var(--t2)}
+.fbotl{display:flex;gap:18px}
+.fbotl a{font-size:12px;color:var(--t2);text-decoration:none;transition:color .2s}
+.fbotl a:hover{color:var(--t1)}
+
+/* ── Scroll top ── */
+.stbtn{position:fixed;bottom:28px;right:28px;width:42px;height:42px;background:var(--grad);border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transform:translateY(16px);transition:all .3s;border:none;box-shadow:0 4px 22px rgba(124,58,237,.4);z-index:900}
+.stbtn.on2{opacity:1;transform:translateY(0)}
+.stbtn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(124,58,237,.55)}
+
+/* ── Responsive ── */
+@media(max-width:1024px){.fg{grid-template-columns:repeat(2,1fr)}.stgrid{grid-template-columns:repeat(2,1fr)}.cg{grid-template-columns:repeat(2,1fr)}.ftop{grid-template-columns:1fr 1fr}}
+@media(max-width:768px){.nl,.na .btn-ghost{display:none}.hstats{gap:20px}.sg{grid-template-columns:1fr}.jg{grid-template-columns:1fr}.eg{grid-template-columns:1fr}.fg{grid-template-columns:1fr}.stgrid{grid-template-columns:1fr 1fr}.cg{grid-template-columns:1fr 1fr}.ftop{grid-template-columns:1fr 1fr}.mbody{grid-template-columns:1fr}.mside{display:none}}
+@media(max-width:480px){.hstats{flex-wrap:wrap;gap:16px}.stgrid{grid-template-columns:1fr}.ftop{grid-template-columns:1fr}.hsearch{flex-wrap:wrap;padding:10px}.hsep{display:none}.sbtn{width:100%;justify-content:center;margin-left:0;margin-top:4px}}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav id="nav">
+  <div class="ni">
+    <a href="#" class="logo">
+      <div class="logo-box">J</div>
+      <span class="logo-name">JobHub</span>
+    </a>
+    <ul class="nl">
+      <li><a href="#jobs">Việc làm</a></li>
+      <li><a href="#companies">Công ty</a></li>
+      <li><a href="#employers">Nhà tuyển dụng</a></li>
+      <li><a href="#about">Về chúng tôi</a></li>
+    </ul>
+    <div class="na">
+      <a href="login.html" class="btn btn-ghost">Đăng nhập</a>
+      <a href="register.html" class="btn btn-primary">Đăng ký miễn phí</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hbg"><div class="hgrid"></div><div class="hg1"></div><div class="hg2"></div><div class="hg3"></div></div>
+
+  <div class="hcontent r">
+    <div class="hbadge"><span class="dot-live"></span>10,000+ việc làm mới mỗi tháng</div>
+    <h1 class="htitle">Tìm việc mơ ước.<br><span class="gt">Ngay hôm nay.</span></h1>
+    <p class="hsub">JobHub kết nối ứng viên tài năng với nhà tuyển dụng hàng đầu Việt Nam. Nhanh chóng, thông minh, bảo mật.</p>
+
+    <div class="hsearch r d2">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--t2);flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Vị trí, kỹ năng, công ty...">
+      <div class="hsep"></div>
+      <div class="hloc">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        Hà Nội, VN
+      </div>
+      <button class="sbtn">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Tìm kiếm
+      </button>
+    </div>
+
+    <div class="htags r d3">
+      <span>Phổ biến:</span>
+      <div class="htag">Frontend Developer</div>
+      <div class="htag">Product Manager</div>
+      <div class="htag">UI/UX Designer</div>
+      <div class="htag">Data Analyst</div>
+      <div class="htag">Backend Engineer</div>
+    </div>
+  </div>
+
+  <!-- Dashboard Mockup -->
+  <div class="wrap" style="position:relative;width:100%">
+    <div class="hmock rs d4">
+      <div class="mwin">
+        <div class="mtop">
+          <div class="md" style="background:#FF5F57"></div>
+          <div class="md" style="background:#FEBC2E"></div>
+          <div class="md" style="background:#28C840"></div>
+          <div class="murl">
+            <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:5px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            jobhub.vn/dashboard
+          </div>
+        </div>
+        <div class="mbody">
+          <div class="mside">
+            <div class="msi ac"><div class="mic">🏠</div>Dashboard</div>
+            <div class="msi"><div class="mic">💼</div>Việc làm</div>
+            <div class="msi"><div class="mic">📄</div>Hồ sơ</div>
+            <div class="msi"><div class="mic">❤️</div>Đã lưu</div>
+            <div class="msi"><div class="mic">📊</div>Đơn ứng tuyển</div>
+            <div style="margin-top:auto"><div class="msi"><div class="mic">⚙️</div>Cài đặt</div></div>
+          </div>
+          <div class="mmain">
+            <div class="msbar">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              Tìm kiếm việc làm phù hợp...
+            </div>
+            <div class="mjg">
+              <div class="mjc">
+                <div class="mcr"><div class="mlog" style="background:linear-gradient(135deg,#7C3AED,#3B82F6)">G</div><div><div class="mjt">Senior Frontend Dev</div><div class="mjm">Google Vietnam</div></div></div>
+                <div class="mbs"><span class="mb" style="background:rgba(124,58,237,.15);color:#B09BF8">Full-time</span><span class="mb" style="background:rgba(34,197,94,.1);color:#4ADE80">Remote</span></div>
+                <div style="font-size:10px;color:var(--t1)">$3,000–$5,000/tháng</div>
+              </div>
+              <div class="mjc">
+                <div class="mcr"><div class="mlog" style="background:linear-gradient(135deg,#EC4899,#F59E0B)">S</div><div><div class="mjt">Product Designer</div><div class="mjm">Shopee</div></div></div>
+                <div class="mbs"><span class="mb" style="background:rgba(59,130,246,.15);color:#60A5FA">Hybrid</span><span class="mb" style="background:rgba(245,158,11,.1);color:#FCD34D">Mới</span></div>
+                <div style="font-size:10px;color:var(--t1)">$2,000–$3,500/tháng</div>
+              </div>
+              <div class="mjc">
+                <div class="mcr"><div class="mlog" style="background:linear-gradient(135deg,#22C55E,#3B82F6)">V</div><div><div class="mjt">Data Engineer</div><div class="mjm">VNG Corporation</div></div></div>
+                <div class="mbs"><span class="mb" style="background:rgba(124,58,237,.15);color:#B09BF8">Full-time</span><span class="mb" style="background:rgba(255,255,255,.05);color:var(--t1)">HCM</span></div>
+                <div style="font-size:10px;color:var(--t1)">$2,500–$4,000/tháng</div>
+              </div>
+              <div class="mjc">
+                <div class="mcr"><div class="mlog" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">M</div><div><div class="mjt">iOS Developer</div><div class="mjm">MoMo</div></div></div>
+                <div class="mbs"><span class="mb" style="background:rgba(124,58,237,.15);color:#B09BF8">Full-time</span><span class="mb" style="background:rgba(255,255,255,.05);color:var(--t1)">Hà Nội</span></div>
+                <div style="font-size:10px;color:var(--t1)">$2,000–$3,000/tháng</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="hstats r d5">
+      <div class="hsi"><div class="hsn gt">12,400+</div><div class="hsl">Việc làm đang tuyển</div></div>
+      <div class="hsi"><div class="hsn gt">850+</div><div class="hsl">Công ty đối tác</div></div>
+      <div class="hsi"><div class="hsn gt">95%</div><div class="hsl">Tỷ lệ hài lòng</div></div>
+      <div class="hsi"><div class="hsn gt">50K+</div><div class="hsl">Ứng viên thành công</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="fsec">
+  <div class="wrap">
+    <div class="sh">
+      <div class="tag r">Tính năng</div>
+      <h2 class="st r d1">Được xây dựng khác biệt</h2>
+      <p class="ss r d2">Không chỉ là bảng việc làm. JobHub là nền tảng tuyển dụng thông minh, bảo mật và hiệu quả nhất Việt Nam.</p>
+    </div>
+    <div class="fg">
+      <div class="fc r"><div class="fi" style="background:rgba(124,58,237,.14)">🔍</div><div class="ft">Tìm kiếm thông minh</div><div class="fd">AI phân tích hồ sơ và gợi ý việc làm phù hợp nhất với kỹ năng và kinh nghiệm của bạn.</div></div>
+      <div class="fc r d1"><div class="fi" style="background:rgba(59,130,246,.13)">🔒</div><div class="ft">Bảo mật dữ liệu</div><div class="fd">Thông tin cá nhân và CV được mã hóa, chỉ chia sẻ khi bạn chủ động ứng tuyển.</div></div>
+      <div class="fc r d2"><div class="fi" style="background:rgba(34,197,94,.11)">⚡</div><div class="ft">Kết nối trực tiếp</div><div class="fd">Nhận phản hồi từ nhà tuyển dụng nhanh hơn 3x so với các nền tảng khác.</div></div>
+      <div class="fc r d1"><div class="fi" style="background:rgba(245,158,11,.11)">📊</div><div class="ft">Theo dõi đơn ứng tuyển</div><div class="fd">Dashboard trực quan hiển thị trạng thái tất cả đơn ứng tuyển theo thời gian thực.</div></div>
+      <div class="fc r d2"><div class="fi" style="background:rgba(236,72,153,.11)">👤</div><div class="ft">Hồ sơ chuyên nghiệp</div><div class="fd">Tạo profile ấn tượng với kỹ năng, kinh nghiệm, dự án và CV PDF chỉ trong vài phút.</div></div>
+      <div class="fc r d3"><div class="fi" style="background:rgba(124,58,237,.14)">🔔</div><div class="ft">Thông báo tức thì</div><div class="fd">Email và thông báo ngay khi có tin tuyển dụng mới hoặc cập nhật trạng thái đơn của bạn.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section>
+  <div class="wrap">
+    <div class="sh">
+      <div class="tag r">Hướng dẫn</div>
+      <h2 class="st r d1">3 bước để có việc làm<br>mơ ước</h2>
+      <p class="ss r d2">Quy trình đơn giản, không rắc rối. Từ đăng ký đến nhận offer chỉ trong vài ngày.</p>
+    </div>
+    <div class="sg">
+      <div class="sc r"><div class="sn">01</div><div class="stit">Tạo hồ sơ của bạn</div><div class="sdsc">Đăng ký tài khoản, điền thông tin cá nhân, kỹ năng, kinh nghiệm và upload CV PDF. Chỉ mất 5 phút.</div></div>
+      <div class="sc r d2"><div class="sn">02</div><div class="stit">Tìm & ứng tuyển</div><div class="sdsc">Dùng bộ lọc thông minh theo ngành nghề, địa điểm, mức lương. Nộp đơn 1-click kèm cover letter.</div></div>
+      <div class="sc r d4"><div class="sn">03</div><div class="stit">Nhận công việc</div><div class="sdsc">Theo dõi trạng thái đơn thời gian thực. Nhận thông báo ngay khi có phản hồi và chuẩn bị phỏng vấn.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED JOBS -->
+<section id="jobs" style="background:var(--bg-0)">
+  <div class="wrap">
+    <div class="sh">
+      <div class="tag r">Việc làm nổi bật</div>
+      <h2 class="st r d1">Cơ hội dành cho bạn</h2>
+      <p class="ss r d2">Hàng nghìn vị trí từ các công ty hàng đầu đang chờ ứng viên phù hợp.</p>
+    </div>
+    <div class="jg">
+      <div class="jc r"><div class="jct"><div class="ci"><div class="cl" style="background:linear-gradient(135deg,#7C3AED,#3B82F6)">G</div><div><div class="cn">Google Vietnam</div><div class="jt">Senior Frontend Engineer</div></div></div><button class="sv"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div><div class="jbs"><span class="b b-type">Full-time</span><span class="b b-rem">Remote</span><span class="b b-sal">$4,000–$6,000</span><span class="b b-new">Mới đăng</span></div><div class="jf"><span class="jm">📍 Hà Nội · 3 ngày trước · 45 đơn</span><button class="abtn">Ứng tuyển</button></div></div>
+      <div class="jc r d1"><div class="jct"><div class="ci"><div class="cl" style="background:linear-gradient(135deg,#EC4899,#F59E0B)">S</div><div><div class="cn">Shopee</div><div class="jt">Product Manager</div></div></div><button class="sv"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div><div class="jbs"><span class="b b-type">Full-time</span><span class="b b-loc">📍 TP.HCM</span><span class="b b-sal">$3,500–$5,000</span></div><div class="jf"><span class="jm">🏢 On-site · 5 ngày trước · 120 đơn</span><button class="abtn">Ứng tuyển</button></div></div>
+      <div class="jc r d2"><div class="jct"><div class="ci"><div class="cl" style="background:linear-gradient(135deg,#22C55E,#3B82F6)">V</div><div><div class="cn">VNG Corporation</div><div class="jt">Data Engineer</div></div></div><button class="sv"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div><div class="jbs"><span class="b b-type">Full-time</span><span class="b b-rem">Hybrid</span><span class="b b-sal">$2,500–$4,000</span></div><div class="jf"><span class="jm">📍 TP.HCM · 1 tuần trước · 78 đơn</span><button class="abtn">Ứng tuyển</button></div></div>
+      <div class="jc r d3"><div class="jct"><div class="ci"><div class="cl" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">M</div><div><div class="cn">MoMo</div><div class="jt">iOS Developer</div></div></div><button class="sv"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div><div class="jbs"><span class="b b-type">Full-time</span><span class="b b-loc">📍 Hà Nội</span><span class="b b-sal">$2,000–$3,500</span><span class="b b-new">Mới đăng</span></div><div class="jf"><span class="jm">🏢 On-site · 2 ngày trước · 32 đơn</span><button class="abtn">Ứng tuyển</button></div></div>
+      <div class="jc r d1"><div class="jct"><div class="ci"><div class="cl" style="background:linear-gradient(135deg,#3B82F6,#22C55E)">Z</div><div><div class="cn">Zalo / VNG</div><div class="jt">UX Designer</div></div></div><button class="sv"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div><div class="jbs"><span class="b b-type">Full-time</span><span class="b b-rem">Remote</span><span class="b b-sal">$1,800–$3,000</span></div><div class="jf"><span class="jm">📍 Toàn quốc · 4 ngày trước · 95 đơn</span><button class="abtn">Ứng tuyển</button></div></div>
+      <div class="jc r d2"><div class="jct"><div class="ci"><div class="cl" style="background:linear-gradient(135deg,#8B5CF6,#EC4899)">T</div><div><div class="cn">Tiki Corporation</div><div class="jt">Backend Engineer (Node.js)</div></div></div><button class="sv"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button></div><div class="jbs"><span class="b b-type">Full-time</span><span class="b b-rem">Hybrid</span><span class="b b-sal">$2,200–$3,800</span></div><div class="jf"><span class="jm">📍 TP.HCM · 6 ngày trước · 61 đơn</span><button class="abtn">Ứng tuyển</button></div></div>
+    </div>
+    <div class="car r"><a href="#" class="btn btn-outline btn-lg">Xem tất cả 12,400+ việc làm →</a></div>
+  </div>
+</section>
+
+<!-- EMPLOYER -->
+<section class="esec" id="employers">
+  <div class="wrap">
+    <div class="eg">
+      <div>
+        <div class="tag r">Dành cho nhà tuyển dụng</div>
+        <h2 class="st r d1">Tìm ứng viên phù hợp<br><span class="gt">nhanh hơn</span></h2>
+        <p class="ss r d2" style="text-align:left;margin:0 0 28px">Công cụ quản lý tuyển dụng toàn diện. Đăng tin, lọc hồ sơ và theo dõi ứng viên trên một nền tảng.</p>
+        <div class="efs">
+          <div class="ef r d1"><div class="efi">📢</div><div class="eft"><h4>Đăng tin nhanh chóng</h4><p>Tạo tin tuyển dụng chuyên nghiệp trong 5 phút. Tiếp cận hàng nghìn ứng viên ngay lập tức.</p></div></div>
+          <div class="ef r d2"><div class="efi">🎯</div><div class="eft"><h4>Lọc hồ sơ thông minh</h4><p>Bộ lọc đa chiều theo kỹ năng, kinh nghiệm, địa điểm giúp tìm đúng ứng viên trong hàng trăm đơn.</p></div></div>
+          <div class="ef r d3"><div class="efi">📈</div><div class="eft"><h4>Dashboard phân tích</h4><p>Theo dõi số lượt xem, tỷ lệ ứng tuyển và hiệu quả chiến dịch tuyển dụng theo thời gian thực.</p></div></div>
+          <div class="ef r d4"><div class="efi">✉️</div><div class="eft"><h4>Thông báo tự động</h4><p>Email tự động gửi đến ứng viên khi cập nhật trạng thái. Chuyên nghiệp, không tốn thêm công sức.</p></div></div>
+        </div>
+        <div style="margin-top:28px" class="r d3"><a href="#" class="btn btn-primary btn-lg">Đăng tin miễn phí →</a></div>
+      </div>
+      <div class="rr">
+        <div class="emock">
+          <div class="emh"><span class="emhp">Dashboard Nhà tuyển dụng</span><span class="b b-new">● Live</span></div>
+          <div class="emb">
+            <div class="esr">
+              <div class="es"><div class="esn gt">24</div><div class="esl">Tin đang chạy</div></div>
+              <div class="es"><div class="esn" style="color:#4ADE80">142</div><div class="esl">Đơn mới tuần này</div></div>
+              <div class="es"><div class="esn" style="color:#FCD34D">3.2K</div><div class="esl">Lượt xem</div></div>
+            </div>
+            <div style="font-size:12px;font-weight:600;color:var(--t2);margin-top:2px">Ứng viên gần đây</div>
+            <div class="ecs">
+              <div class="ec"><div class="av" style="background:linear-gradient(135deg,#7C3AED,#3B82F6)">NH</div><div><div class="en">Nguyễn Hoàng</div><div class="er">Senior Frontend · 5 năm KN</div></div><span class="est" style="background:rgba(34,197,94,.12);color:#4ADE80">Phù hợp</span></div>
+              <div class="ec"><div class="av" style="background:linear-gradient(135deg,#EC4899,#F59E0B)">TL</div><div><div class="en">Trần Lan</div><div class="er">Product Designer · 3 năm KN</div></div><span class="est" style="background:rgba(245,158,11,.12);color:#FCD34D">Đang xem</span></div>
+              <div class="ec"><div class="av" style="background:linear-gradient(135deg,#22C55E,#3B82F6)">PD</div><div><div class="en">Phạm Dũng</div><div class="er">Data Engineer · 4 năm KN</div></div><span class="est" style="background:rgba(59,130,246,.12);color:#60A5FA">Phỏng vấn</span></div>
+              <div class="ec"><div class="av" style="background:linear-gradient(135deg,#8B5CF6,#EC4899)">LM</div><div><div class="en">Lê Minh</div><div class="er">Backend Engineer · 2 năm KN</div></div><span class="est" style="background:rgba(124,58,237,.12);color:#B09BF8">Đang xét</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section>
+  <div class="wrap">
+    <div class="sh">
+      <div class="tag r">Con số ấn tượng</div>
+      <h2 class="st r d1">JobHub trong <span class="gt">con số</span></h2>
+    </div>
+    <div class="stgrid" id="stgrid">
+      <div class="stc r"><div class="stnum gt" data-target="12400" data-suffix="+">12,400+</div><div class="stlab">Việc làm đang tuyển</div><div class="stsub">Cập nhật mỗi ngày</div></div>
+      <div class="stc r d1"><div class="stnum" style="color:#4ADE80" data-target="850" data-suffix="+">850+</div><div class="stlab">Công ty đối tác</div><div class="stsub">Từ startup đến tập đoàn</div></div>
+      <div class="stc r d2"><div class="stnum" style="color:#FCD34D" data-target="50000" data-suffix="+">50,000+</div><div class="stlab">Ứng viên đăng ký</div><div class="stsub">Trong năm 2024</div></div>
+      <div class="stc r d3"><div class="stnum" style="color:#F472B6" data-target="95" data-suffix="%">95%</div><div class="stlab">Tỷ lệ hài lòng</div><div class="stsub">Đánh giá từ người dùng</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPANIES -->
+<section class="csec" id="companies">
+  <div class="wrap">
+    <div class="sh">
+      <div class="tag r">Công ty đối tác</div>
+      <h2 class="st r d1">Làm việc cùng những<br>công ty hàng đầu</h2>
+      <p class="ss r d2">Từ startup công nghệ đến tập đoàn đa quốc gia, cơ hội của bạn đang chờ.</p>
+    </div>
+    <div class="cg">
+      <div class="cc r"><div class="clog" style="background:linear-gradient(135deg,#7C3AED,#3B82F6)">G</div><div><div class="ccn">Google Vietnam</div><div class="cci">Công nghệ · Tìm kiếm</div></div><div class="cop"><span class="ccj">18 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d1"><div class="clog" style="background:linear-gradient(135deg,#EC4899,#F59E0B)">S</div><div><div class="ccn">Shopee</div><div class="cci">E-commerce · FinTech</div></div><div class="cop"><span class="ccj">42 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d2"><div class="clog" style="background:linear-gradient(135deg,#22C55E,#3B82F6)">V</div><div><div class="ccn">VNG Corporation</div><div class="cci">Gaming · Công nghệ</div></div><div class="cop"><span class="ccj">35 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d3"><div class="clog" style="background:linear-gradient(135deg,#F59E0B,#EF4444)">M</div><div><div class="ccn">MoMo</div><div class="cci">FinTech · Mobile</div></div><div class="cop"><span class="ccj">27 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d1"><div class="clog" style="background:linear-gradient(135deg,#3B82F6,#22C55E)">Z</div><div><div class="ccn">Zalo / VNG</div><div class="cci">Social · Messaging</div></div><div class="cop"><span class="ccj">21 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d2"><div class="clog" style="background:linear-gradient(135deg,#8B5CF6,#EC4899)">T</div><div><div class="ccn">Tiki</div><div class="cci">E-commerce · Logistics</div></div><div class="cop"><span class="ccj">33 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d3"><div class="clog" style="background:linear-gradient(135deg,#14B8A6,#3B82F6)">B</div><div><div class="ccn">Baemin</div><div class="cci">Food Delivery · Tech</div></div><div class="cop"><span class="ccj">15 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+      <div class="cc r d4"><div class="clog" style="background:linear-gradient(135deg,#EF4444,#F59E0B)">G</div><div><div class="ccn">Grab Vietnam</div><div class="cci">SuperApp · Transport</div></div><div class="cop"><span class="ccj">29 vị trí mở</span><span style="color:var(--t2);font-size:12px">→</span></div></div>
+    </div>
+    <div class="car r" style="margin-top:36px"><a href="#" class="btn btn-outline btn-lg">Xem tất cả 850+ công ty →</a></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="ctasec" id="about">
+  <div class="ctaglow"></div>
+  <div class="wrap" style="position:relative">
+    <div class="tag r" style="margin:0 auto 22px;display:table">JobHub</div>
+    <h2 class="ctat r d1">Sẵn sàng bứt phá<br><span class="gt">sự nghiệp?</span></h2>
+    <p class="ctas r d2">Hàng nghìn cơ hội đang chờ bạn. Tạo tài khoản miễn phí ngay hôm nay.</p>
+    <div class="ctabs r d3">
+      <a href="#" class="btn btn-primary btn-lg">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Tạo tài khoản miễn phí
+      </a>
+      <a href="#" class="btn btn-outline btn-lg">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="7" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Đăng tin tuyển dụng
+      </a>
+    </div>
+    <div class="r d4" style="margin-top:44px;display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex">
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#3B82F6);border:2px solid var(--bg-0);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-right:-7px">A</div>
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#EC4899,#F59E0B);border:2px solid var(--bg-0);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-right:-7px">B</div>
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#22C55E,#3B82F6);border:2px solid var(--bg-0);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff">C</div>
+        </div>
+        <span style="font-size:13px;color:var(--t1)">50,000+ ứng viên đã tin tưởng JobHub</span>
+      </div>
+      <div style="width:1px;height:18px;background:var(--border)"></div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="color:#FCD34D;font-size:14px">★★★★★</span>
+        <span style="font-size:13px;color:var(--t1)">4.9/5 đánh giá trung bình</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fi2">
+    <div class="ftop">
+      <div class="fbrand">
+        <a href="#" class="logo"><div class="logo-box">J</div><span class="logo-name">JobHub</span></a>
+        <p class="fdesc">Nền tảng tuyển dụng nhân lực hàng đầu Việt Nam. Kết nối tài năng với cơ hội phù hợp.</p>
+        <div class="fsoc">
+          <a href="#" class="fsb">f</a>
+          <a href="#" class="fsb">in</a>
+          <a href="#" class="fsb">X</a>
+          <a href="#" class="fsb">▶</a>
+        </div>
+      </div>
+      <div class="fcol"><h5>Ứng viên</h5><ul><li><a href="#">Tìm việc làm</a></li><li><a href="#">Tạo hồ sơ</a></li><li><a href="#">Upload CV</a></li><li><a href="#">Đơn ứng tuyển</a></li><li><a href="#">Việc làm đã lưu</a></li></ul></div>
+      <div class="fcol"><h5>Nhà tuyển dụng</h5><ul><li><a href="#">Đăng tin tuyển dụng</a></li><li><a href="#">Tìm ứng viên</a></li><li><a href="#">Hồ sơ công ty</a></li><li><a href="#">Dashboard</a></li><li><a href="#">Bảng giá</a></li></ul></div>
+      <div class="fcol"><h5>Khám phá</h5><ul><li><a href="#">Danh sách công ty</a></li><li><a href="#">Việc theo ngành</a></li><li><a href="#">Việc theo thành phố</a></li><li><a href="#">Intern / Thực tập</a></li><li><a href="#">Remote Jobs</a></li></ul></div>
+      <div class="fcol"><h5>Công ty</h5><ul><li><a href="#">Về JobHub</a></li><li><a href="#">Blog</a></li><li><a href="#">Liên hệ</a></li><li><a href="#">Tuyển dụng</a></li><li><a href="#">Đối tác</a></li></ul></div>
+    </div>
+    <div class="fbot">
+      <p>© 2024 JobHub. Bảo lưu mọi quyền. Made with ❤️ in Vietnam.</p>
+      <div class="fbotl"><a href="#">Chính sách bảo mật</a><a href="#">Điều khoản sử dụng</a><a href="#">Cookie</a></div>
+    </div>
+  </div>
+</footer>
+
+<button class="stbtn" id="stbtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24"><path d="m18 15-6-6-6 6"/></svg>
+</button>
+
+<script>
+// Scroll reveal
+const els = document.querySelectorAll('.r,.rl,.rr,.rs');
+const io = new IntersectionObserver(e => e.forEach(x => { if(x.isIntersecting) x.target.classList.add('on') }), {threshold:.07,rootMargin:'0px 0px -30px 0px'});
+els.forEach(el => io.observe(el));
+
+// Navbar + scroll-top
+const nav = document.getElementById('nav');
+const stbtn = document.getElementById('stbtn');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('up', scrollY > 20);
+  stbtn.classList.toggle('on2', scrollY > 400);
+});
+
+// Counter animation
+function counter(el, target, suffix) {
+  let n = 0; const step = target / 55;
+  const t = setInterval(() => {
+    n += step;
+    if(n >= target) { n = target; clearInterval(t); }
+    el.textContent = Math.floor(n).toLocaleString('vi-VN') + suffix;
+  }, 18);
+}
+const stio = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting && !e.target.dataset.done) {
+      e.target.dataset.done = 1;
+      e.target.querySelectorAll('[data-target]').forEach(el => counter(el, +el.dataset.target, el.dataset.suffix));
+    }
+  });
+}, {threshold:.3});
+const sg = document.getElementById('stgrid');
+if(sg) stio.observe(sg);
+
+// Save btn toggle
+document.querySelectorAll('.sv').forEach(btn => btn.addEventListener('click', e => {
+  e.stopPropagation();
+  btn.style.cssText += 'background:rgba(124,58,237,.18);border-color:rgba(124,58,237,.4)';
+}));
+</script>
+</body>
+</html>

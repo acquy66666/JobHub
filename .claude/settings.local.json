@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(New-Item -ItemType Directory -Force -Path \"d:\\\\Desktop\\\\New folder\\\\screenshots\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\Desktop\\\\New folder\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(node -e ' *)",
+      "PowerShell(Get-ChildItem \"d:\\\\Desktop\\\\New folder\" -Force | Where-Object { $_.Name -ne 'node_modules' } | Select-Object Name, LastWriteTime)",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Desktop\\\\New folder\\\\frontend\\\\src\\\\app\\\\\\(public\\)\" -Force)",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Desktop\\\\New folder\\\\frontend\\\\src\\\\app\\\\\\(auth\\)\\\\login\" -Force)",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Desktop\\\\New folder\\\\frontend\\\\src\\\\app\\\\\\(auth\\)\\\\register\" -Force)",
+      "PowerShell(New-Item -ItemType Directory -Path \"d:\\\\Desktop\\\\New folder\\\\frontend\\\\src\\\\app\\\\\\(auth\\)\\\\forgot-password\" -Force)",
+      "Bash(npx skills *)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "supabase"
+  ]
+}
