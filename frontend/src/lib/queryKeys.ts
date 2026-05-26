@@ -1,0 +1,16 @@
+export const queryKeys = {
+  jobs: (filters?: Record<string, unknown>) => ['jobs', filters] as const,
+  job: (id: string) => ['jobs', id] as const,
+  companies: (page?: number) => ['companies', page] as const,
+  candidateProfile: () => ['candidate', 'profile'] as const,
+  candidateApplications: (page?: number) => ['candidate', 'applications', page] as const,
+  candidateSavedJobs: (page?: number) => ['candidate', 'saved-jobs', page] as const,
+  employerProfile: () => ['employer', 'profile'] as const,
+  employerJobs: (page?: number) => ['employer', 'jobs', page] as const,
+  employerJobApplications: (jobId: string, page?: number) => ['employer', 'jobs', jobId, 'applications', page] as const,
+  adminStats: () => ['admin', 'stats'] as const,
+  adminJobs: (params?: Record<string, unknown>) => ['admin', 'jobs', params] as const,
+  adminUsers: (params?: Record<string, unknown>) => ['admin', 'users', params] as const,
+  company: (id: string) => ['company', id] as const,
+  companyJobs: (employerId: string, page?: number) => ['company', employerId, 'jobs', page] as const,
+};

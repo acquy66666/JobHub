@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 237 17% 5%;
+    --foreground: 240 100% 99%;
+    --card: 237 17% 9%;
+    --card-foreground: 240 100% 99%;
+    --popover: 237 17% 9%;
+    --popover-foreground: 240 100% 99%;
+    --primary: 263 71% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 237 17% 12%;
+    --secondary-foreground: 240 100% 99%;
+    --muted: 237 17% 16%;
+    --muted-foreground: 240 11% 63%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 237 17% 18%;
+    --input: 237 17% 18%;
+    --ring: 263 71% 58%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg-0 text-t0;
+    font-family: var(--font-inter), sans-serif;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    background: linear-gradient(135deg, #7c3aed, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .btn-primary {
+    @apply bg-brand-gradient text-white font-semibold rounded-xl;
+    box-shadow: 0 4px 22px rgba(124, 58, 237, 0.35);
+    transition: all 0.2s;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(124, 58, 237, 0.5);
+  }
+
+  .card-dark {
+    @apply bg-bg-2 border border-border-dark rounded-2xl;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+  }
+
+  .card-dark:hover {
+    border-color: rgba(124, 58, 237, 0.38);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 48px rgba(0, 0, 0, 0.3);
+  }
+
+  .badge-type {
+    @apply inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border;
+    background: rgba(124,58,237,.12);
+    color: #B09BF8;
+    border-color: rgba(124,58,237,.2);
+  }
+
+  .badge-mode {
+    @apply inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border;
+    background: rgba(59,130,246,.12);
+    color: #60A5FA;
+    border-color: rgba(59,130,246,.2);
+  }
+
+  .badge-salary {
+    @apply inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border;
+    background: rgba(34,197,94,.10);
+    color: #4ADE80;
+    border-color: rgba(34,197,94,.2);
+  }
+
+  .badge-new {
+    @apply inline-flex items-center text-[11px] font-medium px-2.5 py-1 rounded-lg border;
+    background: rgba(245,158,11,.12);
+    color: #FCD34D;
+    border-color: rgba(245,158,11,.2);
+  }
+
+  .section-tag {
+    background: rgba(124,58,237,.1);
+    border: 1px solid rgba(124,58,237,.22);
+    color: #B09BF8;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12px] font-semibold uppercase tracking-widest;
+  }
+}
