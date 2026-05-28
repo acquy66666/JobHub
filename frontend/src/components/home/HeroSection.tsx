@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { GradientText } from "@/components/common/GradientText";
 

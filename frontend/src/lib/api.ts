@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { useAuthStore } from "@/store/authStore";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api",
@@ -10,7 +11,7 @@ const api = axios.create({
 // Import lazily to avoid SSR issues (Zustand store is client-only).
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const { accessToken } = require("@/store/authStore").useAuthStore.getState();
+    const { accessToken } = useAuthStore.getState();
     if (accessToken) config.headers["Authorization"] = `Bearer ${accessToken}`;
   }
   return config;
@@ -49,7 +50,7 @@ api.interceptors.response.use(
       );
       const { accessToken } = res.data as { accessToken: string };
       if (typeof window !== "undefined") {
-        require("@/store/authStore").useAuthStore.getState().setAccessToken(accessToken);
+        useAuthStore.getState().setAccessToken(accessToken);
       }
       processQueue(null, accessToken);
       original.headers["Authorization"] = `Bearer ${accessToken}`;
@@ -57,7 +58,7 @@ api.interceptors.response.use(
     } catch (refreshError) {
       processQueue(refreshError, null);
       if (typeof window !== "undefined") {
-        require("@/store/authStore").useAuthStore.getState().clearAuth();
+        useAuthStore.getState().clearAuth();
         window.location.href = "/login";
       }
       return Promise.reject(refreshError);
