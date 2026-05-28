@@ -146,7 +146,13 @@ export const authService = {
     if (!stored || stored.expiresAt < new Date())
       throw Object.assign(new Error("Refresh token hết hạn"), { status: 401 });
 
-    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: payload.userId },
+      include: {
+        candidate: { select: { id: true, fullName: true, avatarUrl: true } },
+        employer: { select: { id: true, companyName: true, logoUrl: true } },
+      },
+    });
     if (!user || !user.isActive)
       throw Object.assign(new Error("Tài khoản không hợp lệ"), { status: 401 });
 
@@ -166,7 +172,18 @@ export const authService = {
     ]);
 
     const accessToken = signAccessToken({ userId: user.id, email: user.email, role: user.role });
-    return { accessToken, refreshToken: newRefreshToken };
+    const profile = user.role === "CANDIDATE" ? user.candidate : user.employer;
+    return {
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isVerified: user.isVerified,
+        profile,
+      },
+    };
   },
 
   async logout(rawRefreshToken: string) {

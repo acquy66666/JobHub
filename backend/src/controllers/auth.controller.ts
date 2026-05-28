@@ -55,9 +55,9 @@ export const authController = {
         res.status(401).json({ message: "Không có refresh token" });
         return;
       }
-      const { accessToken, refreshToken } = await authService.refresh(token);
+      const { accessToken, refreshToken, user } = await authService.refresh(token);
       res.cookie("refreshToken", refreshToken, COOKIE_OPTS);
-      res.json({ accessToken });
+      res.json({ accessToken, user });
     } catch (err) {
       next(err);
     }

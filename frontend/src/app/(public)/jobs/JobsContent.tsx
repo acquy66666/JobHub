@@ -1,6 +1,7 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { queryKeys } from "@/lib/queryKeys";
 import { JobFilters } from "@/components/jobs/JobFilters";
 import { JobCard } from "@/components/jobs/JobCard";
@@ -51,6 +52,14 @@ export function JobsContent() {
 
   return (
     <div className="max-w-wrap mx-auto px-6 py-8 pt-24">
+      {/* Breadcrumb */}
+      <div className="mb-6">
+        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-t2 hover:text-t0 transition-colors">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          Trang chủ
+        </Link>
+      </div>
+
       {/* Page header */}
       <ScrollReveal direction="up" className="mb-8">
         <h1 className="text-[clamp(28px,4vw,40px)] font-extrabold text-t0 tracking-tight">

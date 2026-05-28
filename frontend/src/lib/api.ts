@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore, AuthUser } from "@/store/authStore";
 
 const api = axios.create({
   baseURL: "/api",
@@ -48,12 +48,17 @@ api.interceptors.response.use(
         {},
         { withCredentials: true }
       );
-      const { accessToken } = res.data as { accessToken: string };
+      const data = res.data as { accessToken: string; user?: AuthUser };
       if (typeof window !== "undefined") {
-        useAuthStore.getState().setAccessToken(accessToken);
+        const store = useAuthStore.getState();
+        if (data.user) {
+          store.setAuth(data.accessToken, data.user);
+        } else {
+          store.setAccessToken(data.accessToken);
+        }
       }
-      processQueue(null, accessToken);
-      original.headers["Authorization"] = `Bearer ${accessToken}`;
+      processQueue(null, data.accessToken);
+      original.headers["Authorization"] = `Bearer ${data.accessToken}`;
       return api(original);
     } catch (refreshError) {
       processQueue(refreshError, null);
