@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const PROTECTED = ["/candidate", "/employer", "/admin"];
-const AUTH_ONLY = ["/login", "/register", "/forgot-password", "/verify-email", "/reset-password"];
+const AUTH_ONLY = ["/forgot-password", "/verify-email", "/reset-password"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
