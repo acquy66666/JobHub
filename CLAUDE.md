@@ -8,15 +8,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current stage:** Stage 5 — Polish & Deploy (in progress). Stages 0–4 complete (2026-05-25). Full-stack running: Next.js 14 App Router (`frontend/src/`), Express.js + Prisma (`backend/src/`), PostgreSQL via Docker Compose. HTML prototypes archived in `prototype/`.
 
-**Stage 5 done:** SEO (`robots.ts`, `sitemap.ts`, `opengraph-image.tsx`), error boundaries, seed data (28 jobs, 5 companies, 3 demo accounts).
-**Stage 5 pending (theo thứ tự):**
-1. Fix 7 code bugs trước khi deploy (xem PROJECT_PLAN.md Bước 1 — 2 trong số đó là critical)
-2. Setup services: Supabase + Cloudinary + Gmail App Password + GitHub repo
-3. Deploy: Render (backend) → Vercel (frontend) → seed → verify
+**Stage 5 done:** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động.
+**Stage 5 pending:** Fix UI bugs sau deploy, hoàn thành verify TC2–TC8.
 
-**2 critical deploy bugs đã phát hiện:**
-- `backend/prisma/schema.prisma` thiếu `url = env("DATABASE_URL")` → Prisma không connect được
-- `backend/src/index.ts` bind implicit localhost → Render từ chối kết nối (cần `'0.0.0.0'`)
+**Deployed URLs:**
+- Frontend: `https://job-hub-two.vercel.app`
+- Backend: `https://jobhub-700v.onrender.com`
+
+**Bugs phát hiện khi verify (cần fix session tiếp theo):**
+1. **Navbar trống khi đã đăng nhập** — header không hiển thị tên user, avatar, hoặc dropdown menu sau khi login (candidate dashboard)
+2. **Không có nút đăng xuất** — sau khi login, không tìm thấy nút logout ở bất kỳ đâu
+3. **/jobs và /companies thiếu nút về trang chủ** — không có breadcrumb hoặc link "← Trang chủ" để quay về `/`
 
 Track progress in [`PROJECT_PLAN.md`](PROJECT_PLAN.md).
 
