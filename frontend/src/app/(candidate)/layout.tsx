@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
+import { Navbar } from "@/components/layout/Navbar";
 
 const NAV_ITEMS = [
   { href: "/candidate", label: "Tổng quan", icon: "⊞" },
@@ -60,6 +61,8 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
   );
 
   return (
+    <>
+    <Navbar />
     <div className="min-h-screen flex pt-16">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-[240px] bg-bg-1 border-r border-border-dark flex-col z-50 overflow-y-auto">
@@ -96,5 +99,6 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
         {children}
       </main>
     </div>
+    </>
   );
 }

@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Current stage:** Stage 5 — Polish & Deploy (in progress). Stages 0–4 complete (2026-05-25). Full-stack running: Next.js 14 App Router (`frontend/src/`), Express.js + Prisma (`backend/src/`), PostgreSQL via Docker Compose. HTML prototypes archived in `prototype/`.
 
-**Stage 5 done:** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động. BUG-1/2/3 đã fix (commit d9c5517). TC1 ✅, TC2a ✅.
+**Stage 5 done:** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động. BUG-1/2/3/4/5 đã fix. TC1 ✅, TC2a ✅.
 **Stage 5 pending:** Hoàn thành verify TC2b–TC7.
 
 **Deployed URLs:**
