@@ -4,7 +4,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "http", hostname: "localhost" },
       { protocol: "https", hostname: "res.cloudinary.com" },
-      { protocol: "https", hostname: "jobhub-api.onrender.com" },
+      { protocol: "https", hostname: "jobhub-700v.onrender.com" },
+      { protocol: "https", hostname: "job-hub-two.vercel.app" },
     ],
   },
   async rewrites() {
