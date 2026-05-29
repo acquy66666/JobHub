@@ -6,6 +6,7 @@ import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { Pagination } from "@/components/common/Pagination";
 import { formatJobStatus, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
+import { useToast } from "@/store/toastStore";
 
 interface AdminJob {
   id: string;
@@ -27,6 +28,7 @@ export default function AdminJobsPage() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("");
   const qc = useQueryClient();
+  const toast = useToast();
 
   const params = { page, limit: 15, ...(status ? { status } : {}) };
 
@@ -37,12 +39,20 @@ export default function AdminJobsPage() {
 
   const approveMutation = useMutation({
     mutationFn: (jobId: string) => api.patch(`/admin/jobs/${jobId}/status`, { status: "ACTIVE" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminJobs() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminJobs() });
+      toast.success("Tin tuyển dụng đã được duyệt");
+    },
+    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
   });
 
   const rejectMutation = useMutation({
     mutationFn: (jobId: string) => api.patch(`/admin/jobs/${jobId}/status`, { status: "REJECTED" }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminJobs() }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminJobs() });
+      toast.info("Đã từ chối tin tuyển dụng");
+    },
+    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
   });
 
   const jobs: AdminJob[] = data?.jobs ?? [];
