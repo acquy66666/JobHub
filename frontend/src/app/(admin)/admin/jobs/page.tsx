@@ -39,20 +39,44 @@ export default function AdminJobsPage() {
 
   const approveMutation = useMutation({
     mutationFn: (jobId: string) => api.patch(`/admin/jobs/${jobId}/status`, { status: "ACTIVE" }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.adminJobs() });
-      toast.success("Tin tuyển dụng đã được duyệt");
+    onMutate: async (jobId) => {
+      await qc.cancelQueries({ queryKey: queryKeys.adminJobs(params) });
+      const previous = qc.getQueryData(queryKeys.adminJobs(params));
+      qc.setQueryData(queryKeys.adminJobs(params), (old: Record<string, unknown> | undefined) => ({
+        ...old,
+        jobs: (old?.jobs as AdminJob[] | undefined)?.map((j) =>
+          j.id === jobId ? { ...j, status: "ACTIVE" } : j
+        ) ?? [],
+      }));
+      return { previous };
     },
-    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
+    onSuccess: () => toast.success("Tin tuyển dụng đã được duyệt"),
+    onError: (_err, _vars, ctx) => {
+      qc.setQueryData(queryKeys.adminJobs(params), ctx?.previous);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.adminJobs() }),
   });
 
   const rejectMutation = useMutation({
     mutationFn: (jobId: string) => api.patch(`/admin/jobs/${jobId}/status`, { status: "REJECTED" }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.adminJobs() });
-      toast.info("Đã từ chối tin tuyển dụng");
+    onMutate: async (jobId) => {
+      await qc.cancelQueries({ queryKey: queryKeys.adminJobs(params) });
+      const previous = qc.getQueryData(queryKeys.adminJobs(params));
+      qc.setQueryData(queryKeys.adminJobs(params), (old: Record<string, unknown> | undefined) => ({
+        ...old,
+        jobs: (old?.jobs as AdminJob[] | undefined)?.map((j) =>
+          j.id === jobId ? { ...j, status: "REJECTED" } : j
+        ) ?? [],
+      }));
+      return { previous };
     },
-    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
+    onSuccess: () => toast.info("Đã từ chối tin tuyển dụng"),
+    onError: (_err, _vars, ctx) => {
+      qc.setQueryData(queryKeys.adminJobs(params), ctx?.previous);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.adminJobs() }),
   });
 
   const jobs: AdminJob[] = data?.jobs ?? [];
