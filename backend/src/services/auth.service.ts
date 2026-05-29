@@ -62,7 +62,7 @@ export const authService = {
       return u;
     });
 
-    await sendVerificationEmail(user.email, otp);
+    sendVerificationEmail(user.email, otp).catch(console.error);
     return { message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản." };
   },
 
@@ -202,7 +202,7 @@ export const authService = {
       data: { passwordResetOtp: hashOtp(otp), passwordResetExpiry: otpExpiry(15) },
     });
 
-    await sendPasswordResetEmail(email, otp);
+    sendPasswordResetEmail(email, otp).catch(console.error);
     return { message: "Nếu email tồn tại, bạn sẽ nhận được mã OTP." };
   },
 
@@ -238,7 +238,7 @@ export const authService = {
       data: { emailOtp: hashOtp(otp), emailOtpExpiry: otpExpiry(15) },
     });
 
-    await sendVerificationEmail(email, otp);
+    sendVerificationEmail(email, otp).catch(console.error);
     return { message: "Nếu email chưa xác thực, bạn sẽ nhận được mã mới." };
   },
 };
