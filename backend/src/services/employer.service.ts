@@ -131,6 +131,35 @@ export const employerService = {
     return updated;
   },
 
+  async getTemplates(userId: string) {
+    const employer = await prisma.employer.findUnique({ where: { userId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+    return prisma.jobTemplate.findMany({
+      where: { employerId: employer.id },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async createTemplate(userId: string, data: Record<string, unknown>) {
+    const employer = await prisma.employer.findUnique({ where: { userId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+    return prisma.jobTemplate.create({
+      data: {
+        ...data,
+        employerId: employer.id,
+      } as Parameters<typeof prisma.jobTemplate.create>[0]['data'],
+    });
+  },
+
+  async deleteTemplate(userId: string, templateId: string) {
+    const employer = await prisma.employer.findUnique({ where: { userId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+    const template = await prisma.jobTemplate.findUnique({ where: { id: templateId } });
+    if (!template) throw Object.assign(new Error('Không tìm thấy template'), { status: 404 });
+    if (template.employerId !== employer.id) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    await prisma.jobTemplate.delete({ where: { id: templateId } });
+  },
+
   async getPublicCompany(employerId: string) {
     const employer = await prisma.employer.findUnique({
       where: { id: employerId },

@@ -99,6 +99,27 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getTemplates(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await employerService.getTemplates(req.user!.userId);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async createTemplate(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await employerService.createTemplate(req.user!.userId, req.body);
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
+  async deleteTemplate(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await employerService.deleteTemplate(req.user!.userId, String(req.params.templateId));
+      res.json({ message: 'Đã xóa template' });
+    } catch (err) { next(err); }
+  },
+
   async getPublicList(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;

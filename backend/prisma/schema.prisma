@@ -109,9 +109,9 @@ model Education {
 }
 
 model Employer {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String        @id @default(cuid())
+  userId      String        @unique
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   companyName String
   logoUrl     String?
   website     String?
@@ -119,10 +119,32 @@ model Employer {
   companySize String?
   description String?
   location    String?
-  isVerified  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isVerified  Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   jobs        Job[]
+  templates   JobTemplate[]
+}
+
+model JobTemplate {
+  id             String   @id @default(cuid())
+  employerId     String
+  employer       Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  name           String
+  title          String
+  description    String
+  requirements   String
+  benefits       String?
+  industry       String
+  jobType        JobType  @default(FULL_TIME)
+  workMode       WorkMode @default(ON_SITE)
+  salaryMin      Int?
+  salaryMax      Int?
+  salaryCurrency String   @default("VND")
+  experience     String?
+  location       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
 model Job {

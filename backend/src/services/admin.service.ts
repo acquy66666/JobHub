@@ -78,7 +78,7 @@ export const adminService = {
           isVerified: true,
           createdAt: true,
           candidate: { select: { fullName: true, avatarUrl: true } },
-          employer: { select: { companyName: true, logoUrl: true } },
+          employer: { select: { companyName: true, logoUrl: true, isVerified: true } },
         },
       }),
       prisma.user.count({ where }),
@@ -87,20 +87,32 @@ export const adminService = {
     return { users, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 
-  async updateUser(userId: string, data: { isActive?: boolean; role?: Role }) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+  async updateUser(userId: string, data: { isActive?: boolean; role?: Role; employerVerified?: boolean }) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: { employer: true } });
     if (!user) throw Object.assign(new Error('Không tìm thấy người dùng'), { status: 404 });
-    return prisma.user.update({
-      where: { id: userId },
-      data,
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        isActive: true,
-        isVerified: true,
-        createdAt: true,
-      },
-    });
+
+    if (data.employerVerified !== undefined && user.employer) {
+      await prisma.employer.update({
+        where: { userId },
+        data: { isVerified: data.employerVerified },
+      });
+    }
+
+    const { employerVerified: _, ...userData } = data;
+    if (Object.keys(userData).length > 0) {
+      return prisma.user.update({
+        where: { id: userId },
+        data: userData,
+        select: {
+          id: true,
+          email: true,
+          role: true,
+          isActive: true,
+          isVerified: true,
+          createdAt: true,
+        },
+      });
+    }
+    return { id: user.id, email: user.email, role: user.role, isActive: user.isActive, isVerified: user.isVerified, createdAt: user.createdAt };
   },
 };

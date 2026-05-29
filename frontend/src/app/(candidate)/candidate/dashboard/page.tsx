@@ -22,13 +22,17 @@ export default function CandidateDashboard() {
     queryFn: () => api.get("/candidate/saved-jobs", { params: { page: 1, limit: 1 } }).then((r) => r.data),
   });
 
-  const completionFields = [
-    profile?.headline, profile?.summary, profile?.location,
-    (profile?.skills?.length ?? 0) > 0, profile?.cvUrl,
-    (profile?.experiences?.length ?? 0) > 0,
-    (profile?.educations?.length ?? 0) > 0,
-  ];
-  const completionPct = profile ? Math.round((completionFields.filter(Boolean).length / completionFields.length) * 100) : 0;
+  const completionItems = profile ? [
+    { label: "Họ và tên", done: !!profile.fullName, href: "/candidate/profile" },
+    { label: "Số điện thoại", done: !!profile.phone, href: "/candidate/profile" },
+    { label: "Tiêu đề nghề nghiệp", done: !!profile.headline, href: "/candidate/profile" },
+    { label: "Kỹ năng", done: (profile.skills?.length ?? 0) > 0, href: "/candidate/profile" },
+    { label: "CV", done: !!profile.cvUrl, href: "/candidate/cv" },
+    { label: "Kinh nghiệm làm việc", done: (profile.experiences?.length ?? 0) > 0, href: "/candidate/profile" },
+    { label: "Học vấn", done: (profile.educations?.length ?? 0) > 0, href: "/candidate/profile" },
+  ] : [];
+  const completionPct = completionItems.length > 0 ? Math.round(completionItems.filter(i => i.done).length / completionItems.length * 100) : 0;
+  const missingItems = completionItems.filter(i => !i.done);
 
   const stats = [
     { label: "Đơn ứng tuyển", value: appsData?.total ?? "—", icon: "📋", href: "/candidate/applications" },
@@ -67,13 +71,22 @@ export default function CandidateDashboard() {
               <h3 className="text-[15px] font-bold text-t0">Hoàn thiện hồ sơ</h3>
               <span className="text-[13px] font-semibold text-primary">{completionPct}%</span>
             </div>
-            <div className="h-2 bg-bg-3 rounded-full overflow-hidden">
+            <div className="h-2 bg-bg-3 rounded-full overflow-hidden mb-3">
               <div
                 className="h-full bg-brand-gradient rounded-full transition-all duration-700"
                 style={{ width: `${completionPct}%` }}
               />
             </div>
-            <p className="text-[12px] text-t2 mt-2">Hồ sơ hoàn thiện giúp tăng cơ hội được tuyển dụng.</p>
+            {missingItems.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <span className="text-[11px] text-t2">Còn thiếu:</span>
+                {missingItems.map((item) => (
+                  <Link key={item.label} href={item.href} className="text-[11px] px-2 py-0.5 rounded-lg bg-bg-3 border border-border-dark text-t1 hover:border-[rgba(124,58,237,.4)] hover:text-primary transition-colors">
+                    + {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </ScrollReveal>
       )}

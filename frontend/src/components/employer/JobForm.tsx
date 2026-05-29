@@ -4,7 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
+import { useToast } from "@/store/toastStore";
 import api from "@/lib/api";
 
 const jobSchema = z.object({
@@ -41,6 +44,23 @@ const INDUSTRIES = ["Công nghệ thông tin", "Tài chính - Ngân hàng", "Gi�
 const inputClass = "w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2.5 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] focus:shadow-[0_0_0_3px_rgba(124,58,237,.1)] transition-all";
 const labelClass = "block text-[12px] font-semibold text-t1 uppercase tracking-wide mb-1.5";
 
+interface JobTemplate {
+  id: string;
+  name: string;
+  title: string;
+  description: string;
+  requirements: string;
+  benefits?: string;
+  industry: string;
+  jobType: JobForm["jobType"];
+  workMode: JobForm["workMode"];
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  experience?: string;
+  location?: string;
+}
+
 interface Props {
   defaultValues?: Partial<JobForm>;
   jobId?: string;
@@ -52,8 +72,13 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [saveTemplateName, setSaveTemplateName] = useState("");
+  const [showSaveTemplate, setShowSaveTemplate] = useState(false);
+  const qc = useQueryClient();
+  const toast = useToast();
 
-  const { register, handleSubmit, watch, trigger, formState: { errors } } = useForm<JobForm>({
+  const { register, handleSubmit, watch, trigger, reset, formState: { errors } } = useForm<JobForm>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
       jobType: "FULL_TIME",
@@ -62,6 +87,69 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
       ...defaultValues,
     },
   });
+
+  const { data: templates = [] } = useQuery<JobTemplate[]>({
+    queryKey: queryKeys.employerTemplates(),
+    queryFn: () => api.get("/employer/templates").then((r) => r.data),
+    enabled: mode === "create",
+  });
+
+  const saveTemplateMutation = useMutation({
+    mutationFn: (name: string) => {
+      const values = watch();
+      return api.post("/employer/templates", {
+        name,
+        title: values.title,
+        description: values.description,
+        requirements: values.requirements,
+        benefits: values.benefits,
+        industry: values.industry,
+        jobType: values.jobType,
+        workMode: values.workMode,
+        salaryMin: values.salaryMin,
+        salaryMax: values.salaryMax,
+        salaryCurrency: values.salaryCurrency,
+        experience: values.experience,
+        location: values.location,
+      });
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employerTemplates() });
+      toast.success("Đã lưu template");
+      setSaveTemplateName("");
+      setShowSaveTemplate(false);
+    },
+    onError: () => toast.error("Lưu template thất bại"),
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/employer/templates/${id}`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employerTemplates() });
+      toast.info("Đã xóa template");
+    },
+    onError: () => toast.error("Xóa template thất bại"),
+  });
+
+  function applyTemplate(tpl: JobTemplate) {
+    reset({
+      title: tpl.title,
+      description: tpl.description,
+      requirements: tpl.requirements,
+      benefits: tpl.benefits ?? "",
+      industry: tpl.industry,
+      jobType: tpl.jobType,
+      workMode: tpl.workMode,
+      salaryMin: tpl.salaryMin,
+      salaryMax: tpl.salaryMax,
+      salaryCurrency: tpl.salaryCurrency ?? "VND",
+      experience: tpl.experience ?? "",
+      location: tpl.location ?? "",
+      expiresAt: "",
+    });
+    setShowTemplates(false);
+    toast.success(`Đã áp dụng mẫu "${tpl.name}"`);
+  }
 
   const watched = watch();
 
@@ -126,7 +214,45 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
       {/* Step 1 */}
       {step === 1 && (
         <ScrollReveal direction="up" className="card-dark p-6 rounded-2xl space-y-5">
-          <h2 className="text-[17px] font-bold text-t0">Thông tin cơ bản</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-[17px] font-bold text-t0">Thông tin cơ bản</h2>
+            {mode === "create" && (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowTemplates((v) => !v)}
+                  className="px-3 py-1.5 rounded-lg border border-[rgba(124,58,237,.3)] text-[12px] text-[#B09BF8] hover:bg-[rgba(124,58,237,.1)] transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  Dùng mẫu {templates.length > 0 && `(${templates.length})`}
+                </button>
+                {showTemplates && (
+                  <div className="absolute right-0 top-full mt-1 w-72 bg-bg-2 border border-border-dark rounded-xl shadow-[0_12px_40px_rgba(0,0,0,.5)] z-20 overflow-hidden">
+                    {templates.length === 0 ? (
+                      <p className="p-4 text-[12px] text-t2 text-center">Chưa có mẫu nào.</p>
+                    ) : (
+                      <div className="divide-y divide-border-dark max-h-64 overflow-y-auto">
+                        {templates.map((tpl) => (
+                          <div key={tpl.id} className="flex items-center justify-between px-4 py-3 hover:bg-white/[.03] transition-colors">
+                            <button type="button" onClick={() => applyTemplate(tpl)} className="text-[13px] text-t0 font-medium text-left flex-1 truncate hover:text-white">
+                              {tpl.name}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => deleteTemplateMutation.mutate(tpl.id)}
+                              className="ml-2 shrink-0 text-t2 hover:text-red-400 transition-colors"
+                            >
+                              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div><label className={labelClass}>Tiêu đề công việc *</label><input {...register("title")} placeholder="VD: Senior Frontend Developer" className={inputClass} />{errors.title && <p className="text-[12px] text-red-400 mt-1">{errors.title.message}</p>}</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -226,6 +352,41 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
             <p className="text-[13px] text-t1 whitespace-pre-wrap line-clamp-4">{watched.description}</p>
           </div>
           {error && <p className="text-[13px] text-red-400">{error}</p>}
+
+          {/* Save as template */}
+          {mode === "create" && (
+            <div className="border-t border-border-dark pt-4">
+              {showSaveTemplate ? (
+                <div className="flex gap-2">
+                  <input
+                    value={saveTemplateName}
+                    onChange={(e) => setSaveTemplateName(e.target.value)}
+                    placeholder="Tên mẫu (VD: Senior Dev Template)"
+                    className={`flex-1 bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] focus:shadow-[0_0_0_3px_rgba(124,58,237,.1)] transition-all`}
+                  />
+                  <button
+                    type="button"
+                    disabled={!saveTemplateName.trim() || saveTemplateMutation.isPending}
+                    onClick={() => saveTemplateMutation.mutate(saveTemplateName.trim())}
+                    className="px-4 py-2 rounded-xl bg-[rgba(124,58,237,.15)] border border-[rgba(124,58,237,.3)] text-[12px] text-[#B09BF8] hover:bg-[rgba(124,58,237,.25)] transition-colors disabled:opacity-50"
+                  >
+                    Lưu
+                  </button>
+                  <button type="button" onClick={() => setShowSaveTemplate(false)} className="px-3 py-2 rounded-xl border border-border-dark text-[12px] text-t2 hover:text-t0 transition-colors">Hủy</button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSaveTemplate(true)}
+                  className="text-[12px] text-t2 hover:text-[#B09BF8] transition-colors flex items-center gap-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" /></svg>
+                  Lưu làm mẫu để dùng lại sau
+                </button>
+              )}
+            </div>
+          )}
+
           <div className="flex justify-between">
             <button type="button" onClick={() => setStep(2)} className="px-6 py-2.5 rounded-xl border border-border-dark text-[14px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">← Sửa lại</button>
             <button type="submit" disabled={loading} className="btn-primary px-8 py-2.5 rounded-xl text-[14px] font-bold disabled:opacity-60">

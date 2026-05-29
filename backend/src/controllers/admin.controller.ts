@@ -47,6 +47,7 @@ export const adminController = {
       const result = await adminService.updateUser(String(req.params.userId), {
         isActive: data.isActive,
         role: data.role as Role | undefined,
+        employerVerified: data.employerVerified,
       });
       res.json(result);
     } catch (err) { next(err); }

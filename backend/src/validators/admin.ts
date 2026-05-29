@@ -3,7 +3,8 @@ import { z } from 'zod';
 export const updateUserSchema = z.object({
   isActive: z.boolean().optional(),
   role: z.enum(['CANDIDATE', 'EMPLOYER', 'ADMIN']).optional(),
-}).refine(d => d.isActive !== undefined || d.role !== undefined, {
+  employerVerified: z.boolean().optional(),
+}).refine(d => d.isActive !== undefined || d.role !== undefined || d.employerVerified !== undefined, {
   message: 'Cần ít nhất một trường để cập nhật',
 });
 

@@ -16,7 +16,7 @@ interface AdminUser {
   isVerified: boolean;
   createdAt: string;
   candidate: { fullName: string; avatarUrl: string | null } | null;
-  employer: { companyName: string; logoUrl: string | null } | null;
+  employer: { companyName: string; logoUrl: string | null; isVerified: boolean } | null;
 }
 
 const ROLE_TABS = [
@@ -60,6 +60,17 @@ export default function AdminUsersPage() {
       qc.invalidateQueries({ queryKey: queryKeys.adminUsers() });
       if (isActive) toast.success("Đã mở khóa tài khoản");
       else toast.info("Đã ban tài khoản");
+    },
+    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
+  });
+
+  const verifyMutation = useMutation({
+    mutationFn: ({ userId, employerVerified }: { userId: string; employerVerified: boolean }) =>
+      api.patch(`/admin/users/${userId}`, { employerVerified }),
+    onSuccess: (_data, { employerVerified }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminUsers() });
+      if (employerVerified) toast.success("Đã xác thực công ty");
+      else toast.info("Đã bỏ xác thực công ty");
     },
     onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
   });
@@ -150,7 +161,7 @@ export default function AdminUsersPage() {
           ) : (
             <div className="divide-y divide-border-dark">
               {/* Header */}
-              <div className="grid grid-cols-[2fr_120px_100px_100px_120px] gap-4 px-5 py-3 text-[11px] font-semibold text-t2 uppercase tracking-wider">
+              <div className="grid grid-cols-[2fr_120px_100px_100px_180px] gap-4 px-5 py-3 text-[11px] font-semibold text-t2 uppercase tracking-wider">
                 <span>Người dùng</span>
                 <span>Vai trò</span>
                 <span>Xác thực</span>
@@ -158,7 +169,7 @@ export default function AdminUsersPage() {
                 <span>Thao tác</span>
               </div>
               {users.map((user) => (
-                <div key={user.id} className="grid grid-cols-[2fr_120px_100px_100px_120px] gap-4 px-5 py-4 items-center hover:bg-white/[.02] transition-colors">
+                <div key={user.id} className="grid grid-cols-[2fr_120px_100px_100px_180px] gap-4 px-5 py-4 items-center hover:bg-white/[.02] transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     {getAvatar(user)}
                     <div className="min-w-0">
@@ -185,7 +196,20 @@ export default function AdminUsersPage() {
                       <span className="text-[11px] text-red-400">Đã bị ban</span>
                     )}
                   </div>
-                  <div>
+                  <div className="flex items-center gap-2">
+                    {user.role === "EMPLOYER" && user.employer && (
+                      <button
+                        onClick={() => verifyMutation.mutate({ userId: user.id, employerVerified: !user.employer!.isVerified })}
+                        disabled={verifyMutation.isPending}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors disabled:opacity-50 ${
+                          user.employer.isVerified
+                            ? "bg-[rgba(245,158,11,.12)] text-yellow-400 border-yellow-500/20 hover:bg-[rgba(245,158,11,.2)]"
+                            : "bg-[rgba(34,197,94,.12)] text-green-400 border-green-500/20 hover:bg-[rgba(34,197,94,.2)]"
+                        }`}
+                      >
+                        {user.employer.isVerified ? "Bỏ XN" : "Xác nhận"}
+                      </button>
+                    )}
                     <button
                       onClick={() => toggleMutation.mutate({ userId: user.id, isActive: !user.isActive })}
                       disabled={toggleMutation.isPending}
