@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-05-30
+Last Updated: 2026-05-29
 Current Stage: Stage 5 → Stage 6
-Status: Stage 5 Nearly Done (TC4/TC6/TC7 verify) | Stage 6 Planned
+Status: Stage 5 Nearly Done (TC4/TC6/TC7 verify) | Stage 6 Nhóm 1 Done
 
 ---
 
