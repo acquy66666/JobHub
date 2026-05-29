@@ -10,7 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Stage 5 done:** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động. BUG-1 → BUG-8 đã fix. TC1 ✅, TC2a ✅, TC2b ✅, TC2c ✅, TC3 ✅, TC5 ✅. Toast system (Zustand + Framer Motion) đã build và wire toàn bộ 6 pages. queryKeys.ts prefix-match fix. Admin/jobs optimistic update.
 **Stage 5 pending:** Verify TC4 (email), TC6 (admin approve job), TC7 (mobile 375px) trên deployed site.
-**Stage 6 planned:** Feature Enhancement — 4 nhóm tăng dần complexity. Nhóm 1 Quick Wins: Employer Verification Badge, Profile Completeness Meter, Job Analytics Columns, Job Post Templates. Chi tiết trong PROJECT_PLAN.md Stage 6.
+**Stage 6 Nhóm 1 done:** Job Analytics Columns ✅, Employer Verification Badge ✅, Profile Completeness Meter (enhanced) ✅, Job Post Templates ✅. Commit `c1fd287`.
+**Stage 6 pending:** Nhóm 2 Medium Complexity — Job Match Score, Candidate Shortlist & Tags, Platform Analytics Charts v2, v.v.
 
 **Deployed URLs:**
 - Frontend: `https://job-hub-two.vercel.app`
