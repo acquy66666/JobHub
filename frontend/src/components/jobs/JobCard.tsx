@@ -4,6 +4,7 @@ import { useAuthStore } from "@/store/authStore";
 import { formatSalary, formatJobType, formatWorkMode, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
 import { useState } from "react";
+import { useToast } from "@/store/toastStore";
 
 interface Job {
   id: string;
@@ -37,6 +38,7 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave }: Props) {
   const [saved, setSaved] = useState(isSaved);
   const [loading, setLoading] = useState(false);
   const initial = job.employer.companyName?.[0]?.toUpperCase() ?? "?";
+  const toast = useToast();
 
   async function handleSave(e: React.MouseEvent) {
     e.preventDefault();
@@ -48,11 +50,15 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave }: Props) {
         await api.delete(`/candidate/saved-jobs/${job.id}`);
         setSaved(false);
         onUnsave?.(job.id);
+        toast.info("Đã bỏ lưu việc làm");
       } else {
         await api.post("/candidate/saved-jobs", { jobId: job.id });
         setSaved(true);
+        toast.success("Đã lưu việc làm");
       }
-    } catch {}
+    } catch {
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
+    }
     setLoading(false);
   }
 

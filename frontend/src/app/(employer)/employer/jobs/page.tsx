@@ -7,6 +7,7 @@ import { Pagination } from "@/components/common/Pagination";
 import { formatJobStatus, formatJobType, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
 import Link from "next/link";
+import { useToast } from "@/store/toastStore";
 
 interface Job {
   id: string;
@@ -23,6 +24,7 @@ export default function EmployerJobsPage() {
   const [page, setPage] = useState(1);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const qc = useQueryClient();
+  const toast = useToast();
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.employerJobs(page),
@@ -34,7 +36,11 @@ export default function EmployerJobsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => api.delete(`/employer/jobs/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.employerJobs(page) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employerJobs(page) });
+      toast.info("Đã xóa tin tuyển dụng");
+    },
+    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
   });
 
   const toggleMutation = useMutation({
@@ -53,6 +59,11 @@ export default function EmployerJobsPage() {
     },
     onError: (_err, _vars, ctx) => {
       qc.setQueryData(queryKeys.employerJobs(page), ctx?.previous);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
+    },
+    onSuccess: (_data, { action }) => {
+      if (action === "pause") toast.info("Đã tạm dừng tin tuyển dụng");
+      else toast.success("Đã khôi phục tin tuyển dụng");
     },
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.employerJobs(page) }),
   });

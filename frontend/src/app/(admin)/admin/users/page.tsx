@@ -6,6 +6,7 @@ import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { Pagination } from "@/components/common/Pagination";
 import { timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
+import { useToast } from "@/store/toastStore";
 
 interface AdminUser {
   id: string;
@@ -43,6 +44,7 @@ export default function AdminUsersPage() {
   const [keyword, setKeyword] = useState("");
   const [search, setSearch] = useState("");
   const qc = useQueryClient();
+  const toast = useToast();
 
   const params = { page, limit: 15, ...(role ? { role } : {}), ...(search ? { keyword: search } : {}) };
 
@@ -54,7 +56,12 @@ export default function AdminUsersPage() {
   const toggleMutation = useMutation({
     mutationFn: ({ userId, isActive }: { userId: string; isActive: boolean }) =>
       api.patch(`/admin/users/${userId}`, { isActive }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.adminUsers() }),
+    onSuccess: (_data, { isActive }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.adminUsers() });
+      if (isActive) toast.success("Đã mở khóa tài khoản");
+      else toast.info("Đã ban tài khoản");
+    },
+    onError: () => toast.error("Có lỗi xảy ra, vui lòng thử lại"),
   });
 
   const users: AdminUser[] = data?.users ?? [];

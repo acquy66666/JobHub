@@ -2,6 +2,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import api from "@/lib/api";
+import { useToast } from "@/store/toastStore";
 
 interface Props {
   jobId: string;
@@ -19,6 +20,7 @@ export function ApplyModal({ jobId, jobTitle, savedCvUrl, savedCvFileName, isOpe
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const toast = useToast();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,6 +46,7 @@ export function ApplyModal({ jobId, jobTitle, savedCvUrl, savedCvFileName, isOpe
 
       await api.post("/candidate/applications", { jobId, cvUrl, coverLetter: coverLetter || undefined });
       setSuccess(true);
+      toast.success("Ứng tuyển thành công!");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(msg ?? "Đã xảy ra lỗi. Vui lòng thử lại.");

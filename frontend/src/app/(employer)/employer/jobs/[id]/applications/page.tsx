@@ -8,6 +8,7 @@ import { formatApplicationStatus, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
 import { useState } from "react";
 import Link from "next/link";
+import { useToast } from "@/store/toastStore";
 
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Chờ xét duyệt" },
@@ -43,6 +44,7 @@ interface Application {
 export default function JobApplicationsPage() {
   const { id: jobId } = useParams<{ id: string }>();
   const qc = useQueryClient();
+  const toast = useToast();
   const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
@@ -75,8 +77,10 @@ export default function JobApplicationsPage() {
       }));
       return { previous };
     },
+    onSuccess: () => toast.success("Đã cập nhật trạng thái đơn"),
     onError: (_err, _vars, ctx) => {
       qc.setQueryData(queryKeys.employerJobApplications(jobId, page), ctx?.previous);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: queryKeys.employerJobApplications(jobId, page) });
