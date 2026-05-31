@@ -1,27 +1,31 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { env } from "../config/env";
 
-function createTransport() {
-  if (!env.GMAIL_USER || !env.GMAIL_APP_PASSWORD) return null;
-  return nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: env.GMAIL_USER, pass: env.GMAIL_APP_PASSWORD },
-    connectionTimeout: 5000,
-    greetingTimeout: 5000,
-    socketTimeout: 10000,
-  });
+function getClient(): Resend | null {
+  if (!env.RESEND_API_KEY) {
+    console.warn("[Email] RESEND_API_KEY not set — emails will be skipped");
+    return null;
+  }
+  return new Resend(env.RESEND_API_KEY);
 }
 
-async function sendMail(to: string, subject: string, html: string) {
-  const transport = createTransport();
-  if (!transport) {
+const FROM = "JobHub <onboarding@resend.dev>";
+
+async function sendMail(to: string, subject: string, html: string): Promise<void> {
+  const client = getClient();
+  if (!client) {
     console.log(`[Email - DEV fallback] To: ${to} | Subject: ${subject}`);
     return;
   }
-  await transport.sendMail({ from: `"JobHub" <${env.GMAIL_USER}>`, to, subject, html });
+  const { error } = await client.emails.send({ from: FROM, to, subject, html });
+  if (error) {
+    console.error(`[Email] Failed to send to ${to}:`, error);
+    throw new Error(error.message);
+  }
+  console.log(`[Email] Sent "${subject}" → ${to}`);
 }
 
-export async function sendVerificationEmail(to: string, otp: string) {
+export async function sendVerificationEmail(to: string, otp: string): Promise<void> {
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#7C3AED">Xác thực email JobHub</h2>
@@ -33,7 +37,7 @@ export async function sendVerificationEmail(to: string, otp: string) {
   if (env.NODE_ENV === "development") console.log(`[Email OTP] ${to} → ${otp}`);
 }
 
-export async function sendPasswordResetEmail(to: string, otp: string) {
+export async function sendPasswordResetEmail(to: string, otp: string): Promise<void> {
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#7C3AED">Đặt lại mật khẩu JobHub</h2>
@@ -45,7 +49,7 @@ export async function sendPasswordResetEmail(to: string, otp: string) {
   if (env.NODE_ENV === "development") console.log(`[Password Reset OTP] ${to} → ${otp}`);
 }
 
-export async function sendApplicationEmail(to: string, jobTitle: string, candidateName: string) {
+export async function sendApplicationEmail(to: string, jobTitle: string, candidateName: string): Promise<void> {
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
       <h2 style="color:#7C3AED">Đơn ứng tuyển mới — JobHub</h2>
@@ -57,13 +61,13 @@ export async function sendApplicationEmail(to: string, jobTitle: string, candida
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  PENDING: 'Chờ xét duyệt',
-  REVIEWING: 'Đang xem xét',
-  ACCEPTED: 'Đã chấp nhận',
-  REJECTED: 'Bị từ chối',
+  PENDING: "Chờ xét duyệt",
+  REVIEWING: "Đang xem xét",
+  ACCEPTED: "Đã chấp nhận",
+  REJECTED: "Bị từ chối",
 };
 
-export async function sendApplicationStatusEmail(to: string, jobTitle: string, status: string) {
+export async function sendApplicationStatusEmail(to: string, jobTitle: string, status: string): Promise<void> {
   const label = STATUS_LABELS[status] ?? status;
   const html = `
     <div style="font-family:sans-serif;max-width:480px;margin:0 auto">

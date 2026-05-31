@@ -25,6 +25,7 @@ router.patch('/jobs/:jobId/status', employerController.toggleJobStatus);
 
 router.get('/jobs/:jobId/applications', employerController.getJobApplications);
 router.patch('/jobs/:jobId/applications/:appId', employerController.updateApplicationStatus);
+router.patch('/jobs/:jobId/applications/:appId/tag', employerController.updateApplicationTag);
 
 router.get('/templates', employerController.getTemplates);
 router.post('/templates', employerController.createTemplate);

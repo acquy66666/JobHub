@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { Pagination } from "@/components/common/Pagination";
-import { formatApplicationStatus, timeAgo } from "@/lib/formatters";
+import { formatApplicationStatus, formatApplicationTag, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
 import { useState } from "react";
 import Link from "next/link";
@@ -17,17 +17,26 @@ const STATUS_OPTIONS = [
   { value: "REJECTED", label: "Từ chối" },
 ];
 
+const TAG_OPTIONS = [
+  { value: null,           label: "Không có tag" },
+  { value: "SHORTLISTED",  label: "⭐ Tiềm năng cao" },
+  { value: "POTENTIAL",    label: "💡 Tiềm năng" },
+  { value: "ON_HOLD",      label: "⏸ Tạm giữ" },
+];
+
 const FILTER_TABS = [
   { value: "", label: "Tất cả" },
   { value: "PENDING", label: "Chờ duyệt" },
   { value: "REVIEWING", label: "Đang xem" },
   { value: "ACCEPTED", label: "Chấp nhận" },
   { value: "REJECTED", label: "Từ chối" },
+  { value: "__SHORTLISTED__", label: "⭐ Shortlist" },
 ];
 
 interface Application {
   id: string;
   status: string;
+  tag?: string | null;
   appliedAt: string;
   cvUrl: string;
   coverLetter?: string;
@@ -48,6 +57,7 @@ export default function JobApplicationsPage() {
   const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [taggingId, setTaggingId] = useState<string | null>(null);
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
   const [statusSelects, setStatusSelects] = useState<Record<string, string>>({});
 
@@ -88,8 +98,37 @@ export default function JobApplicationsPage() {
     },
   });
 
+  const tagMutation = useMutation({
+    mutationFn: ({ appId, tag }: { appId: string; tag: string | null }) =>
+      api.patch(`/employer/jobs/${jobId}/applications/${appId}/tag`, { tag }),
+    onMutate: async ({ appId, tag }) => {
+      await qc.cancelQueries({ queryKey: queryKeys.employerJobApplications(jobId, page) });
+      const previous = qc.getQueryData(queryKeys.employerJobApplications(jobId, page));
+      qc.setQueryData(queryKeys.employerJobApplications(jobId, page), (old: Record<string, unknown> | undefined) => ({
+        ...old,
+        applications: (old?.applications as Application[] | undefined)?.map((a) =>
+          a.id === appId ? { ...a, tag } : a
+        ) ?? [],
+      }));
+      return { previous };
+    },
+    onSuccess: () => toast.success("Đã cập nhật tag"),
+    onError: (_err, _vars, ctx) => {
+      qc.setQueryData(queryKeys.employerJobApplications(jobId, page), ctx?.previous);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại");
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employerJobApplications(jobId, page) });
+      setTaggingId(null);
+    },
+  });
+
   const allApplications: Application[] = data?.applications ?? [];
-  const filtered = filterStatus ? allApplications.filter((a) => a.status === filterStatus) : allApplications;
+  const filtered = (() => {
+    if (filterStatus === "__SHORTLISTED__") return allApplications.filter((a) => a.tag === "SHORTLISTED");
+    if (filterStatus) return allApplications.filter((a) => a.status === filterStatus);
+    return allApplications;
+  })();
   const totalPages = data?.totalPages ?? 1;
 
   return (
@@ -130,6 +169,7 @@ export default function JobApplicationsPage() {
         <div className="space-y-4">
           {filtered.map((app, i) => {
             const { label, color } = formatApplicationStatus(app.status);
+            const tagInfo = formatApplicationTag(app.tag);
             const initial = app.candidate.fullName?.[0]?.toUpperCase() ?? "?";
             const currentStatus = statusSelects[app.id] ?? app.status;
             const hasChange = currentStatus !== app.status;
@@ -148,9 +188,14 @@ export default function JobApplicationsPage() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-[14px] font-bold text-t0">{app.candidate.fullName}</p>
                         <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border ${color}`}>{label}</span>
+                        {tagInfo && (
+                          <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border ${tagInfo.color}`}>
+                            {tagInfo.icon} {tagInfo.label}
+                          </span>
+                        )}
                       </div>
                       {app.candidate.headline && <p className="text-[12px] text-t1">{app.candidate.headline}</p>}
                       <p className="text-[11px] text-t2">{app.candidate.user.email} · Nộp đơn {timeAgo(app.appliedAt)}</p>
@@ -168,8 +213,9 @@ export default function JobApplicationsPage() {
                     </div>
                   )}
 
-                  {/* Status change */}
+                  {/* Status + Tag controls */}
                   <div className="flex items-start gap-3 pt-2 border-t border-border-dark/50">
+                    {/* Status update */}
                     <div className="flex-1 space-y-2">
                       <select
                         value={currentStatus}
@@ -196,6 +242,25 @@ export default function JobApplicationsPage() {
                     >
                       {updatingId === app.id ? "Đang lưu..." : "Cập nhật"}
                     </button>
+
+                    {/* Tag selector */}
+                    <div className="shrink-0">
+                      <select
+                        value={app.tag ?? ""}
+                        onChange={(e) => {
+                          const newTag = e.target.value || null;
+                          setTaggingId(app.id);
+                          tagMutation.mutate({ appId: app.id, tag: newTag });
+                        }}
+                        disabled={taggingId === app.id}
+                        className="bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[12px] text-t1 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all disabled:opacity-50 cursor-pointer"
+                        title="Tag ứng viên"
+                      >
+                        {TAG_OPTIONS.map((opt) => (
+                          <option key={String(opt.value)} value={opt.value ?? ""}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                 </div>
               </ScrollReveal>

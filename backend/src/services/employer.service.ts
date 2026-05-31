@@ -1,7 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationStatusEmail } from '../utils/email';
-import { JobStatus, ApplicationStatus } from '../generated/prisma/client';
+import { JobStatus, ApplicationStatus, ApplicationTag } from '../generated/prisma/client';
 
 export const employerService = {
   async getProfile(userId: string) {
@@ -129,6 +129,15 @@ export const employerService = {
     });
     sendApplicationStatusEmail(application.candidate.user.email, job.title, status).catch(console.error);
     return updated;
+  },
+
+  async updateApplicationTag(userId: string, jobId: string, appId: string, tag: ApplicationTag | null) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    const application = await prisma.application.findFirst({ where: { id: appId, jobId } });
+    if (!application) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
+    return prisma.application.update({ where: { id: appId }, data: { tag } });
   },
 
   async getTemplates(userId: string) {

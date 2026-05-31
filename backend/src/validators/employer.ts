@@ -33,3 +33,7 @@ export const updateApplicationStatusSchema = z.object({
   status: z.enum(['PENDING', 'REVIEWING', 'ACCEPTED', 'REJECTED']),
   note: z.string().optional(),
 });
+
+export const updateApplicationTagSchema = z.object({
+  tag: z.enum(['SHORTLISTED', 'ON_HOLD', 'POTENTIAL']).nullable(),
+});

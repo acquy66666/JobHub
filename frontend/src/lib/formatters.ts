@@ -55,6 +55,17 @@ export function formatJobStatus(status: string): { label: string; color: string 
   return JOB_STATUS[status] ?? { label: status, color: 'bg-bg-3 text-t1 border-border-dark' };
 }
 
+const APPLICATION_TAG: Record<string, { label: string; color: string; icon: string }> = {
+  SHORTLISTED: { label: 'Tiềm năng cao', color: 'bg-[rgba(34,197,94,.12)] text-green-400 border-green-500/30', icon: '⭐' },
+  ON_HOLD:     { label: 'Tạm giữ',       color: 'bg-[rgba(245,158,11,.12)] text-yellow-400 border-yellow-500/30', icon: '⏸' },
+  POTENTIAL:   { label: 'Tiềm năng',     color: 'bg-[rgba(59,130,246,.12)] text-blue-400 border-blue-500/30', icon: '💡' },
+};
+
+export function formatApplicationTag(tag?: string | null): { label: string; color: string; icon: string } | null {
+  if (!tag) return null;
+  return APPLICATION_TAG[tag] ?? null;
+}
+
 export function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);

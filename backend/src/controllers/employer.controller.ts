@@ -6,6 +6,7 @@ import {
   createJobSchema,
   updateJobSchema,
   updateApplicationStatusSchema,
+  updateApplicationTagSchema,
 } from '../validators/employer';
 
 export const employerController = {
@@ -94,6 +95,19 @@ export const employerController = {
         String(req.params.appId),
         status as import('../generated/prisma/client').ApplicationStatus,
         note,
+      );
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async updateApplicationTag(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { tag } = updateApplicationTagSchema.parse(req.body);
+      const result = await employerService.updateApplicationTag(
+        req.user!.userId,
+        String(req.params.jobId),
+        String(req.params.appId),
+        tag as import('../generated/prisma/client').ApplicationTag | null,
       );
       res.json(result);
     } catch (err) { next(err); }
