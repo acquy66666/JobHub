@@ -9,9 +9,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Current stage:** Stage 5 — Polish & Deploy (in progress). Stages 0–4 complete (2026-05-25). Full-stack running: Next.js 14 App Router (`frontend/src/`), Express.js + Prisma (`backend/src/`), PostgreSQL via Docker Compose. HTML prototypes archived in `prototype/`.
 
 **Stage 5 done:** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động. BUG-1 → BUG-9 đã fix. TC1 ✅, TC2a ✅, TC2b ✅, TC2c ✅, TC3 ✅, TC5 ✅, TC6 ✅. Toast system (Zustand + Framer Motion) đã build và wire toàn bộ 6 pages. queryKeys.ts prefix-match fix. Admin/jobs optimistic update. Email fire-and-forget + auto-seed on startup.
-**Stage 5 pending:** Verify TC4 (email) — cần test sau khi Render redeploy `bffd5fd`. TC7 (mobile 375px) hoãn theo yêu cầu.
+**Stage 5 pending:** Verify TC4 (email) — đã migrate từ Gmail SMTP → Resend HTTP API (commit `3dc2769`). Cần set `RESEND_API_KEY` trong Render dashboard rồi test `POST /api/health/test-email`. TC7 (mobile 375px) hoãn theo yêu cầu.
 **Stage 6 Nhóm 1 done:** Job Analytics Columns ✅, Employer Verification Badge ✅, Profile Completeness Meter (enhanced) ✅, Job Post Templates ✅. Commit `c1fd287`.
-**Stage 6 pending:** Nhóm 2 Medium Complexity — Job Match Score, Candidate Shortlist & Tags, Platform Analytics Charts v2, v.v.
+**Stage 6 Nhóm 2 done (partial):** Candidate Shortlist & Tags ✅ — `ApplicationTag` enum (SHORTLISTED/ON_HOLD/POTENTIAL), `db push` Supabase, endpoint `PATCH /employer/jobs/:jobId/applications/:appId/tag`, tag UI + optimistic update + Shortlist filter tab. Commit `3dc2769`.
+**Stage 6 pending:** Job Match Score, Platform Analytics Charts v2, Candidate Database Search.
 
 **Deployed URLs:**
 - Frontend: `https://job-hub-two.vercel.app`
@@ -41,7 +42,7 @@ backend/src/
   controllers/     # auth, job, candidate, employer, admin
   services/        # auth, job, candidate, employer, admin
   middlewares/     # authGuard, roleGuard, upload (multer), errorHandler
-  utils/           # jwt, email (Nodemailer)
+  utils/           # jwt, email (Resend HTTP API)
   lib/             # prisma.ts, cloudinary.ts
   config/          # env.ts (Zod-validated)
 backend/prisma/
