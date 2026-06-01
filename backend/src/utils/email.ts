@@ -1,27 +1,29 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { env } from "../config/env";
 
-function getClient(): Resend | null {
-  if (!env.RESEND_API_KEY) {
-    console.warn("[Email] RESEND_API_KEY not set — emails will be skipped");
-    return null;
-  }
-  return new Resend(env.RESEND_API_KEY);
+function createTransporter() {
+  if (!env.BREVO_SMTP_KEY || !env.BREVO_SMTP_USER) return null;
+  return nodemailer.createTransport({
+    host: "smtp-relay.brevo.com",
+    port: 587,
+    secure: false,
+    auth: { user: env.BREVO_SMTP_USER, pass: env.BREVO_SMTP_KEY },
+  });
 }
 
-const FROM = "JobHub <onboarding@resend.dev>";
-
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  const client = getClient();
-  if (!client) {
+  const transporter = createTransporter();
+  if (!transporter) {
+    console.warn("[Email] BREVO credentials not set — emails will be skipped");
     console.log(`[Email - DEV fallback] To: ${to} | Subject: ${subject}`);
     return;
   }
-  const { error } = await client.emails.send({ from: FROM, to, subject, html });
-  if (error) {
-    console.error(`[Email] Failed to send to ${to}:`, error);
-    throw new Error(error.message);
-  }
+  await transporter.sendMail({
+    from: `JobHub <${env.BREVO_SMTP_USER}>`,
+    to,
+    subject,
+    html,
+  });
   console.log(`[Email] Sent "${subject}" → ${to}`);
 }
 
