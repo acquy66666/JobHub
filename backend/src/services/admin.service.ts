@@ -3,7 +3,7 @@ import { JobStatus, Role, Prisma } from '../generated/prisma/client';
 
 export const adminService = {
   async getDashboardStats() {
-    const [totalUsers, totalJobs, totalApplications, pendingJobs, monthlyRaw] = await Promise.all([
+    const [totalUsers, totalJobs, totalApplications, pendingJobs, monthlyRaw, weeklyUsersRaw, weeklyJobsRaw, weeklyAppsRaw] = await Promise.all([
       prisma.user.count(),
       prisma.job.count(),
       prisma.application.count(),
@@ -15,6 +15,24 @@ export const adminService = {
         GROUP BY 1
         ORDER BY 1
       `,
+      prisma.$queryRaw<{ week: Date; count: bigint }[]>`
+        SELECT DATE_TRUNC('week', "createdAt") as week, COUNT(*) as count
+        FROM "User"
+        WHERE "createdAt" >= NOW() - INTERVAL '8 weeks'
+        GROUP BY 1 ORDER BY 1
+      `,
+      prisma.$queryRaw<{ week: Date; count: bigint }[]>`
+        SELECT DATE_TRUNC('week', "createdAt") as week, COUNT(*) as count
+        FROM "Job"
+        WHERE "createdAt" >= NOW() - INTERVAL '8 weeks'
+        GROUP BY 1 ORDER BY 1
+      `,
+      prisma.$queryRaw<{ week: Date; count: bigint }[]>`
+        SELECT DATE_TRUNC('week', "appliedAt") as week, COUNT(*) as count
+        FROM "Application"
+        WHERE "appliedAt" >= NOW() - INTERVAL '8 weeks'
+        GROUP BY 1 ORDER BY 1
+      `,
     ]);
 
     const monthlyData = monthlyRaw.map(r => ({
@@ -22,7 +40,19 @@ export const adminService = {
       count: Number(r.count),
     }));
 
-    return { totalUsers, totalJobs, totalApplications, pendingJobs, monthlyData };
+    const usersMap = new Map(weeklyUsersRaw.map(r => [r.week.toISOString().slice(0, 10), Number(r.count)]));
+    const jobsMap = new Map(weeklyJobsRaw.map(r => [r.week.toISOString().slice(0, 10), Number(r.count)]));
+    const appsMap = new Map(weeklyAppsRaw.map(r => [r.week.toISOString().slice(0, 10), Number(r.count)]));
+
+    const allWeeks = new Set<string>([...usersMap.keys(), ...jobsMap.keys(), ...appsMap.keys()]);
+    const weeklyData = Array.from(allWeeks).sort().map(week => ({
+      week,
+      users: usersMap.get(week) ?? 0,
+      jobs: jobsMap.get(week) ?? 0,
+      applications: appsMap.get(week) ?? 0,
+    }));
+
+    return { totalUsers, totalJobs, totalApplications, pendingJobs, monthlyData, weeklyData };
   },
 
   async getJobs(page: number, limit: number, status?: string) {

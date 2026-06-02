@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  LineChart, Line,
 } from "recharts";
 import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
@@ -14,6 +15,7 @@ interface AdminStats {
   totalApplications: number;
   pendingJobs: number;
   monthlyData: { month: string; count: number }[];
+  weeklyData: { week: string; users: number; jobs: number; applications: number }[];
 }
 
 const MONTH_LABELS: Record<string, string> = {
@@ -39,6 +41,16 @@ export default function AdminDashboard() {
     name: MONTH_LABELS[d.month.slice(5, 7)] ?? d.month.slice(5, 7),
     "Tin đăng": d.count,
   }));
+
+  const weeklyChartData = (data?.weeklyData ?? []).map((d) => {
+    const [, m, day] = d.week.split("-");
+    return {
+      name: `${day}/${m}`,
+      "Người dùng": d.users,
+      "Tin đăng": d.jobs,
+      "Đơn nộp": d.applications,
+    };
+  });
 
   return (
     <div className="p-8 max-w-5xl">
@@ -82,6 +94,40 @@ export default function AdminDashboard() {
                 />
                 <Bar dataKey="Tin đăng" fill="#7C3AED" radius={[6, 6, 0, 0]} />
               </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </ScrollReveal>
+
+      {/* Weekly trend LineChart */}
+      <ScrollReveal direction="up" delay={0.2}>
+        <div className="card-dark rounded-2xl p-6 mt-6">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-[15px] font-bold text-t0">Xu hướng 8 tuần gần nhất</h3>
+            <div className="flex items-center gap-4 text-[12px] text-t2">
+              <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full bg-[#B09BF8]" />Người dùng</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full bg-[#60A5FA]" />Tin đăng</span>
+              <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full bg-[#4ADE80]" />Đơn nộp</span>
+            </div>
+          </div>
+          {isLoading ? (
+            <div className="h-[240px] bg-bg-3 rounded-xl animate-pulse" />
+          ) : weeklyChartData.length === 0 ? (
+            <div className="h-[240px] flex items-center justify-center text-t2 text-[13px]">Chưa có dữ liệu tuần</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <LineChart data={weeklyChartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#252538" />
+                <XAxis dataKey="name" tick={{ fill: "#9494B0", fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fill: "#9494B0", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{ background: "#13131E", border: "1px solid #252538", borderRadius: 10, color: "#F5F5FF", fontSize: 13 }}
+                  cursor={{ stroke: "rgba(124,58,237,.2)", strokeWidth: 1 }}
+                />
+                <Line type="monotone" dataKey="Người dùng" stroke="#B09BF8" strokeWidth={2} dot={{ r: 3, fill: "#B09BF8" }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="Tin đăng" stroke="#60A5FA" strokeWidth={2} dot={{ r: 3, fill: "#60A5FA" }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="Đơn nộp" stroke="#4ADE80" strokeWidth={2} dot={{ r: 3, fill: "#4ADE80" }} activeDot={{ r: 5 }} />
+              </LineChart>
             </ResponsiveContainer>
           )}
         </div>
