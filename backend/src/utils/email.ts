@@ -8,6 +8,9 @@ function createTransporter() {
     port: 587,
     secure: false,
     auth: { user: env.BREVO_SMTP_USER, pass: env.BREVO_SMTP_KEY },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 }
 
