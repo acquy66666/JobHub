@@ -9,6 +9,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useState } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
+import { computeMatchScore, scoreColor } from "@/lib/matchScore";
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -52,6 +53,10 @@ export default function JobDetailPage() {
   }
 
   const initial = job.employer.companyName?.[0]?.toUpperCase() ?? "?";
+  const candidateSkills: string[] = profile?.skills ?? [];
+  const matchResult = user?.role === "CANDIDATE" && job?.requirements
+    ? computeMatchScore(candidateSkills, job.requirements)
+    : null;
 
   return (
     <>
@@ -128,6 +133,54 @@ export default function JobDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-4 lg:sticky lg:top-20">
+            {/* Match score card */}
+            {matchResult && (
+              <ScrollReveal direction="right" delay={0.05}>
+                <div className="card-dark p-5 rounded-2xl">
+                  <p className="text-[12px] font-semibold text-t2 uppercase tracking-wider mb-3">Độ phù hợp với bạn</p>
+                  {candidateSkills.length === 0 ? (
+                    <div className="text-center py-2">
+                      <p className="text-[13px] text-t1 mb-2">Bạn chưa cập nhật kỹ năng</p>
+                      <Link href="/candidate/profile" className="text-[12px] text-primary hover:underline">
+                        → Cập nhật hồ sơ
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
+                      <div className={`inline-flex items-center gap-1.5 text-[22px] font-extrabold px-3 py-1.5 rounded-xl border mb-4 ${scoreColor(matchResult.score)}`}>
+                        {matchResult.score}%
+                        <span className="text-[13px] font-semibold opacity-80">phù hợp</span>
+                      </div>
+                      {matchResult.matched.length > 0 && (
+                        <div className="mb-3">
+                          <p className="text-[11px] text-t2 mb-1.5">Kỹ năng phù hợp</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {matchResult.matched.map(s => (
+                              <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-[rgba(34,197,94,.1)] text-[#4ADE80] border border-[rgba(34,197,94,.2)]">
+                                ✓ {s}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {matchResult.unmatched.length > 0 && (
+                        <div>
+                          <p className="text-[11px] text-t2 mb-1.5">Chưa có trong yêu cầu</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {matchResult.unmatched.map(s => (
+                              <span key={s} className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-bg-3 text-t2 border border-border-dark">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              </ScrollReveal>
+            )}
+
             <ScrollReveal direction="right" delay={0.1}>
               <div className="card-dark p-6 rounded-2xl space-y-4">
                 {user?.role === "CANDIDATE" ? (

@@ -8,11 +8,14 @@ import { JobCard } from "@/components/jobs/JobCard";
 import { JobCardSkeleton } from "@/components/jobs/JobCardSkeleton";
 import { Pagination } from "@/components/common/Pagination";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
+import { useAuthStore } from "@/store/authStore";
+import { computeMatchScore } from "@/lib/matchScore";
 import api from "@/lib/api";
 
 export function JobsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   const filters = {
     page: parseInt(searchParams.get("page") ?? "1"),
@@ -29,6 +32,14 @@ export function JobsContent() {
     queryKey: queryKeys.jobs(filters),
     queryFn: () => api.get("/jobs", { params: filters }).then((r) => r.data),
   });
+
+  const { data: profile } = useQuery({
+    queryKey: queryKeys.candidateProfile(),
+    queryFn: () => api.get("/candidate/profile").then((r) => r.data),
+    enabled: user?.role === "CANDIDATE",
+  });
+
+  const candidateSkills: string[] = profile?.skills ?? [];
 
   const jobs = data?.jobs ?? [];
   const totalPages = data?.totalPages ?? 1;
@@ -93,11 +104,16 @@ export function JobsContent() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {jobs.map((job: Parameters<typeof JobCard>[0]['job'], i: number) => (
-                  <ScrollReveal key={job.id} direction="up" delay={i * 0.05}>
-                    <JobCard job={job} />
-                  </ScrollReveal>
-                ))}
+                {jobs.map((job: Parameters<typeof JobCard>[0]['job'] & { requirements?: string }, i: number) => {
+                  const matchScore = user?.role === "CANDIDATE" && candidateSkills.length > 0 && job.requirements
+                    ? computeMatchScore(candidateSkills, job.requirements).score
+                    : undefined;
+                  return (
+                    <ScrollReveal key={job.id} direction="up" delay={i * 0.05}>
+                      <JobCard job={job} matchScore={matchScore} />
+                    </ScrollReveal>
+                  );
+                })}
               </div>
               <Pagination page={filters.page} totalPages={totalPages} onPageChange={handlePageChange} />
             </>

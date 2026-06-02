@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { formatSalary, formatJobType, formatWorkMode, timeAgo } from "@/lib/formatters";
+import { scoreColor } from "@/lib/matchScore";
 import api from "@/lib/api";
 import { useState } from "react";
 import { useToast } from "@/store/toastStore";
@@ -31,9 +32,10 @@ interface Props {
   delay?: number;
   isSaved?: boolean;
   onUnsave?: (jobId: string) => void;
+  matchScore?: number;
 }
 
-export function JobCard({ job, delay = 0, isSaved = false, onUnsave }: Props) {
+export function JobCard({ job, delay = 0, isSaved = false, onUnsave, matchScore }: Props) {
   const { user } = useAuthStore();
   const [saved, setSaved] = useState(isSaved);
   const [loading, setLoading] = useState(false);
@@ -114,7 +116,14 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave }: Props) {
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border-dark/50">
         <span className="text-[11px] text-t2">{job.industry}</span>
-        <span className="text-[11px] text-t2">{timeAgo(job.createdAt)}</span>
+        <div className="flex items-center gap-2">
+          {matchScore !== undefined && matchScore !== null && (
+            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border ${scoreColor(matchScore)}`}>
+              {matchScore}% phù hợp
+            </span>
+          )}
+          <span className="text-[11px] text-t2">{timeAgo(job.createdAt)}</span>
+        </div>
       </div>
     </Link>
   );
