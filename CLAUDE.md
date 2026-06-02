@@ -10,8 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Stage 5 done (100%):** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động. BUG-1 → BUG-9 đã fix. TC1 ✅, TC2a ✅, TC2b ✅, TC2c ✅, TC3 ✅, TC4 ✅, TC5 ✅, TC6 ✅. TC7 hoãn theo yêu cầu. Email: Brevo REST API (HTTPS port 443, không dùng SMTP). Env vars: `BREVO_API_KEY` + `BREVO_SENDER_EMAIL` trong Render.
 **Stage 6 Nhóm 1 done:** Job Analytics Columns ✅, Employer Verification Badge ✅, Profile Completeness Meter (enhanced) ✅, Job Post Templates ✅. Commit `c1fd287`.
-**Stage 6 Nhóm 2 done (partial):** Candidate Shortlist & Tags ✅ — `ApplicationTag` enum (SHORTLISTED/ON_HOLD/POTENTIAL), `db push` Supabase, endpoint `PATCH /employer/jobs/:jobId/applications/:appId/tag`, tag UI + optimistic update + Shortlist filter tab. Commit `3dc2769`.
-**Stage 6 pending:** Platform Analytics Charts v2, Job Match Score, Candidate Database Search.
+**Stage 6 Nhóm 2 done (100%):** Candidate Shortlist & Tags ✅, Platform Analytics Charts v2 ✅, Job Match Score ✅, Candidate Database Search ✅. Commits `3dc2769`–`81c9a24`.
+**Stage 6 pending (optional):** Content Moderation Queue, Bulk Export CSV — Nhóm 2 còn lại. Nhóm 3 (Email Job Alerts, Audit Logs, Fraud Detection) — high complexity, tùy thời gian.
 
 **Deployed URLs:**
 - Frontend: `https://job-hub-two.vercel.app`
