@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: "/candidate/cv", label: "Upload CV", icon: "📄" },
   { href: "/candidate/saved-jobs", label: "Việc đã lưu", icon: "🔖" },
   { href: "/candidate/applications", label: "Đơn ứng tuyển", icon: "📋" },
+  { href: "/candidate/job-alerts", label: "Thông báo việc làm", icon: "🔔" },
 ];
 
 export default function CandidateLayout({ children }: { children: React.ReactNode }) {

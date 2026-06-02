@@ -16,6 +16,7 @@ export const adminJobsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   limit: z.coerce.number().int().positive().max(50).default(10),
   status: z.string().optional(),
+  flagged: z.coerce.boolean().optional(),
 });
 
 export const adminUsersQuerySchema = z.object({
@@ -41,4 +42,15 @@ export const createReportSchema = z.object({
   targetId: z.string().min(1),
   reason: z.enum(['SPAM', 'MISLEADING', 'INAPPROPRIATE', 'FRAUD', 'OTHER']),
   description: z.string().max(500).optional(),
+});
+
+export const adminLogsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(50).default(20),
+  action: z.enum([
+    'JOB_APPROVED', 'JOB_REJECTED',
+    'USER_BANNED', 'USER_UNBANNED', 'USER_ROLE_CHANGED',
+    'EMPLOYER_VERIFIED', 'EMPLOYER_UNVERIFIED',
+    'REPORT_REVIEWED', 'REPORT_DISMISSED',
+  ]).optional(),
 });

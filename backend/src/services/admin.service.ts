@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { JobStatus, Role, ReportStatus, Prisma } from '../generated/prisma/client';
+import { JobStatus, Role, ReportStatus, AuditAction, Prisma } from '../generated/prisma/client';
 
 export const adminService = {
   async getDashboardStats() {
@@ -55,10 +55,11 @@ export const adminService = {
     return { totalUsers, totalJobs, totalApplications, pendingJobs, monthlyData, weeklyData };
   },
 
-  async getJobs(page: number, limit: number, status?: string) {
+  async getJobs(page: number, limit: number, status?: string, flagged?: boolean) {
     const skip = (page - 1) * limit;
     const where: Prisma.JobWhereInput = {};
     if (status) where.status = status as JobStatus;
+    if (flagged === true) where.isFlagged = true;
 
     const [jobs, total] = await Promise.all([
       prisma.job.findMany({
@@ -182,6 +183,29 @@ export const adminService = {
       where: { id: reportId },
       data: { status: data.status as ReportStatus, adminNote: data.adminNote },
     });
+  },
+
+  async getLogs(page: number, limit: number, action?: AuditAction) {
+    const skip = (page - 1) * limit;
+    const where: Prisma.AuditLogWhereInput = {};
+    if (action) where.action = action;
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          admin: {
+            select: { id: true, email: true },
+          },
+        },
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
+
+    return { logs, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 
   async createReport(reporterId: string, data: {

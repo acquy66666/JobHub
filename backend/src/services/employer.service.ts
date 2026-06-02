@@ -26,12 +26,44 @@ export const employerService = {
   async createJob(userId: string, data: Record<string, unknown>) {
     const employer = await prisma.employer.findUnique({ where: { userId } });
     if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+
+    // Fraud detection rules
+    const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const [duplicateCount, dailyCount] = await Promise.all([
+      prisma.job.count({
+        where: {
+          employerId: employer.id,
+          title: { equals: data.title as string, mode: 'insensitive' },
+          createdAt: { gte: since24h },
+        },
+      }),
+      prisma.job.count({
+        where: {
+          employerId: employer.id,
+          createdAt: { gte: since24h },
+        },
+      }),
+    ]);
+
+    let isFlagged = false;
+    let flagReason: string | undefined;
+
+    if (duplicateCount > 0) {
+      isFlagged = true;
+      flagReason = 'Trùng tiêu đề trong vòng 24 giờ';
+    } else if (dailyCount >= 10) {
+      isFlagged = true;
+      flagReason = `Đăng quá 10 tin trong 24 giờ (${dailyCount + 1} tin)`;
+    }
+
     return prisma.job.create({
       data: {
         ...data,
         expiresAt: new Date(data.expiresAt as string),
         employerId: employer.id,
         status: JobStatus.PENDING,
+        isFlagged,
+        ...(flagReason && { flagReason }),
       } as Parameters<typeof prisma.job.create>[0]['data'],
     });
   },

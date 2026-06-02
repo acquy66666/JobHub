@@ -27,4 +27,9 @@ router.get('/saved-jobs', candidateController.getSavedJobs);
 router.post('/saved-jobs', candidateController.saveJob);
 router.delete('/saved-jobs/:jobId', candidateController.unsaveJob);
 
+router.get('/job-alerts', candidateController.getJobAlerts);
+router.post('/job-alerts', candidateController.createJobAlert);
+router.put('/job-alerts/:alertId', candidateController.updateJobAlert);
+router.delete('/job-alerts/:alertId', candidateController.deleteJobAlert);
+
 export default router;

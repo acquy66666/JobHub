@@ -12,6 +12,8 @@ interface AdminJob {
   id: string;
   title: string;
   status: string;
+  isFlagged: boolean;
+  flagReason: string | null;
   createdAt: string;
   employer: { id: string; companyName: string; logoUrl: string | null };
   _count: { applications: number };
@@ -22,6 +24,7 @@ const STATUS_TABS = [
   { value: "PENDING", label: "Chờ duyệt" },
   { value: "ACTIVE", label: "Đang tuyển" },
   { value: "REJECTED", label: "Bị từ chối" },
+  { value: "FLAGGED", label: "⚠ Gắn cờ" },
 ];
 
 export default function AdminJobsPage() {
@@ -30,7 +33,13 @@ export default function AdminJobsPage() {
   const qc = useQueryClient();
   const toast = useToast();
 
-  const params = { page, limit: 15, ...(status ? { status } : {}) };
+  const isFlaggedFilter = status === "FLAGGED";
+  const params = {
+    page,
+    limit: 15,
+    ...(status && !isFlaggedFilter ? { status } : {}),
+    ...(isFlaggedFilter ? { flagged: true } : {}),
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.adminJobs(params),
@@ -146,8 +155,18 @@ export default function AdminJobsPage() {
                 return (
                   <div key={job.id} className="grid grid-cols-[1fr_180px_100px_120px_160px] gap-4 px-5 py-4 items-center hover:bg-white/[.02] transition-colors">
                     <div className="min-w-0">
-                      <p className="text-[13px] font-semibold text-t0 truncate">{job.title}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-[13px] font-semibold text-t0 truncate">{job.title}</p>
+                        {job.isFlagged && (
+                          <span title={job.flagReason ?? "Bị gắn cờ"} className="shrink-0 inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-[rgba(245,158,11,.12)] text-[#FCD34D] border border-[rgba(245,158,11,.2)]">
+                            ⚠
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-t2">{timeAgo(job.createdAt)}</p>
+                      {job.isFlagged && job.flagReason && (
+                        <p className="text-[10px] text-[#FCD34D]/70 mt-0.5 truncate">{job.flagReason}</p>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <p className="text-[12px] text-t1 truncate">{job.employer.companyName}</p>

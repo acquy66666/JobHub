@@ -9,6 +9,8 @@ import {
   updateEducationSchema,
   applyJobSchema,
   saveJobSchema,
+  createJobAlertSchema,
+  updateJobAlertSchema,
 } from '../validators/candidate';
 
 export const candidateController = {
@@ -129,6 +131,36 @@ export const candidateController = {
       const limit = parseInt(String(req.query.limit)) || 10;
       const result = await candidateService.getSavedJobs(req.user!.userId, page, limit);
       res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async getJobAlerts(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.getJobAlerts(req.user!.userId);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async createJobAlert(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = createJobAlertSchema.parse(req.body);
+      const result = await candidateService.createJobAlert(req.user!.userId, data);
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
+  async updateJobAlert(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = updateJobAlertSchema.parse(req.body);
+      const result = await candidateService.updateJobAlert(req.user!.userId, String(req.params.alertId), data);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async deleteJobAlert(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await candidateService.deleteJobAlert(req.user!.userId, String(req.params.alertId));
+      res.json({ message: 'Đã xóa thông báo việc làm' });
     } catch (err) { next(err); }
   },
 };

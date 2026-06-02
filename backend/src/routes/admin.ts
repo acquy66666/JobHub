@@ -14,5 +14,6 @@ router.get('/users', adminController.getUsers);
 router.patch('/users/:userId', adminController.updateUser);
 router.get('/reports', adminController.getReports);
 router.patch('/reports/:reportId', adminController.updateReport);
+router.get('/logs', adminController.getLogs);
 
 export default router;

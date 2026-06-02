@@ -39,3 +39,20 @@ export const applyJobSchema = z.object({
 export const saveJobSchema = z.object({
   jobId: z.string().min(1, 'jobId không được để trống'),
 });
+
+const jobTypeEnum = z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'FREELANCE']);
+
+export const createJobAlertSchema = z.object({
+  industries: z.array(z.string()).default([]),
+  locations: z.array(z.string()).default([]),
+  jobTypes: z.array(jobTypeEnum).default([]),
+  frequency: z.enum(['DAILY', 'WEEKLY']).default('DAILY'),
+});
+
+export const updateJobAlertSchema = z.object({
+  industries: z.array(z.string()).optional(),
+  locations: z.array(z.string()).optional(),
+  jobTypes: z.array(jobTypeEnum).optional(),
+  frequency: z.enum(['DAILY', 'WEEKLY']).optional(),
+  isActive: z.boolean().optional(),
+});

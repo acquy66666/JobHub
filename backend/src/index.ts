@@ -3,6 +3,7 @@ import path from 'path';
 import app from './app';
 import { env } from './config/env';
 import { prisma } from './lib/prisma';
+import { startJobAlertCron } from './utils/jobAlertCron';
 
 async function autoSeedIfEmpty() {
   try {
@@ -25,4 +26,5 @@ async function autoSeedIfEmpty() {
 app.listen(Number(env.PORT), '0.0.0.0', () => {
   console.log(`Backend running on http://localhost:${env.PORT}`);
   autoSeedIfEmpty();
+  startJobAlertCron();
 });

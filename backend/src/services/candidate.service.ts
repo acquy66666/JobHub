@@ -192,4 +192,64 @@ export const candidateService = {
     ]);
     return { savedJobs, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
+
+  async getJobAlerts(userId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    return prisma.jobAlert.findMany({
+      where: { candidateId: candidate.id },
+      orderBy: { createdAt: 'desc' },
+    });
+  },
+
+  async createJobAlert(userId: string, data: {
+    industries: string[];
+    locations: string[];
+    jobTypes: string[];
+    frequency: 'DAILY' | 'WEEKLY';
+  }) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    return prisma.jobAlert.create({
+      data: {
+        id: crypto.randomUUID(),
+        candidateId: candidate.id,
+        industries: data.industries,
+        locations: data.locations,
+        jobTypes: data.jobTypes as import('../generated/prisma/client').JobType[],
+        frequency: data.frequency,
+      },
+    });
+  },
+
+  async updateJobAlert(userId: string, alertId: string, data: {
+    industries?: string[];
+    locations?: string[];
+    jobTypes?: string[];
+    frequency?: 'DAILY' | 'WEEKLY';
+    isActive?: boolean;
+  }) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const alert = await prisma.jobAlert.findFirst({ where: { id: alertId, candidateId: candidate.id } });
+    if (!alert) throw Object.assign(new Error('Không tìm thấy thông báo'), { status: 404 });
+    return prisma.jobAlert.update({
+      where: { id: alertId },
+      data: {
+        ...(data.industries !== undefined && { industries: data.industries }),
+        ...(data.locations !== undefined && { locations: data.locations }),
+        ...(data.jobTypes !== undefined && { jobTypes: data.jobTypes as import('../generated/prisma/client').JobType[] }),
+        ...(data.frequency !== undefined && { frequency: data.frequency }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+      },
+    });
+  },
+
+  async deleteJobAlert(userId: string, alertId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const alert = await prisma.jobAlert.findFirst({ where: { id: alertId, candidateId: candidate.id } });
+    if (!alert) throw Object.assign(new Error('Không tìm thấy thông báo'), { status: 404 });
+    await prisma.jobAlert.delete({ where: { id: alertId } });
+  },
 };
