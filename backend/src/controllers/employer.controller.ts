@@ -134,6 +134,20 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async exportApplications(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { csv, jobTitle } = await employerService.exportApplicationsCsv(
+        req.user!.userId,
+        String(req.params.jobId),
+      );
+      const filename = `ung-vien-${String(req.params.jobId).slice(0, 8)}.csv`;
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send('﻿' + csv);
+      void jobTitle;
+    } catch (err) { next(err); }
+  },
+
   async searchCandidates(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const skill = req.query.skill ? String(req.query.skill).trim() : undefined;

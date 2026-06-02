@@ -24,6 +24,7 @@ router.delete('/jobs/:jobId', employerController.deleteJob);
 router.patch('/jobs/:jobId/status', employerController.toggleJobStatus);
 
 router.get('/jobs/:jobId/applications', employerController.getJobApplications);
+router.get('/jobs/:jobId/applications/export', employerController.exportApplications);
 router.patch('/jobs/:jobId/applications/:appId', employerController.updateApplicationStatus);
 router.patch('/jobs/:jobId/applications/:appId/tag', employerController.updateApplicationTag);
 

@@ -169,6 +169,50 @@ export const employerService = {
     await prisma.jobTemplate.delete({ where: { id: templateId } });
   },
 
+  async exportApplicationsCsv(userId: string, jobId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+
+    const applications = await prisma.application.findMany({
+      where: { jobId },
+      orderBy: { appliedAt: 'asc' },
+      include: { candidate: { include: { user: { select: { email: true } } } } },
+    });
+
+    const statusLabel: Record<string, string> = {
+      PENDING: 'Chờ xét duyệt',
+      REVIEWING: 'Đang xem xét',
+      ACCEPTED: 'Chấp nhận',
+      REJECTED: 'Từ chối',
+    };
+    const tagLabel: Record<string, string> = {
+      SHORTLISTED: 'Tiềm năng cao',
+      POTENTIAL: 'Tiềm năng',
+      ON_HOLD: 'Tạm giữ',
+    };
+
+    const esc = (v: string | null | undefined) => {
+      const s = String(v ?? '');
+      return s.includes(',') || s.includes('"') || s.includes('\n') ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = 'STT,Họ tên,Email,Tiêu đề,Trạng thái,Tag,Ghi chú,Ngày nộp đơn,Link CV';
+    const rows = applications.map((app, i) => [
+      i + 1,
+      esc(app.candidate.fullName),
+      esc(app.candidate.user.email),
+      esc(app.candidate.headline),
+      esc(statusLabel[app.status] ?? app.status),
+      esc(app.tag ? tagLabel[app.tag] ?? app.tag : ''),
+      esc(app.note),
+      new Date(app.appliedAt).toLocaleDateString('vi-VN'),
+      esc(app.cvUrl),
+    ].join(','));
+
+    return { csv: [header, ...rows].join('\r\n'), jobTitle: job.title };
+  },
+
   async searchCandidates(params: {
     skill?: string;
     location?: string;

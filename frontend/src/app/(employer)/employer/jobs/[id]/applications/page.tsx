@@ -60,6 +60,25 @@ export default function JobApplicationsPage() {
   const [taggingId, setTaggingId] = useState<string | null>(null);
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
   const [statusSelects, setStatusSelects] = useState<Record<string, string>>({});
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const res = await api.get(`/employer/jobs/${jobId}/applications/export`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/csv;charset=utf-8;' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ung-vien-${jobId.slice(0, 8)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Xuất CSV thất bại, vui lòng thử lại');
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const { data: jobData } = useQuery({
     queryKey: [...queryKeys.employerJobApplications(jobId, page), "job"],
@@ -137,8 +156,26 @@ export default function JobApplicationsPage() {
         <div className="flex items-center gap-3 mb-2">
           <Link href="/employer/jobs" className="text-[13px] text-t2 hover:text-t0 transition-colors">← Quản lý tin</Link>
         </div>
-        <h1 className="text-[22px] font-extrabold text-t0">{jobData?.title ?? "Đơn ứng tuyển"}</h1>
-        <p className="text-[14px] text-t1 mt-1">{data?.total ?? 0} đơn ứng tuyển</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-[22px] font-extrabold text-t0">{jobData?.title ?? "Đơn ứng tuyển"}</h1>
+            <p className="text-[14px] text-t1 mt-1">{data?.total ?? 0} đơn ứng tuyển</p>
+          </div>
+          {(data?.total ?? 0) > 0 && (
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl border border-border-dark text-[13px] text-t1 hover:text-t0 hover:border-[rgba(124,58,237,.3)] disabled:opacity-50 transition-colors"
+            >
+              {exporting ? (
+                <span className="inline-block w-3.5 h-3.5 border-2 border-t-transparent border-t1 rounded-full animate-spin" />
+              ) : (
+                <span>⬇</span>
+              )}
+              Xuất CSV
+            </button>
+          )}
+        </div>
       </ScrollReveal>
 
       {/* Filter tabs */}
