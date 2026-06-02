@@ -14,6 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Stage 6 Nhóm 3 done (100%):** Audit Logs ✅, Email Job Alerts ✅, Fraud Detection ✅. Commit `c8c4891`. Schema: `AuditLog` + `JobAlert` models, `isFlagged`/`flagReason` trên `Job` — đã migrate Supabase.
 **Stage 6 COMPLETE.** Nhóm 4 (Kanban, Salary Benchmark, Reviews, Zalo, Payment) — deferred v2+.
 **Production fix (2026-06-02):** BUG-10 fixed — Vercel build fail do ESLint unescaped `"` trong `admin/reports/page.tsx`. Seed data enhanced: +3 flagged jobs, +8 reports, +19 audit logs, +3 job alerts, +5 application tags inserted via Supabase MCP. Commit `8b20c98`.
+**Production verify (2026-06-02, session 9):** Render auto-deploy webhook broken → 4 trang Stage 6 Nhóm 3 empty. Fix: Manual Deploy trên Render dashboard. Tất cả 4 trang verified: `/admin/logs` ✅, `/candidate/job-alerts` ✅, `/admin/jobs` flagged tab ✅, `/admin/reports` ✅.
 
 **Deployed URLs:**
 - Frontend: `https://job-hub-two.vercel.app`
