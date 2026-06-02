@@ -141,7 +141,7 @@ export default function AdminReportsPage() {
                       <span className="ml-2 text-[11px] text-t2">({report.reporter.role})</span>
                     </p>
                     {report.description && (
-                      <p className="text-[13px] text-t1 italic">"{report.description}"</p>
+                      <p className="text-[13px] text-t1 italic">&quot;{report.description}&quot;</p>
                     )}
                     {report.adminNote && (
                       <p className="text-[12px] text-t2">Ghi chú admin: {report.adminNote}</p>

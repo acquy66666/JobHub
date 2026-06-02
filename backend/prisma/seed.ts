@@ -940,6 +940,195 @@ async function main() {
 
   // ── Done ─────────────────────────────────────────────────────────────────────
 
+  // ── 7. Flagged Jobs (Fraud Detection demo) ──────────────────────────────────
+
+  const flaggedJobsCount = await prisma.job.count({ where: { isFlagged: true } });
+  if (flaggedJobsCount === 0) {
+    await Promise.all([
+      prisma.job.create({
+        data: {
+          employerId: techcorp.id,
+          title: 'Senior Full-Stack Developer',
+          description: 'Tuyển gấp Senior Full-Stack Developer bổ sung cho team. Ưu tiên ứng viên có kinh nghiệm React và Node.js. Lương hấp dẫn, môi trường năng động.',
+          requirements: '- 4+ năm Full-Stack\n- React, TypeScript, Node.js\n- PostgreSQL, Docker\n- Kỹ năng giao tiếp tốt',
+          benefits: 'Lương 30-50tr VND. MacBook. Remote linh hoạt.',
+          location: 'Hà Nội',
+          jobType: 'FULL_TIME',
+          workMode: 'REMOTE',
+          salaryMin: 30000000,
+          salaryMax: 50000000,
+          industry: 'Công nghệ thông tin',
+          experience: '4 năm',
+          status: 'PENDING',
+          expiresAt: futureDate(30),
+          isFlagged: true,
+          flagReason: 'Trùng tiêu đề trong vòng 24 giờ',
+        },
+      }),
+      prisma.job.create({
+        data: {
+          employerId: momo.id,
+          title: 'Digital Marketing Executive',
+          description: 'MoMo tuyển Digital Marketing Executive thúc đẩy tăng trưởng người dùng qua các kênh digital. Cơ hội làm việc với sản phẩm Fintech số 1 Việt Nam.',
+          requirements: '- 2+ năm Digital Marketing\n- Google/Facebook/TikTok Ads\n- Phân tích dữ liệu\n- Content creation',
+          benefits: 'Lương 15-22tr VND. ESOP. Môi trường năng động.',
+          location: 'TP. Hồ Chí Minh',
+          jobType: 'FULL_TIME',
+          workMode: 'ON_SITE',
+          salaryMin: 15000000,
+          salaryMax: 22000000,
+          industry: 'Marketing',
+          experience: '2 năm',
+          status: 'PENDING',
+          expiresAt: futureDate(30),
+          isFlagged: true,
+          flagReason: 'Đăng quá 10 tin trong 24 giờ (11 tin)',
+        },
+      }),
+      prisma.job.create({
+        data: {
+          employerId: fpt.id,
+          title: 'Java Backend Developer',
+          description: 'FPT Software tuyển bổ sung Java Backend Developer cho dự án ngân hàng Nhật Bản. Cơ hội đi Nhật onsite 3-6 tháng.',
+          requirements: '- 2+ năm Java Spring Boot\n- Hibernate, MySQL\n- Tiếng Nhật N3 hoặc tiếng Anh B2\n- Quen làm việc Agile',
+          benefits: 'Lương 16-26tr VND. Cơ hội đi Nhật. Đào tạo liên tục.',
+          location: 'Hà Nội',
+          jobType: 'FULL_TIME',
+          workMode: 'HYBRID',
+          salaryMin: 16000000,
+          salaryMax: 26000000,
+          industry: 'Công nghệ thông tin',
+          experience: '2 năm',
+          status: 'PENDING',
+          expiresAt: futureDate(30),
+          isFlagged: true,
+          flagReason: 'Trùng tiêu đề trong vòng 24 giờ',
+        },
+      }),
+    ]);
+    console.log('✅ Flagged jobs created (3)');
+  }
+
+  // ── 8. Reports ───────────────────────────────────────────────────────────────
+
+  const reportsCount = await prisma.report.count();
+  if (reportsCount === 0) {
+    const reportRows = [
+      { reporterId: candidateUser.id,  targetId: momoJobs[5].id,    reason: 'SPAM',          description: 'Tin này xuất hiện lặp đi lặp lại nhiều lần trong ngày, gây nhiễu kết quả tìm kiếm.', status: 'PENDING',   adminNote: null },
+      { reporterId: candidateUser2.id, targetId: vinaiJobs[4].id,   reason: 'MISLEADING',    description: 'Mô tả lương 50-75tr nhưng khi phỏng vấn thực tế mức offer chỉ 35tr, misleading hoàn toàn.', status: 'PENDING', adminNote: null },
+      { reporterId: candidateUser3.id, targetId: tcJobs[5].id,      reason: 'INAPPROPRIATE', description: 'Form ứng tuyển yêu cầu cung cấp CMND, ảnh cá nhân và địa chỉ nhà riêng — không liên quan đến tuyển dụng.', status: 'PENDING', adminNote: null },
+      { reporterId: candidateUser.id,  targetId: fptJobs[3].id,     reason: 'FRAUD',         description: 'Nhà tuyển dụng yêu cầu đóng phí "đào tạo" 500.000đ trước khi phỏng vấn — dấu hiệu lừa đảo rõ ràng.', status: 'PENDING', adminNote: null },
+      { reporterId: candidateUser2.id, targetId: viettelJobs[4].id, reason: 'SPAM',          description: 'Tin đăng giống hệt nhau đã xuất hiện 3 lần trong 1 tuần với nội dung copy-paste.', status: 'REVIEWED',  adminNote: 'Đã kiểm tra — đây là tin đăng lại do cũ hết hạn, không vi phạm quy định. NTD đã được nhắc nhở.' },
+      { reporterId: candidateUser3.id, targetId: momoJobs[4].id,    reason: 'MISLEADING',    description: 'Mô tả công việc quá chung chung, không rõ KPI và trách nhiệm thực tế.', status: 'REVIEWED', adminNote: 'Đã liên hệ MoMo HR và yêu cầu cập nhật JD chi tiết hơn. NTD đã bổ sung nội dung.' },
+      { reporterId: candidateUser.id,  targetId: tcJobs[2].id,      reason: 'OTHER',         description: 'Không tìm thấy thông tin liên hệ trực tiếp của HR trong mô tả.', status: 'DISMISSED', adminNote: 'Báo cáo không hợp lệ. Thông tin liên hệ qua hệ thống ứng tuyển là đủ theo quy định.' },
+      { reporterId: candidateUser2.id, targetId: fptJobs[2].id,     reason: 'INAPPROPRIATE', description: 'Yêu cầu kinh nghiệm 2 năm nhưng mức lương chỉ 15-22tr — không tương xứng với thị trường.', status: 'DISMISSED', adminNote: 'Không vi phạm chính sách. Mức lương và yêu cầu là quyết định của NTD.' },
+    ];
+
+    for (const r of reportRows) {
+      await prisma.report.create({
+        data: {
+          reporterId: r.reporterId,
+          targetType: 'JOB',
+          targetId: r.targetId,
+          reason: r.reason as any,
+          description: r.description,
+          status: r.status as any,
+          adminNote: r.adminNote,
+        },
+      });
+    }
+    console.log(`✅ Reports created (${reportRows.length})`);
+  }
+
+  // ── 9. Audit Logs ────────────────────────────────────────────────────────────
+
+  const logsCount = await prisma.auditLog.count();
+  if (logsCount === 0) {
+    const allJobs = [...tcJobs, ...fptJobs, ...viettelJobs, ...momoJobs, ...vinaiJobs];
+    const auditRows: Array<{ action: string; targetType: string; targetId: string; daysAgo: number; metadata: Record<string, unknown> }> = [
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: tcJobs[0].id,       daysAgo: 30, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: fptJobs[0].id,      daysAgo: 28, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: momoJobs[0].id,     daysAgo: 25, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: viettelJobs[0].id,  daysAgo: 22, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: vinaiJobs[0].id,    daysAgo: 20, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: fptJobs[1].id,      daysAgo: 18, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: momoJobs[3].id,     daysAgo: 15, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_APPROVED',       targetType: 'JOB',    targetId: tcJobs[1].id,       daysAgo: 12, metadata: { previousStatus: 'PENDING' } },
+      { action: 'JOB_REJECTED',       targetType: 'JOB',    targetId: allJobs[10].id,     daysAgo: 10, metadata: { previousStatus: 'PENDING', reason: 'Nội dung không đầy đủ, thiếu phúc lợi' } },
+      { action: 'JOB_REJECTED',       targetType: 'JOB',    targetId: allJobs[15].id,     daysAgo: 6,  metadata: { previousStatus: 'PENDING', reason: 'Mức lương không thực tế' } },
+      { action: 'USER_BANNED',        targetType: 'USER',   targetId: candidateUser2.id,  daysAgo: 14, metadata: { reason: 'Tạo nhiều tài khoản spam và báo cáo giả mạo' } },
+      { action: 'USER_UNBANNED',      targetType: 'USER',   targetId: candidateUser2.id,  daysAgo: 7,  metadata: { reason: 'Đã xác minh danh tính, cam kết không tái phạm' } },
+      { action: 'EMPLOYER_VERIFIED',  targetType: 'USER',   targetId: fptUser.id,         daysAgo: 25, metadata: { companyName: 'FPT Software' } },
+      { action: 'EMPLOYER_VERIFIED',  targetType: 'USER',   targetId: momoUser.id,        daysAgo: 20, metadata: { companyName: 'MoMo' } },
+      { action: 'EMPLOYER_VERIFIED',  targetType: 'USER',   targetId: viettelUser.id,     daysAgo: 16, metadata: { companyName: 'Viettel Digital' } },
+      { action: 'EMPLOYER_VERIFIED',  targetType: 'USER',   targetId: vinaiUser.id,       daysAgo: 10, metadata: { companyName: 'VinAI Research' } },
+      { action: 'REPORT_REVIEWED',    targetType: 'REPORT', targetId: 'report-demo-1',    daysAgo: 4,  metadata: { adminNote: 'Đã xem xét và liên hệ NTD' } },
+      { action: 'REPORT_DISMISSED',   targetType: 'REPORT', targetId: 'report-demo-2',    daysAgo: 2,  metadata: { adminNote: 'Không vi phạm chính sách' } },
+      { action: 'USER_ROLE_CHANGED',  targetType: 'USER',   targetId: candidateUser3.id,  daysAgo: 1,  metadata: { fromRole: 'CANDIDATE', toRole: 'CANDIDATE', note: 'Kiểm tra quyền hạn' } },
+    ];
+
+    for (const row of auditRows) {
+      await prisma.auditLog.create({
+        data: {
+          adminId: adminUser.id,
+          action: row.action as any,
+          targetType: row.targetType as any,
+          targetId: row.targetId,
+          metadata: row.metadata as any,
+          createdAt: pastDate(row.daysAgo),
+        },
+      });
+    }
+    console.log(`✅ Audit logs created (${auditRows.length})`);
+  }
+
+  // ── 10. Job Alerts ───────────────────────────────────────────────────────────
+
+  const alertsCount = await prisma.jobAlert.count();
+  if (alertsCount === 0) {
+    await prisma.jobAlert.createMany({
+      data: [
+        {
+          candidateId: candidate.id,
+          industries: ['Công nghệ thông tin'],
+          locations: ['Hà Nội'],
+          jobTypes: ['FULL_TIME', 'CONTRACT'],
+          frequency: 'DAILY',
+          isActive: true,
+        },
+        {
+          candidateId: candidate.id,
+          industries: ['Trí tuệ nhân tạo', 'Fintech'],
+          locations: ['Hà Nội', 'TP. Hồ Chí Minh', 'Remote'],
+          jobTypes: ['FULL_TIME'],
+          frequency: 'WEEKLY',
+          isActive: true,
+        },
+        {
+          candidateId: candidate.id,
+          industries: ['Công nghệ thông tin'],
+          locations: ['Remote'],
+          jobTypes: ['FREELANCE', 'PART_TIME'],
+          frequency: 'DAILY',
+          isActive: false,
+          lastSentAt: pastDate(2),
+        },
+      ],
+    });
+    console.log('✅ Job alerts created (3)');
+  }
+
+  // ── 11. Application Tags ─────────────────────────────────────────────────────
+
+  await Promise.all([
+    prisma.application.updateMany({ where: { candidateId: candidate.id,  jobId: tcJobs[0].id,    status: 'REVIEWING' }, data: { tag: 'SHORTLISTED' } }),
+    prisma.application.updateMany({ where: { candidateId: candidate.id,  jobId: momoJobs[0].id,  status: 'REVIEWING' }, data: { tag: 'POTENTIAL'  } }),
+    prisma.application.updateMany({ where: { candidateId: candidate2.id, jobId: tcJobs[2].id,    status: 'REVIEWING' }, data: { tag: 'POTENTIAL'  } }),
+    prisma.application.updateMany({ where: { candidateId: candidate2.id, jobId: fptJobs[5].id,   status: 'REVIEWING' }, data: { tag: 'ON_HOLD'    } }),
+    prisma.application.updateMany({ where: { candidateId: candidate3.id, jobId: momoJobs[3].id,  status: 'REVIEWING' }, data: { tag: 'SHORTLISTED' } }),
+  ]);
+  console.log('✅ Application tags updated');
+
   console.log('\n🎉 Seed complete!\n');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('  Demo accounts (password: Demo@2026)');
