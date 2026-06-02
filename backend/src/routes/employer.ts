@@ -31,4 +31,6 @@ router.get('/templates', employerController.getTemplates);
 router.post('/templates', employerController.createTemplate);
 router.delete('/templates/:templateId', employerController.deleteTemplate);
 
+router.get('/candidates/search', employerController.searchCandidates);
+
 export default router;

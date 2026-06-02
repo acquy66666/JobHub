@@ -169,6 +169,95 @@ export const employerService = {
     await prisma.jobTemplate.delete({ where: { id: templateId } });
   },
 
+  async searchCandidates(params: {
+    skill?: string;
+    location?: string;
+    headline?: string;
+    page: number;
+    limit: number;
+  }) {
+    const { skill, location, headline, page, limit } = params;
+    const skip = (page - 1) * limit;
+
+    if (skill) {
+      const likeSkill = skill.toLowerCase();
+      const whereLocation = location ? `AND LOWER(c.location) LIKE LOWER('%' || $2 || '%')` : '';
+      const whereHeadline = headline ? `AND LOWER(c.headline) LIKE LOWER('%' || $3 || '%')` : '' ;
+
+      const extraArgs: string[] = [];
+      if (location) extraArgs.push(location);
+      if (headline) extraArgs.push(headline);
+
+      const countRaw = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*) as count FROM "Candidate" c
+         WHERE EXISTS (SELECT 1 FROM unnest(c.skills) s WHERE LOWER(s) = $1)
+         ${whereLocation} ${whereHeadline}`,
+        likeSkill,
+        ...extraArgs,
+      );
+      const total = Number(countRaw[0]?.count ?? 0);
+
+      const candidates = await prisma.$queryRawUnsafe<{
+        id: string;
+        fullName: string;
+        avatarUrl: string | null;
+        headline: string | null;
+        location: string | null;
+        skills: string[];
+        experienceCount: number;
+      }[]>(
+        `SELECT c.id, c."fullName", c."avatarUrl", c.headline, c.location, c.skills,
+                (SELECT COUNT(*) FROM "Experience" e WHERE e."candidateId" = c.id)::int as "experienceCount"
+         FROM "Candidate" c
+         WHERE EXISTS (SELECT 1 FROM unnest(c.skills) s WHERE LOWER(s) = $1)
+         ${whereLocation} ${whereHeadline}
+         ORDER BY c.id DESC
+         LIMIT $${extraArgs.length + 2} OFFSET $${extraArgs.length + 3}`,
+        likeSkill,
+        ...extraArgs,
+        limit,
+        skip,
+      );
+
+      return { candidates, total, page, limit, totalPages: Math.ceil(total / limit) };
+    }
+
+    const where: { location?: { contains: string; mode: 'insensitive' }; headline?: { contains: string; mode: 'insensitive' } } = {};
+    if (location) where.location = { contains: location, mode: 'insensitive' };
+    if (headline) where.headline = { contains: headline, mode: 'insensitive' };
+
+    const [raw, total] = await Promise.all([
+      prisma.candidate.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { id: 'desc' },
+        select: {
+          id: true,
+          fullName: true,
+          avatarUrl: true,
+          headline: true,
+          location: true,
+          skills: true,
+          _count: { select: { experiences: true } },
+        },
+      }),
+      prisma.candidate.count({ where }),
+    ]);
+
+    const candidates = raw.map(c => ({
+      id: c.id,
+      fullName: c.fullName,
+      avatarUrl: c.avatarUrl,
+      headline: c.headline,
+      location: c.location,
+      skills: c.skills,
+      experienceCount: c._count.experiences,
+    }));
+
+    return { candidates, total, page, limit, totalPages: Math.ceil(total / limit) };
+  },
+
   async getPublicCompany(employerId: string) {
     const employer = await prisma.employer.findUnique({
       where: { id: employerId },

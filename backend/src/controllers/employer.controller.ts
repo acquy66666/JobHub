@@ -134,6 +134,18 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async searchCandidates(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const skill = req.query.skill ? String(req.query.skill).trim() : undefined;
+      const location = req.query.location ? String(req.query.location).trim() : undefined;
+      const headline = req.query.headline ? String(req.query.headline).trim() : undefined;
+      const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+      const limit = Math.min(20, Math.max(1, parseInt(String(req.query.limit)) || 12));
+      const result = await employerService.searchCandidates({ skill, location, headline, page, limit });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async getPublicList(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;
