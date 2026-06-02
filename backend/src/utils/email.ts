@@ -1,33 +1,50 @@
-import nodemailer from "nodemailer";
+import https from "https";
 import { env } from "../config/env";
 
-function createTransporter() {
-  if (!env.BREVO_SMTP_KEY || !env.BREVO_SMTP_USER) return null;
-  return nodemailer.createTransport({
-    host: "smtp-relay.brevo.com",
-    port: 587,
-    secure: false,
-    auth: { user: env.BREVO_SMTP_USER, pass: env.BREVO_SMTP_KEY },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
-  });
-}
-
 async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  const transporter = createTransporter();
-  if (!transporter) {
+  if (!env.BREVO_API_KEY || !env.BREVO_SENDER_EMAIL) {
     console.warn("[Email] BREVO credentials not set — emails will be skipped");
     console.log(`[Email - DEV fallback] To: ${to} | Subject: ${subject}`);
     return;
   }
-  await transporter.sendMail({
-    from: `JobHub <${env.BREVO_SMTP_USER}>`,
-    to,
+
+  const body = JSON.stringify({
+    sender: { name: "JobHub", email: env.BREVO_SENDER_EMAIL },
+    to: [{ email: to }],
     subject,
-    html,
+    htmlContent: html,
   });
-  console.log(`[Email] Sent "${subject}" → ${to}`);
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      {
+        hostname: "api.brevo.com",
+        path: "/v3/smtp/email",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": env.BREVO_API_KEY,
+          "Content-Length": Buffer.byteLength(body),
+        },
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+            console.log(`[Email] Sent "${subject}" → ${to}`);
+            resolve();
+          } else {
+            reject(new Error(`Brevo API ${res.statusCode}: ${data}`));
+          }
+        });
+      }
+    );
+    req.on("error", reject);
+    req.setTimeout(15000, () => req.destroy(new Error("Email timeout")));
+    req.write(body);
+    req.end();
+  });
 }
 
 export async function sendVerificationEmail(to: string, otp: string): Promise<void> {

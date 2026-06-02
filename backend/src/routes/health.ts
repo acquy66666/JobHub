@@ -5,7 +5,7 @@ import { env } from '../config/env';
 const router = Router();
 
 router.get('/health', (_req, res) => {
-  res.json({ ok: true, env: env.NODE_ENV, emailConfigured: !!(env.BREVO_SMTP_KEY && env.BREVO_SMTP_USER) });
+  res.json({ ok: true, env: env.NODE_ENV, emailConfigured: !!(env.BREVO_API_KEY && env.BREVO_SENDER_EMAIL) });
 });
 
 // Test email — chỉ dùng để debug, không expose route này trong production lâu dài
