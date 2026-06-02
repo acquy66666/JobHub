@@ -10,11 +10,41 @@ import { useState } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { computeMatchScore, scoreColor } from "@/lib/matchScore";
+import { useToast } from "@/store/toastStore";
+
+const REPORT_REASONS = [
+  { value: "SPAM", label: "Spam / quảng cáo" },
+  { value: "MISLEADING", label: "Thông tin gây hiểu lầm" },
+  { value: "INAPPROPRIATE", label: "Nội dung không phù hợp" },
+  { value: "FRAUD", label: "Lừa đảo / gian lận" },
+  { value: "OTHER", label: "Lý do khác" },
+];
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuthStore();
+  const toast = useToast();
   const [applyOpen, setApplyOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("SPAM");
+  const [reportDesc, setReportDesc] = useState("");
+  const [reporting, setReporting] = useState(false);
+
+  async function handleReport() {
+    if (reporting) return;
+    setReporting(true);
+    try {
+      await api.post("/reports", { targetType: "JOB", targetId: id, reason: reportReason, description: reportDesc || undefined });
+      toast.success("Báo cáo đã được gửi. Chúng tôi sẽ xem xét trong thời gian sớm nhất.");
+      setReportOpen(false);
+      setReportDesc("");
+      setReportReason("SPAM");
+    } catch {
+      toast.error("Không thể gửi báo cáo, vui lòng thử lại");
+    } finally {
+      setReporting(false);
+    }
+  }
 
   const { data: job, isLoading } = useQuery({
     queryKey: queryKeys.job(id),
@@ -224,9 +254,69 @@ export default function JobDetailPage() {
                 </div>
               </div>
             </ScrollReveal>
+
+            {/* Report button — only for logged in users */}
+            {user && (
+              <ScrollReveal direction="right" delay={0.2}>
+                <button
+                  onClick={() => setReportOpen(true)}
+                  className="w-full text-[12px] text-t2 hover:text-red-400 transition-colors py-2 flex items-center justify-center gap-1.5"
+                >
+                  <span>⚑</span> Báo cáo vi phạm
+                </button>
+              </ScrollReveal>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Report modal */}
+      {reportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-bg-2 border border-border-dark rounded-2xl w-full max-w-md p-6 space-y-4">
+            <h3 className="text-[17px] font-bold text-t0">Báo cáo vi phạm</h3>
+            <div className="space-y-2">
+              <label className="text-[12px] font-semibold text-t2 uppercase tracking-wider">Lý do báo cáo</label>
+              <select
+                value={reportReason}
+                onChange={e => setReportReason(e.target.value)}
+                className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2.5 text-[14px] text-t0 focus:outline-none focus:border-primary"
+              >
+                {REPORT_REASONS.map(r => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[12px] font-semibold text-t2 uppercase tracking-wider">Mô tả thêm (tùy chọn)</label>
+              <textarea
+                value={reportDesc}
+                onChange={e => setReportDesc(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder="Mô tả chi tiết vấn đề..."
+                className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2.5 text-[14px] text-t0 resize-none focus:outline-none focus:border-primary placeholder:text-t2"
+              />
+              <p className="text-[11px] text-t2 text-right">{reportDesc.length}/500</p>
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setReportOpen(false)}
+                className="flex-1 py-2.5 rounded-xl border border-border-dark text-[14px] text-t1 hover:text-t0 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleReport}
+                disabled={reporting}
+                className="flex-1 py-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-[14px] font-semibold text-red-400 hover:bg-red-500/20 disabled:opacity-50 transition-colors"
+              >
+                {reporting ? "Đang gửi..." : "Gửi báo cáo"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ApplyModal
         jobId={id}

@@ -6,6 +6,9 @@ import {
   updateJobStatusSchema,
   adminJobsQuerySchema,
   adminUsersQuerySchema,
+  adminReportsQuerySchema,
+  updateReportSchema,
+  createReportSchema,
 } from '../validators/admin';
 import { Role } from '../generated/prisma/client';
 
@@ -50,6 +53,30 @@ export const adminController = {
         employerVerified: data.employerVerified,
       });
       res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async getReports(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { page, limit, status } = adminReportsQuerySchema.parse(req.query);
+      const result = await adminService.getReports(page, limit, status as Parameters<typeof adminService.getReports>[2]);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async updateReport(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = updateReportSchema.parse(req.body);
+      const result = await adminService.updateReport(String(req.params.reportId), data);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async createReport(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const data = createReportSchema.parse(req.body);
+      const result = await adminService.createReport(req.user!.userId, data);
+      res.status(201).json(result);
     } catch (err) { next(err); }
   },
 };

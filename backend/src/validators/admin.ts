@@ -24,3 +24,21 @@ export const adminUsersQuerySchema = z.object({
   role: z.enum(['CANDIDATE', 'EMPLOYER', 'ADMIN']).optional(),
   keyword: z.string().optional(),
 });
+
+export const adminReportsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(50).default(15),
+  status: z.enum(['PENDING', 'REVIEWED', 'DISMISSED']).optional(),
+});
+
+export const updateReportSchema = z.object({
+  status: z.enum(['REVIEWED', 'DISMISSED']),
+  adminNote: z.string().max(500).optional(),
+});
+
+export const createReportSchema = z.object({
+  targetType: z.enum(['JOB']),
+  targetId: z.string().min(1),
+  reason: z.enum(['SPAM', 'MISLEADING', 'INAPPROPRIATE', 'FRAUD', 'OTHER']),
+  description: z.string().max(500).optional(),
+});

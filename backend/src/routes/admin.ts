@@ -12,5 +12,7 @@ router.get('/jobs', adminController.getJobs);
 router.patch('/jobs/:jobId/status', adminController.updateJobStatus);
 router.get('/users', adminController.getUsers);
 router.patch('/users/:userId', adminController.updateUser);
+router.get('/reports', adminController.getReports);
+router.patch('/reports/:reportId', adminController.updateReport);
 
 export default router;

@@ -9,6 +9,7 @@ import employerRouter from './routes/employer';
 import jobRouter from './routes/job';
 import candidateRouter from './routes/candidate';
 import adminRouter from './routes/admin';
+import reportRouter from './routes/report';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/employer', employerRouter);
 app.use('/api/jobs', jobRouter);
 app.use('/api/candidate', candidateRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/reports', reportRouter);
 
 app.use(errorHandler);
 

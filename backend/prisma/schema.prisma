@@ -50,6 +50,24 @@ enum ApplicationTag {
   POTENTIAL
 }
 
+enum ReportTargetType {
+  JOB
+}
+
+enum ReportReason {
+  SPAM
+  MISLEADING
+  INAPPROPRIATE
+  FRAUD
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -68,6 +86,7 @@ model User {
   candidate            Candidate?
   employer             Employer?
   refreshTokens        RefreshToken[]
+  reports              Report[]
 }
 
 model Candidate {
@@ -216,4 +235,20 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model Report {
+  id          String           @id @default(cuid())
+  reporterId  String
+  reporter    User             @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType  ReportTargetType
+  targetId    String
+  reason      ReportReason
+  description String?
+  status      ReportStatus     @default(PENDING)
+  adminNote   String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status, createdAt])
 }

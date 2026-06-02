@@ -15,4 +15,5 @@ export const queryKeys = {
   company: (id: string) => ['company', id] as const,
   companyJobs: (employerId: string, page?: number) => page !== undefined ? ['company', employerId, 'jobs', page] as const : ['company', employerId, 'jobs'] as const,
   candidateSearch: (params?: Record<string, unknown>) => params ? ['employer', 'candidates', params] as const : ['employer', 'candidates'] as const,
+  adminReports: (params?: Record<string, unknown>) => params ? ['admin', 'reports', params] as const : ['admin', 'reports'] as const,
 };

@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { JobStatus, Role, Prisma } from '../generated/prisma/client';
+import { JobStatus, Role, ReportStatus, Prisma } from '../generated/prisma/client';
 
 export const adminService = {
   async getDashboardStats() {
@@ -144,5 +144,64 @@ export const adminService = {
       });
     }
     return { id: user.id, email: user.email, role: user.role, isActive: user.isActive, isVerified: user.isVerified, createdAt: user.createdAt };
+  },
+
+  async getReports(page: number, limit: number, status?: ReportStatus) {
+    const skip = (page - 1) * limit;
+    const where: Prisma.ReportWhereInput = {};
+    if (status) where.status = status;
+
+    const [reports, total] = await Promise.all([
+      prisma.report.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          reporter: {
+            select: {
+              id: true,
+              email: true,
+              role: true,
+              candidate: { select: { fullName: true } },
+              employer: { select: { companyName: true } },
+            },
+          },
+        },
+      }),
+      prisma.report.count({ where }),
+    ]);
+
+    return { reports, total, page, limit, totalPages: Math.ceil(total / limit) };
+  },
+
+  async updateReport(reportId: string, data: { status: 'REVIEWED' | 'DISMISSED'; adminNote?: string }) {
+    const report = await prisma.report.findUnique({ where: { id: reportId } });
+    if (!report) throw Object.assign(new Error('Không tìm thấy báo cáo'), { status: 404 });
+    return prisma.report.update({
+      where: { id: reportId },
+      data: { status: data.status as ReportStatus, adminNote: data.adminNote },
+    });
+  },
+
+  async createReport(reporterId: string, data: {
+    targetType: 'JOB';
+    targetId: string;
+    reason: string;
+    description?: string;
+  }) {
+    if (data.targetType === 'JOB') {
+      const job = await prisma.job.findUnique({ where: { id: data.targetId } });
+      if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    }
+    return prisma.report.create({
+      data: {
+        reporterId,
+        targetType: data.targetType,
+        targetId: data.targetId,
+        reason: data.reason as Prisma.ReportCreateInput['reason'],
+        description: data.description,
+      },
+    });
   },
 };
