@@ -11,6 +11,7 @@ import candidateRouter from './routes/candidate';
 import adminRouter from './routes/admin';
 import reportRouter from './routes/report';
 import notificationRouter from './routes/notification';
+import publicRouter from './routes/public';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use('/api/candidate', candidateRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/notifications', notificationRouter);
+app.use('/api/public', publicRouter);
 
 app.use(errorHandler);
 

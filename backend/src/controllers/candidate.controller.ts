@@ -209,4 +209,44 @@ export const candidateController = {
       res.json(result);
     } catch (err) { next(err); }
   },
+
+  async getCvs(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.getCvs(req.user!.userId);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async uploadCvFile(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      if (!req.file) {
+        res.status(400).json({ message: 'Vui lòng chọn file CV (PDF)' });
+        return;
+      }
+      const result = await candidateService.uploadCvFile(req.user!.userId, req.file.buffer, req.file.originalname);
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
+  async setDefaultCv(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.setDefaultCv(req.user!.userId, String(req.params.cvId));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async deleteCv(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.deleteCv(req.user!.userId, String(req.params.cvId));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async updatePublicSettings(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { isPublicProfile, publicSlug } = req.body as { isPublicProfile?: boolean; publicSlug?: string };
+      const result = await candidateService.updatePublicSettings(req.user!.userId, { isPublicProfile, publicSlug });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
 };

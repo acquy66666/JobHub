@@ -341,8 +341,6 @@ export default function JobDetailPage() {
       <ApplyModal
         jobId={id}
         jobTitle={job.title}
-        savedCvUrl={profile?.cvUrl}
-        savedCvFileName={profile?.cvFileName}
         isOpen={applyOpen}
         onClose={() => setApplyOpen(false)}
       />

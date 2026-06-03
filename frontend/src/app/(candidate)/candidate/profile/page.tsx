@@ -49,6 +49,8 @@ interface CandidateProfile {
   cvUrl?: string;
   cvFileName?: string;
   avatarUrl?: string;
+  publicSlug?: string | null;
+  isPublicProfile?: boolean;
   user?: { email?: string };
   experiences?: Array<{ id: string; company: string; position: string; startDate: string; endDate?: string; isCurrent?: boolean; description?: string }>;
   educations?: Array<{ id: string; school: string; degree: string; major?: string; startYear: number; endYear?: number }>;
@@ -260,6 +262,31 @@ export default function CandidateProfilePage() {
               ))}
             </div>
           )}
+        </div>
+      </ScrollReveal>
+
+      {/* Public profile */}
+      <ScrollReveal direction="up" delay={0.2}>
+        <div className="card-dark rounded-2xl p-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[16px] ${profile?.isPublicProfile ? "bg-[rgba(34,197,94,.1)]" : "bg-bg-3"}`}>
+              {profile?.isPublicProfile ? "🌐" : "🔒"}
+            </div>
+            <div>
+              <p className="text-[13px] font-semibold text-t0">Hồ sơ công khai</p>
+              <p className="text-[12px] text-t2">
+                {profile?.isPublicProfile && profile.publicSlug
+                  ? `/u/${profile.publicSlug}`
+                  : "Chưa công khai — chỉ bạn mới thấy"}
+              </p>
+            </div>
+          </div>
+          <a
+            href="/candidate/preview"
+            className="shrink-0 px-4 py-2 rounded-xl border border-border-dark text-[12px] text-t1 hover:border-[rgba(124,58,237,.4)] hover:text-[#B09BF8] transition-colors"
+          >
+            Quản lý →
+          </a>
         </div>
       </ScrollReveal>
 

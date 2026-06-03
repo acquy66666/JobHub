@@ -10,7 +10,13 @@ router.use(authGuard, roleGuard('CANDIDATE'));
 
 router.get('/profile', candidateController.getProfile);
 router.put('/profile', uploadImage.single('avatar'), candidateController.updateProfile);
+router.patch('/profile/public-settings', candidateController.updatePublicSettings);
 router.post('/cv', uploadPdf.single('cv'), candidateController.uploadCv);
+
+router.get('/cvs', candidateController.getCvs);
+router.post('/cvs', uploadPdf.single('cv'), candidateController.uploadCvFile);
+router.patch('/cvs/:cvId/default', candidateController.setDefaultCv);
+router.delete('/cvs/:cvId', candidateController.deleteCv);
 
 router.post('/experience', candidateController.addExperience);
 router.put('/experience/:id', candidateController.updateExperience);

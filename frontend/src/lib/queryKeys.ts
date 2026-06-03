@@ -24,4 +24,5 @@ export const queryKeys = {
   followedCompanies: (page?: number) => page !== undefined ? ['candidate', 'followed-companies', page] as const : ['candidate', 'followed-companies'] as const,
   followStatus: (employerId: string) => ['candidate', 'following', employerId] as const,
   applicationTimeline: (appId: string) => ['candidate', 'applications', appId, 'timeline'] as const,
+  candidateCvs: () => ['candidate', 'cvs'] as const,
 };

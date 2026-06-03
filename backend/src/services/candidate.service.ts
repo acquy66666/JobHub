@@ -3,6 +3,20 @@ import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationEmail } from '../utils/email';
 import { JobStatus } from '../generated/prisma/client';
 
+function generateSlug(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .slice(0, 40);
+  const suffix = Math.random().toString(36).slice(2, 6);
+  return `${base}-${suffix}`;
+}
+
 export const candidateService = {
   async getProfile(userId: string) {
     const candidate = await prisma.candidate.findUnique({
@@ -14,6 +28,18 @@ export const candidateService = {
       },
     });
     if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    // Lazy-init publicSlug nếu chưa có
+    if (!candidate.publicSlug) {
+      const slug = generateSlug(candidate.fullName);
+      try {
+        await prisma.candidate.update({ where: { userId }, data: { publicSlug: slug } });
+        return { ...candidate, publicSlug: slug };
+      } catch {
+        // slug trùng (race condition) — bỏ qua, trả về không có slug
+      }
+    }
+
     return candidate;
   },
 
@@ -327,5 +353,158 @@ export const candidateService = {
     });
     if (!application) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
     return application;
+  },
+
+  async getCvs(userId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    let cvs = await prisma.candidateCV.findMany({
+      where: { candidateId: candidate.id },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Backfill: nếu chưa có CandidateCV row nào nhưng candidate có cvUrl cũ
+    if (cvs.length === 0 && candidate.cvUrl) {
+      const created = await prisma.candidateCV.create({
+        data: {
+          candidateId: candidate.id,
+          fileName: candidate.cvFileName ?? 'cv.pdf',
+          fileUrl: candidate.cvUrl,
+          isDefault: true,
+        },
+      });
+      cvs = [created];
+    }
+
+    return cvs;
+  },
+
+  async uploadCvFile(userId: string, pdfBuffer: Buffer, originalName: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    const fileUrl = await uploadToCloudinary(pdfBuffer, 'candidate-cvs', 'raw');
+
+    const existingCount = await prisma.candidateCV.count({ where: { candidateId: candidate.id } });
+    const isFirst = existingCount === 0;
+
+    const cv = await prisma.candidateCV.create({
+      data: {
+        candidateId: candidate.id,
+        fileName: originalName,
+        fileUrl,
+        isDefault: isFirst,
+      },
+    });
+
+    // Cập nhật cvUrl trên Candidate để backward compat (ApplyModal cũ, profile completeness)
+    if (isFirst) {
+      await prisma.candidate.update({
+        where: { userId },
+        data: { cvUrl: fileUrl, cvFileName: originalName },
+      });
+    }
+
+    return cv;
+  },
+
+  async setDefaultCv(userId: string, cvId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    const cv = await prisma.candidateCV.findFirst({ where: { id: cvId, candidateId: candidate.id } });
+    if (!cv) throw Object.assign(new Error('Không tìm thấy CV'), { status: 404 });
+
+    await prisma.$transaction([
+      prisma.candidateCV.updateMany({
+        where: { candidateId: candidate.id },
+        data: { isDefault: false },
+      }),
+      prisma.candidateCV.update({
+        where: { id: cvId },
+        data: { isDefault: true },
+      }),
+      prisma.candidate.update({
+        where: { userId },
+        data: { cvUrl: cv.fileUrl, cvFileName: cv.fileName },
+      }),
+    ]);
+
+    return { success: true };
+  },
+
+  async updatePublicSettings(userId: string, data: { isPublicProfile?: boolean; publicSlug?: string }) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    const updateData: { isPublicProfile?: boolean; publicSlug?: string } = {};
+
+    if (data.isPublicProfile !== undefined) updateData.isPublicProfile = data.isPublicProfile;
+
+    if (data.publicSlug !== undefined) {
+      const slug = data.publicSlug.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 50);
+      if (slug.length < 3) throw Object.assign(new Error('Slug phải có ít nhất 3 ký tự'), { status: 400 });
+      // Check unique (loại trừ chính mình)
+      const conflict = await prisma.candidate.findUnique({ where: { publicSlug: slug } });
+      if (conflict && conflict.id !== candidate.id) {
+        throw Object.assign(new Error('Slug này đã được sử dụng, hãy chọn slug khác'), { status: 409 });
+      }
+      updateData.publicSlug = slug;
+    }
+
+    // Nếu bật public nhưng chưa có slug → tự sinh
+    const needsSlug = updateData.isPublicProfile === true && !candidate.publicSlug && !updateData.publicSlug;
+    if (needsSlug) {
+      updateData.publicSlug = generateSlug(candidate.fullName);
+    }
+
+    return prisma.candidate.update({ where: { userId }, data: updateData });
+  },
+
+  async getPublicProfile(slug: string) {
+    const candidate = await prisma.candidate.findUnique({
+      where: { publicSlug: slug },
+      include: {
+        experiences: { orderBy: { startDate: 'desc' } },
+        educations: { orderBy: { startYear: 'desc' } },
+      },
+    });
+    if (!candidate || !candidate.isPublicProfile) {
+      throw Object.assign(new Error('Hồ sơ không tồn tại hoặc chưa được công khai'), { status: 404 });
+    }
+    // Chỉ trả về field public, không trả phone/email/cvUrl
+    const { id, fullName, avatarUrl, headline, summary, location, skills, experiences, educations } = candidate;
+    return { id, fullName, avatarUrl, headline, summary, location, skills, experiences, educations };
+  },
+
+  async deleteCv(userId: string, cvId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    const cv = await prisma.candidateCV.findFirst({ where: { id: cvId, candidateId: candidate.id } });
+    if (!cv) throw Object.assign(new Error('Không tìm thấy CV'), { status: 404 });
+
+    const total = await prisma.candidateCV.count({ where: { candidateId: candidate.id } });
+    if (total <= 1) throw Object.assign(new Error('Không thể xóa CV duy nhất'), { status: 400 });
+
+    await prisma.candidateCV.delete({ where: { id: cvId } });
+
+    // Nếu xóa CV mặc định, đặt CV mới nhất làm mặc định
+    if (cv.isDefault) {
+      const next = await prisma.candidateCV.findFirst({
+        where: { candidateId: candidate.id },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (next) {
+        await prisma.candidateCV.update({ where: { id: next.id }, data: { isDefault: true } });
+        await prisma.candidate.update({
+          where: { userId },
+          data: { cvUrl: next.fileUrl, cvFileName: next.fileName },
+        });
+      }
+    }
+
+    return { success: true };
   },
 };

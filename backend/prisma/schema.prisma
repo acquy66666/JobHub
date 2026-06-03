@@ -123,26 +123,41 @@ model User {
 }
 
 model Candidate {
-  id           String        @id @default(cuid())
-  userId       String        @unique
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  fullName     String
-  phone        String?
-  avatarUrl    String?
-  headline     String?
-  summary      String?
-  location     String?
-  skills       String[]
-  cvUrl        String?
-  cvFileName   String?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  userId          String        @unique
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName        String
+  phone           String?
+  avatarUrl       String?
+  headline        String?
+  summary         String?
+  location        String?
+  skills          String[]
+  cvUrl           String?
+  cvFileName      String?
+  publicSlug      String?       @unique
+  isPublicProfile Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   applications      Application[]
   savedJobs         SavedJob[]
   experiences       Experience[]
   educations        Education[]
   jobAlerts         JobAlert[]
   followedCompanies FollowedCompany[]
+  cvFiles           CandidateCV[]
+}
+
+model CandidateCV {
+  id          String    @id @default(cuid())
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  fileName    String
+  fileUrl     String
+  isDefault   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([candidateId])
 }
 
 model Experience {

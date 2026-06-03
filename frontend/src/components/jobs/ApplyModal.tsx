@@ -1,47 +1,77 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
+import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/store/toastStore";
+
+interface CandidateCV {
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  isDefault: boolean;
+}
 
 interface Props {
   jobId: string;
   jobTitle: string;
-  savedCvUrl?: string | null;
-  savedCvFileName?: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function ApplyModal({ jobId, jobTitle, savedCvUrl, savedCvFileName, isOpen, onClose }: Props) {
+export function ApplyModal({ jobId, jobTitle, isOpen, onClose }: Props) {
   const [coverLetter, setCoverLetter] = useState("");
-  const [useSavedCv, setUseSavedCv] = useState(!!savedCvUrl);
+  const [selectedCvId, setSelectedCvId] = useState<string>("__new__");
   const [newCvFile, setNewCvFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
 
+  const { data: cvs = [] } = useQuery<CandidateCV[]>({
+    queryKey: queryKeys.candidateCvs(),
+    queryFn: () => api.get("/candidate/cvs").then((r) => r.data),
+    enabled: isOpen,
+    staleTime: 30_000,
+    select: (data) => {
+      // Pre-select default CV khi data load xong lần đầu
+      if (selectedCvId === "__new__" && data.some((c) => c.isDefault)) {
+        const def = data.find((c) => c.isDefault);
+        if (def) setSelectedCvId(def.id);
+      }
+      return data;
+    },
+  });
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (!useSavedCv && !newCvFile) {
+    if (selectedCvId === "__new__" && !newCvFile) {
       setError("Vui lòng chọn CV để ứng tuyển");
       return;
     }
 
     setLoading(true);
     try {
-      let cvUrl = savedCvUrl;
+      let cvUrl: string | undefined;
 
-      if (!useSavedCv && newCvFile) {
+      if (selectedCvId === "__new__" && newCvFile) {
         const formData = new FormData();
         formData.append("cv", newCvFile);
-        const res = await api.post("/candidate/cv", formData, {
+        const res = await api.post("/candidate/cvs", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-        cvUrl = res.data.cvUrl;
+        cvUrl = res.data.fileUrl;
+      } else {
+        const selected = cvs.find((c) => c.id === selectedCvId);
+        cvUrl = selected?.fileUrl;
+      }
+
+      if (!cvUrl) {
+        setError("Không lấy được URL CV. Vui lòng thử lại.");
+        return;
       }
 
       await api.post("/candidate/applications", { jobId, cvUrl, coverLetter: coverLetter || undefined });
@@ -98,21 +128,53 @@ export function ApplyModal({ jobId, jobTitle, savedCvUrl, savedCvFileName, isOpe
 
                 {/* CV selection */}
                 <div className="space-y-3">
-                  <label className="text-[12px] font-semibold text-t1 uppercase tracking-wide">CV của bạn</label>
-                  {savedCvUrl && (
-                    <label className="flex items-center gap-3 p-3 rounded-xl border border-border-dark cursor-pointer hover:border-[rgba(124,58,237,.4)] transition-colors">
-                      <input type="radio" checked={useSavedCv} onChange={() => setUseSavedCv(true)} className="accent-[#7C3AED]" />
-                      <div>
-                        <p className="text-[13px] font-medium text-t0">Dùng CV đã tải lên</p>
-                        <p className="text-[12px] text-t2">{savedCvFileName ?? "cv.pdf"}</p>
+                  <label className="text-[12px] font-semibold text-t1 uppercase tracking-wide">Chọn CV</label>
+
+                  {cvs.map((cv) => (
+                    <label
+                      key={cv.id}
+                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                        selectedCvId === cv.id
+                          ? "border-[rgba(124,58,237,.5)] bg-[rgba(124,58,237,.05)]"
+                          : "border-border-dark hover:border-[rgba(124,58,237,.3)]"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="cv"
+                        value={cv.id}
+                        checked={selectedCvId === cv.id}
+                        onChange={() => setSelectedCvId(cv.id)}
+                        className="accent-[#7C3AED]"
+                      />
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-medium text-t0 truncate">{cv.fileName}</p>
+                        {cv.isDefault && (
+                          <span className="text-[11px] text-[#B09BF8]">Mặc định</span>
+                        )}
                       </div>
                     </label>
-                  )}
-                  <label className="flex items-center gap-3 p-3 rounded-xl border border-border-dark cursor-pointer hover:border-[rgba(124,58,237,.4)] transition-colors">
-                    <input type="radio" checked={!useSavedCv} onChange={() => setUseSavedCv(false)} className="accent-[#7C3AED]" />
+                  ))}
+
+                  <label
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${
+                      selectedCvId === "__new__"
+                        ? "border-[rgba(124,58,237,.5)] bg-[rgba(124,58,237,.05)]"
+                        : "border-border-dark hover:border-[rgba(124,58,237,.3)]"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="cv"
+                      value="__new__"
+                      checked={selectedCvId === "__new__"}
+                      onChange={() => setSelectedCvId("__new__")}
+                      className="accent-[#7C3AED]"
+                    />
                     <span className="text-[13px] text-t0">Tải CV mới (PDF, max 5MB)</span>
                   </label>
-                  {!useSavedCv && (
+
+                  {selectedCvId === "__new__" && (
                     <input
                       type="file"
                       accept="application/pdf"
