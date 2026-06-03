@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
-import { JobStatus, Role, ReportStatus, AuditAction, Prisma } from '../generated/prisma/client';
+import { JobStatus, Role, ReportStatus, AuditAction, NotificationType, Prisma } from '../generated/prisma/client';
+import { createNotification } from './notification.service';
 
 export const adminService = {
   async getDashboardStats() {
@@ -79,12 +80,30 @@ export const adminService = {
   },
 
   async updateJobStatus(jobId: string, status: 'ACTIVE' | 'REJECTED') {
-    const job = await prisma.job.findUnique({ where: { id: jobId } });
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      include: { employer: { select: { companyName: true, followedBy: { include: { candidate: { select: { userId: true } } } } } } },
+    });
     if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
-    return prisma.job.update({
+    const updated = await prisma.job.update({
       where: { id: jobId },
       data: { status: status as JobStatus },
     });
+
+    if (status === 'ACTIVE' && job.employer.followedBy.length > 0) {
+      const notifications = job.employer.followedBy.map(f =>
+        createNotification({
+          userId: f.candidate.userId,
+          type: NotificationType.NEW_JOB_FROM_FOLLOWED_COMPANY,
+          title: `${job.employer.companyName} vừa đăng tin mới`,
+          message: job.title,
+          link: `/jobs/${job.id}`,
+        }).catch(console.error)
+      );
+      await Promise.allSettled(notifications);
+    }
+
+    return updated;
   },
 
   async getUsers(page: number, limit: number, role?: Role, keyword?: string) {

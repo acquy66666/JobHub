@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { JobCard } from "@/components/jobs/JobCard";
@@ -8,6 +8,7 @@ import { Pagination } from "@/components/common/Pagination";
 import api from "@/lib/api";
 import Link from "next/link";
 import { useState } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 interface Company {
   id: string;
@@ -25,6 +26,9 @@ interface Company {
 export default function CompanyDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [page, setPage] = useState(1);
+  const queryClient = useQueryClient();
+  const user = useAuthStore((s) => s.user);
+  const isCandidate = user?.role === "CANDIDATE";
 
   const { data: company, isLoading: companyLoading } = useQuery<Company>({
     queryKey: queryKeys.company(id),
@@ -35,6 +39,22 @@ export default function CompanyDetailPage() {
     queryKey: queryKeys.companyJobs(id, page),
     queryFn: () => api.get("/jobs", { params: { employerId: id, page, limit: 9 } }).then((r) => r.data),
     enabled: !!id,
+  });
+
+  const { data: followStatus } = useQuery({
+    queryKey: queryKeys.followStatus(id),
+    queryFn: () => api.get(`/candidate/followed-companies/${id}/status`).then((r) => r.data),
+    enabled: isCandidate,
+  });
+
+  const followMutation = useMutation({
+    mutationFn: () => api.post(`/candidate/followed-companies/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.followStatus(id) }),
+  });
+
+  const unfollowMutation = useMutation({
+    mutationFn: () => api.delete(`/candidate/followed-companies/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.followStatus(id) }),
   });
 
   const jobs = jobsData?.jobs ?? [];
@@ -95,10 +115,29 @@ export default function CompanyDetailPage() {
                   </a>
                 )}
               </div>
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 mt-4 flex-wrap">
                 <span className="text-[13px] px-3 py-1.5 rounded-xl bg-bg-3 text-t1 border border-border-dark">
                   {company._count.jobs} việc làm đang tuyển
                 </span>
+                {isCandidate && (
+                  followStatus?.isFollowing ? (
+                    <button
+                      onClick={() => unfollowMutation.mutate()}
+                      disabled={unfollowMutation.isPending}
+                      className="text-[13px] px-3 py-1.5 rounded-xl bg-[rgba(124,58,237,.12)] text-[#B09BF8] border border-[rgba(124,58,237,.2)] hover:bg-[rgba(124,58,237,.2)] transition-colors"
+                    >
+                      {unfollowMutation.isPending ? "..." : "🏢 Đang theo dõi"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => followMutation.mutate()}
+                      disabled={followMutation.isPending}
+                      className="text-[13px] px-3 py-1.5 rounded-xl border border-border-dark text-t1 hover:text-t0 hover:bg-white/[.04] transition-colors"
+                    >
+                      {followMutation.isPending ? "..." : "🏢 Theo dõi"}
+                    </button>
+                  )
+                )}
               </div>
             </div>
           </div>

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { formatApplicationStatus, formatJobType, formatWorkMode, formatSalary, timeAgo } from "@/lib/formatters";
+import { scoreColor } from "@/lib/matchScore";
 import { getRecentlyViewed, RecentlyViewedJob } from "@/lib/recentlyViewed";
 import api from "@/lib/api";
 import Link from "next/link";
@@ -41,6 +42,11 @@ export default function CandidateDashboard() {
   const { data: notifData } = useQuery({
     queryKey: queryKeys.notifications(1),
     queryFn: () => api.get("/notifications?page=1&limit=5").then((r) => r.data),
+  });
+
+  const { data: recommendedJobs = [] } = useQuery<{ id: string; title: string; matchScore: number; matchedSkills: string[]; location: string; jobType: string; workMode: string; salaryMin: number | null; salaryMax: number | null; salaryCurrency: string; employer: { companyName: string; logoUrl: string | null } }[]>({
+    queryKey: queryKeys.recommendedJobs(4),
+    queryFn: () => api.get("/candidate/recommended-jobs?limit=4").then((r) => r.data),
   });
 
   const completionItems = profile ? [
@@ -192,6 +198,52 @@ export default function CandidateDashboard() {
           </div>
         </ScrollReveal>
       </div>
+
+      {/* ĐỀ XUẤT CHO BẠN */}
+      {recommendedJobs.length > 0 && (
+        <ScrollReveal direction="up" delay={0.08}>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-[14px] font-bold text-t0">✨ Đề xuất cho bạn</h3>
+              <Link href="/candidate/recommended" className="text-[12px] text-[#7C3AED] hover:underline">Xem tất cả →</Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {recommendedJobs.map((job) => {
+                const scoreClass = scoreColor(job.matchScore);
+                const initial = job.employer.companyName?.[0]?.toUpperCase() ?? "?";
+                return (
+                  <Link
+                    key={job.id}
+                    href={`/jobs/${job.id}`}
+                    className="block bg-bg-2 border border-border-dark rounded-2xl p-4 hover:border-[rgba(124,58,237,.38)] hover:-translate-y-0.5 transition-all duration-200 group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-bg-3 flex items-center justify-center shrink-0">
+                        {job.employer.logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={job.employer.logoUrl} alt="" className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          <span className="text-[12px] font-black gradient-text">{initial}</span>
+                        )}
+                      </div>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${scoreClass}`}>{job.matchScore}%</span>
+                    </div>
+                    <p className="text-[12px] font-bold text-t0 line-clamp-2 mb-1.5 group-hover:text-[#9D5CF6] transition-colors">{job.title}</p>
+                    <p className="text-[10px] text-t2 mb-1.5">{job.employer.companyName}</p>
+                    <p className="text-[11px] text-green-400 font-medium">
+                      {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+                    </p>
+                    <div className="flex gap-1 mt-2 flex-wrap">
+                      <span className="badge-type text-[9px]">{formatJobType(job.jobType)}</span>
+                      <span className="badge-mode text-[9px]">{formatWorkMode(job.workMode)}</span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </ScrollReveal>
+      )}
 
       {/* ĐƠN ỨNG TUYỂN GẦN ĐÂY */}
       <ScrollReveal direction="up" delay={0.1}>

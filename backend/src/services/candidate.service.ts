@@ -252,4 +252,80 @@ export const candidateService = {
     if (!alert) throw Object.assign(new Error('Không tìm thấy thông báo'), { status: 404 });
     await prisma.jobAlert.delete({ where: { id: alertId } });
   },
+
+  async followCompany(userId: string, employerId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const employer = await prisma.employer.findUnique({ where: { id: employerId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy công ty'), { status: 404 });
+    try {
+      return await prisma.followedCompany.create({
+        data: { candidateId: candidate.id, employerId },
+      });
+    } catch {
+      throw Object.assign(new Error('Bạn đã theo dõi công ty này'), { status: 409 });
+    }
+  },
+
+  async unfollowCompany(userId: string, employerId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const follow = await prisma.followedCompany.findUnique({
+      where: { candidateId_employerId: { candidateId: candidate.id, employerId } },
+    });
+    if (!follow) throw Object.assign(new Error('Bạn chưa theo dõi công ty này'), { status: 404 });
+    await prisma.followedCompany.delete({ where: { id: follow.id } });
+  },
+
+  async getFollowedCompanies(userId: string, page: number, limit: number) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const skip = (page - 1) * limit;
+    const [items, total] = await Promise.all([
+      prisma.followedCompany.findMany({
+        where: { candidateId: candidate.id },
+        skip,
+        take: limit,
+        orderBy: { followedAt: 'desc' },
+        include: {
+          employer: {
+            select: {
+              id: true,
+              companyName: true,
+              logoUrl: true,
+              industry: true,
+              location: true,
+              isVerified: true,
+              _count: { select: { jobs: true } },
+            },
+          },
+        },
+      }),
+      prisma.followedCompany.count({ where: { candidateId: candidate.id } }),
+    ]);
+    return { companies: items.map(i => ({ ...i.employer, followedAt: i.followedAt })), total, totalPages: Math.ceil(total / limit) };
+  },
+
+  async isFollowing(userId: string, employerId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) return false;
+    const follow = await prisma.followedCompany.findUnique({
+      where: { candidateId_employerId: { candidateId: candidate.id, employerId } },
+    });
+    return !!follow;
+  },
+
+  async getApplicationTimeline(userId: string, appId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const application = await prisma.application.findFirst({
+      where: { id: appId, candidateId: candidate.id },
+      include: {
+        job: { select: { title: true, employer: { select: { companyName: true } } } },
+        statusHistory: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+    if (!application) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
+    return application;
+  },
 };

@@ -32,4 +32,13 @@ router.post('/job-alerts', candidateController.createJobAlert);
 router.put('/job-alerts/:alertId', candidateController.updateJobAlert);
 router.delete('/job-alerts/:alertId', candidateController.deleteJobAlert);
 
+router.get('/recommended-jobs', candidateController.getRecommendedJobs);
+
+router.get('/followed-companies', candidateController.getFollowedCompanies);
+router.get('/followed-companies/:employerId/status', candidateController.getFollowStatus);
+router.post('/followed-companies/:employerId', candidateController.followCompany);
+router.delete('/followed-companies/:employerId', candidateController.unfollowCompany);
+
+router.get('/applications/:appId/timeline', candidateController.getApplicationTimeline);
+
 export default router;

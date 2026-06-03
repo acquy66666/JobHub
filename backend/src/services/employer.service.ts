@@ -1,7 +1,8 @@
 import { prisma } from '../lib/prisma';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationStatusEmail } from '../utils/email';
-import { JobStatus, ApplicationStatus, ApplicationTag } from '../generated/prisma/client';
+import { createNotification } from './notification.service';
+import { JobStatus, ApplicationStatus, ApplicationTag, NotificationType } from '../generated/prisma/client';
 
 export const employerService = {
   async getProfile(userId: string) {
@@ -159,7 +160,27 @@ export const employerService = {
       where: { id: appId },
       data: { status, ...(note !== undefined ? { note } : {}) },
     });
+
+    prisma.applicationStatusHistory.create({
+      data: {
+        applicationId: appId,
+        fromStatus: application.status,
+        toStatus: status,
+        changedById: job.employer.userId,
+        note: note,
+      },
+    }).catch(console.error);
+
     sendApplicationStatusEmail(application.candidate.user.email, job.title, status).catch(console.error);
+
+    createNotification({
+      userId: application.candidate.userId,
+      type: NotificationType.APPLICATION_STATUS_CHANGED,
+      title: 'Cập nhật đơn ứng tuyển',
+      message: `Đơn ứng tuyển vị trí "${job.title}" đã chuyển sang trạng thái ${status}`,
+      link: '/candidate/applications',
+    }).catch(console.error);
+
     return updated;
   },
 

@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/authGuard';
 import { candidateService } from '../services/candidate.service';
+import * as recommendationService from '../services/recommendation.service';
 import {
   updateProfileSchema,
   addExperienceSchema,
@@ -161,6 +162,51 @@ export const candidateController = {
     try {
       await candidateService.deleteJobAlert(req.user!.userId, String(req.params.alertId));
       res.json({ message: 'Đã xóa thông báo việc làm' });
+    } catch (err) { next(err); }
+  },
+
+  async getRecommendedJobs(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const limit = Math.min(20, parseInt(String(req.query.limit)) || 10);
+      const result = await recommendationService.getRecommendedJobs(req.user!.userId, limit);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async followCompany(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.followCompany(req.user!.userId, String(req.params.employerId));
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
+  async unfollowCompany(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await candidateService.unfollowCompany(req.user!.userId, String(req.params.employerId));
+      res.json({ message: 'Đã bỏ theo dõi công ty' });
+    } catch (err) { next(err); }
+  },
+
+  async getFollowedCompanies(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const page = parseInt(String(req.query.page)) || 1;
+      const limit = parseInt(String(req.query.limit)) || 12;
+      const result = await candidateService.getFollowedCompanies(req.user!.userId, page, limit);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async getFollowStatus(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const isFollowing = await candidateService.isFollowing(req.user!.userId, String(req.params.employerId));
+      res.json({ isFollowing });
+    } catch (err) { next(err); }
+  },
+
+  async getApplicationTimeline(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.getApplicationTimeline(req.user!.userId, String(req.params.appId));
+      res.json(result);
     } catch (err) { next(err); }
   },
 };

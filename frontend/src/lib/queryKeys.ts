@@ -20,4 +20,8 @@ export const queryKeys = {
   candidateJobAlerts: () => ['candidate', 'job-alerts'] as const,
   notifications: (page?: number) => page !== undefined ? ['notifications', page] as const : ['notifications'] as const,
   notificationsUnreadCount: () => ['notifications', 'unread-count'] as const,
+  recommendedJobs: (limit?: number) => limit !== undefined ? ['candidate', 'recommended-jobs', limit] as const : ['candidate', 'recommended-jobs'] as const,
+  followedCompanies: (page?: number) => page !== undefined ? ['candidate', 'followed-companies', page] as const : ['candidate', 'followed-companies'] as const,
+  followStatus: (employerId: string) => ['candidate', 'following', employerId] as const,
+  applicationTimeline: (appId: string) => ['candidate', 'applications', appId, 'timeline'] as const,
 };

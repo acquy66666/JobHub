@@ -137,11 +137,12 @@ model Candidate {
   cvFileName   String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  applications Application[]
-  savedJobs    SavedJob[]
-  experiences  Experience[]
-  educations   Education[]
-  jobAlerts    JobAlert[]
+  applications      Application[]
+  savedJobs         SavedJob[]
+  experiences       Experience[]
+  educations        Education[]
+  jobAlerts         JobAlert[]
+  followedCompanies FollowedCompany[]
 }
 
 model Experience {
@@ -178,11 +179,12 @@ model Employer {
   companySize String?
   description String?
   location    String?
-  isVerified  Boolean       @default(false)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  isVerified  Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
   jobs        Job[]
   templates   JobTemplate[]
+  followedBy  FollowedCompany[]
 }
 
 model JobTemplate {
@@ -252,6 +254,7 @@ model Application {
 
   @@unique([jobId, candidateId])
   @@index([jobId, candidateId])
+  statusHistory ApplicationStatusHistory[]
 }
 
 model SavedJob {
@@ -263,6 +266,31 @@ model SavedJob {
   savedAt     DateTime  @default(now())
 
   @@unique([jobId, candidateId])
+}
+
+model FollowedCompany {
+  id          String    @id @default(cuid())
+  candidateId String
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  employerId  String
+  employer    Employer  @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  followedAt  DateTime  @default(now())
+
+  @@unique([candidateId, employerId])
+  @@index([candidateId])
+}
+
+model ApplicationStatusHistory {
+  id            String             @id @default(cuid())
+  applicationId String
+  application   Application        @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fromStatus    ApplicationStatus?
+  toStatus      ApplicationStatus
+  changedById   String?
+  note          String?
+  createdAt     DateTime           @default(now())
+
+  @@index([applicationId, createdAt])
 }
 
 model RefreshToken {
