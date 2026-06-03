@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Production verify (2026-06-02, session 9):** Render auto-deploy webhook broken → 4 trang Stage 6 Nhóm 3 empty. Fix: Manual Deploy trên Render dashboard. Tất cả 4 trang verified: `/admin/logs` ✅, `/candidate/job-alerts` ✅, `/admin/jobs` flagged tab ✅, `/admin/reports` ✅.
 
 **Stage 7 Phase A done (2026-06-03, session 11):** Commit `12d7f01`. F1 In-app Notification Center ✅ (schema + backend 5 endpoints + NotificationBell polling 60s + /candidate/notifications page). F5 Recently Viewed ✅ (localStorage max 20 + hook /jobs/[id] + /candidate/recently-viewed page). Sidebar redesign ✅ (4 nhóm NAV_GROUPS: HOẠT ĐỘNG/HỒ SƠ/KHÁM PHÁ/CÀI ĐẶT + 4 placeholder pages). Dashboard redesign ✅ (HERO + 4 metrics + 2-col grid + horizontal scroll). `tsc --noEmit` clean + ESLint clean (no new errors).
-**Stage 7 Phase B pending:** F3 Recommended Jobs + F2 Followed Companies + F4 Application Timeline + Kanban.
+**Stage 7 Phase B done (2026-06-03, session 12):** Commit `726c370`. F3 Recommended Jobs ✅ (rule-based scoring 0.5*skills+0.2*location+0.2*industry+0.1*recency + /candidate/recommended page + dashboard section). F2 Followed Companies ✅ (FollowedCompany model + db push + follow/unfollow/list + follow button on /companies/[id] + /candidate/followed-companies page + admin approve job → notify followers). F4 Application Timeline + Kanban ✅ (ApplicationStatusHistory model + db push + history recording on status change + APPLICATION_STATUS_CHANGED notification + applications page 3-view List/Kanban/Timeline). `tsc --noEmit` clean + ESLint warnings only (pre-existing).
 **Stage 7 Phase C pending:** F8 Multiple CVs + F6 Profile Public View + F7 Job Comparison.
 
 **Deployed URLs:**
