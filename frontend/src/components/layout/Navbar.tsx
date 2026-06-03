@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
+import { NotificationBell } from "./NotificationBell";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -80,6 +81,8 @@ export function Navbar() {
               </Link>
             </>
           ) : (
+            <>
+            <NotificationBell />
             <div className="relative" ref={dropdownRef}>
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
@@ -142,6 +145,7 @@ export function Navbar() {
                 </div>
               )}
             </div>
+            </>
           )}
 
           {/* Mobile hamburger */}

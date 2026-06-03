@@ -18,4 +18,6 @@ export const queryKeys = {
   adminReports: (params?: Record<string, unknown>) => params ? ['admin', 'reports', params] as const : ['admin', 'reports'] as const,
   adminLogs: (params?: Record<string, unknown>) => params ? ['admin', 'logs', params] as const : ['admin', 'logs'] as const,
   candidateJobAlerts: () => ['candidate', 'job-alerts'] as const,
+  notifications: (page?: number) => page !== undefined ? ['notifications', page] as const : ['notifications'] as const,
+  notificationsUnreadCount: () => ['notifications', 'unread-count'] as const,
 };

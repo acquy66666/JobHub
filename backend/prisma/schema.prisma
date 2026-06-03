@@ -91,6 +91,14 @@ enum JobAlertFrequency {
   WEEKLY
 }
 
+enum NotificationType {
+  APPLICATION_STATUS_CHANGED
+  NEW_JOB_FROM_FOLLOWED_COMPANY
+  NEW_MATCHED_JOB
+  JOB_EXPIRING_SOON
+  SYSTEM
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -111,6 +119,7 @@ model User {
   refreshTokens        RefreshToken[]
   reports              Report[]
   auditLogs            AuditLog[]
+  notifications        Notification[]
 }
 
 model Candidate {
@@ -293,6 +302,21 @@ model AuditLog {
 
   @@index([adminId])
   @@index([action, createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  message   String
+  link      String?
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead, createdAt])
 }
 
 model JobAlert {

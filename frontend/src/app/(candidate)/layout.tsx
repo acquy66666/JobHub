@@ -5,13 +5,38 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Navbar } from "@/components/layout/Navbar";
 
-const NAV_ITEMS = [
-  { href: "/candidate", label: "Tổng quan", icon: "⊞" },
-  { href: "/candidate/profile", label: "Hồ sơ cá nhân", icon: "👤" },
-  { href: "/candidate/cv", label: "Upload CV", icon: "📄" },
-  { href: "/candidate/saved-jobs", label: "Việc đã lưu", icon: "🔖" },
-  { href: "/candidate/applications", label: "Đơn ứng tuyển", icon: "📋" },
-  { href: "/candidate/job-alerts", label: "Thông báo việc làm", icon: "🔔" },
+const NAV_GROUPS = [
+  {
+    label: "HOẠT ĐỘNG",
+    items: [
+      { href: "/candidate", label: "Tổng quan", icon: "⊞" },
+      { href: "/candidate/applications", label: "Đơn ứng tuyển", icon: "📋" },
+      { href: "/candidate/saved-jobs", label: "Việc đã lưu", icon: "🔖" },
+      { href: "/candidate/recently-viewed", label: "Đã xem gần đây", icon: "👁" },
+    ],
+  },
+  {
+    label: "HỒ SƠ",
+    items: [
+      { href: "/candidate/profile", label: "Hồ sơ cá nhân", icon: "👤" },
+      { href: "/candidate/cv", label: "CV của tôi", icon: "📄" },
+      { href: "/candidate/preview", label: "Xem hồ sơ public", icon: "🔗" },
+    ],
+  },
+  {
+    label: "KHÁM PHÁ",
+    items: [
+      { href: "/candidate/recommended", label: "Việc làm phù hợp", icon: "✨" },
+      { href: "/candidate/compare", label: "So sánh việc làm", icon: "⚖" },
+      { href: "/candidate/followed-companies", label: "Công ty theo dõi", icon: "🏢" },
+    ],
+  },
+  {
+    label: "CÀI ĐẶT",
+    items: [
+      { href: "/candidate/job-alerts", label: "Thông báo việc làm", icon: "🔔" },
+    ],
+  },
 ];
 
 export default function CandidateLayout({ children }: { children: React.ReactNode }) {
@@ -38,25 +63,34 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </div>
-      <nav className="flex-1 p-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                active
-                  ? "bg-[rgba(124,58,237,.12)] border-l-2 border-primary text-t0 pl-[10px]"
-                  : "text-t1 hover:bg-white/[.04] hover:text-t0"
-              }`}
-            >
-              <span className="text-[16px]">{item.icon}</span>
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 p-3 space-y-4 overflow-y-auto">
+        {NAV_GROUPS.map((group) => (
+          <div key={group.label}>
+            <p className="px-3 py-1 text-[10px] font-semibold tracking-widest text-[#55556A] uppercase">
+              {group.label}
+            </p>
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+                      active
+                        ? "bg-[rgba(124,58,237,.12)] border-l-2 border-primary text-t0 pl-[10px]"
+                        : "text-t1 hover:bg-white/[.04] hover:text-t0"
+                    }`}
+                  >
+                    <span className="text-[15px]">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
     </>
   );

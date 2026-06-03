@@ -6,11 +6,12 @@ import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { ApplyModal } from "@/components/jobs/ApplyModal";
 import { formatSalary, formatJobType, formatWorkMode, timeAgo } from "@/lib/formatters";
 import { useAuthStore } from "@/store/authStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/api";
 import Link from "next/link";
 import { computeMatchScore, scoreColor } from "@/lib/matchScore";
 import { useToast } from "@/store/toastStore";
+import { addRecentlyViewed } from "@/lib/recentlyViewed";
 
 const REPORT_REASONS = [
   { value: "SPAM", label: "Spam / quảng cáo" },
@@ -57,6 +58,25 @@ export default function JobDetailPage() {
     queryFn: () => api.get("/candidate/profile").then((r) => r.data),
     enabled: user?.role === "CANDIDATE",
   });
+
+  useEffect(() => {
+    if (job && typeof window !== "undefined") {
+      addRecentlyViewed({
+        id: job.id,
+        title: job.title,
+        employer: { companyName: job.employer.companyName, logoUrl: job.employer.logoUrl },
+        location: job.location,
+        jobType: job.jobType,
+        workMode: job.workMode,
+        salaryMin: job.salaryMin,
+        salaryMax: job.salaryMax,
+        salaryCurrency: job.salaryCurrency,
+        industry: job.industry,
+        createdAt: job.createdAt,
+        viewedAt: new Date().toISOString(),
+      });
+    }
+  }, [job?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isLoading) {
     return (
