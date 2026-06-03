@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **JobHub** — full-stack recruitment website (đồ án tốt nghiệp). 3 user roles: Candidate, Employer, Admin. Dark theme inspired by Status.app.
 
-**Current stage:** Stage 6 — Feature Enhancement (in progress). Stage 5 ✅ COMPLETE (2026-06-02). Stages 0–4 complete (2026-05-25). Full-stack running: Next.js 14 App Router (`frontend/src/`), Express.js + Prisma (`backend/src/`), PostgreSQL via Docker Compose. HTML prototypes archived in `prototype/`.
+**Current stage:** Stage 7 — Candidate Side Expansion (planned, 2026-06-03). Stage 6 ✅ COMPLETE (2026-06-02). Stage 5 ✅ COMPLETE (2026-06-02). Stages 0–4 complete (2026-05-25). Full-stack running: Next.js 14 App Router (`frontend/src/`), Express.js + Prisma (`backend/src/`), PostgreSQL via Docker Compose. HTML prototypes archived in `prototype/`.
 
 **Stage 5 done (100%):** SEO, error boundaries, seed data, deploy (Render + Vercel), proxy architecture, auth login hoạt động. BUG-1 → BUG-9 đã fix. TC1 ✅, TC2a ✅, TC2b ✅, TC2c ✅, TC3 ✅, TC4 ✅, TC5 ✅, TC6 ✅. TC7 hoãn theo yêu cầu. Email: Brevo REST API (HTTPS port 443, không dùng SMTP). Env vars: `BREVO_API_KEY` + `BREVO_SENDER_EMAIL` trong Render.
 **Stage 6 Nhóm 1 done:** Job Analytics Columns ✅, Employer Verification Badge ✅, Profile Completeness Meter (enhanced) ✅, Job Post Templates ✅. Commit `c1fd287`.
@@ -15,6 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Stage 6 COMPLETE.** Nhóm 4 (Kanban, Salary Benchmark, Reviews, Zalo, Payment) — deferred v2+.
 **Production fix (2026-06-02):** BUG-10 fixed — Vercel build fail do ESLint unescaped `"` trong `admin/reports/page.tsx`. Seed data enhanced: +3 flagged jobs, +8 reports, +19 audit logs, +3 job alerts, +5 application tags inserted via Supabase MCP. Commit `8b20c98`.
 **Production verify (2026-06-02, session 9):** Render auto-deploy webhook broken → 4 trang Stage 6 Nhóm 3 empty. Fix: Manual Deploy trên Render dashboard. Tất cả 4 trang verified: `/admin/logs` ✅, `/candidate/job-alerts` ✅, `/admin/jobs` flagged tab ✅, `/admin/reports` ✅.
+
+**Stage 7 planned (2026-06-03, session 10):** Candidate-side expansion — 8 features mới + redesign bố cục candidate. Plan chi tiết: [`C:\Users\Admin\.claude\plans\serene-knitting-octopus.md`](file:///C:/Users/Admin/.claude/plans/serene-knitting-octopus.md). 8 features: (1) In-app Notification Center, (2) Followed Companies, (3) Recommended Jobs rule-based, (4) Application Timeline + Kanban, (5) Recently Viewed Jobs, (6) Profile Public View, (7) Job Comparison (so sánh 3 jobs), (8) Multiple CVs. Redesign: sidebar 4 nhóm (Hoạt động/Hồ sơ/Khám phá/Cài đặt), dashboard mới (hero + grid 2-col + sections), Navbar notification bell. Roadmap 3 phase A/B/C. Demo bảo vệ đồ án hoãn sau Stage 7.
 
 **Deployed URLs:**
 - Frontend: `https://job-hub-two.vercel.app`
