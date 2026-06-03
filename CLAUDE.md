@@ -16,7 +16,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Production fix (2026-06-02):** BUG-10 fixed — Vercel build fail do ESLint unescaped `"` trong `admin/reports/page.tsx`. Seed data enhanced: +3 flagged jobs, +8 reports, +19 audit logs, +3 job alerts, +5 application tags inserted via Supabase MCP. Commit `8b20c98`.
 **Production verify (2026-06-02, session 9):** Render auto-deploy webhook broken → 4 trang Stage 6 Nhóm 3 empty. Fix: Manual Deploy trên Render dashboard. Tất cả 4 trang verified: `/admin/logs` ✅, `/candidate/job-alerts` ✅, `/admin/jobs` flagged tab ✅, `/admin/reports` ✅.
 
-**Stage 7 planned (2026-06-03, session 10):** Candidate-side expansion — 8 features mới + redesign bố cục candidate. Plan chi tiết: [`C:\Users\Admin\.claude\plans\serene-knitting-octopus.md`](file:///C:/Users/Admin/.claude/plans/serene-knitting-octopus.md). 8 features: (1) In-app Notification Center, (2) Followed Companies, (3) Recommended Jobs rule-based, (4) Application Timeline + Kanban, (5) Recently Viewed Jobs, (6) Profile Public View, (7) Job Comparison (so sánh 3 jobs), (8) Multiple CVs. Redesign: sidebar 4 nhóm (Hoạt động/Hồ sơ/Khám phá/Cài đặt), dashboard mới (hero + grid 2-col + sections), Navbar notification bell. Roadmap 3 phase A/B/C. Demo bảo vệ đồ án hoãn sau Stage 7.
+**Stage 7 Phase A done (2026-06-03, session 11):** Commit `12d7f01`. F1 In-app Notification Center ✅ (schema + backend 5 endpoints + NotificationBell polling 60s + /candidate/notifications page). F5 Recently Viewed ✅ (localStorage max 20 + hook /jobs/[id] + /candidate/recently-viewed page). Sidebar redesign ✅ (4 nhóm NAV_GROUPS: HOẠT ĐỘNG/HỒ SƠ/KHÁM PHÁ/CÀI ĐẶT + 4 placeholder pages). Dashboard redesign ✅ (HERO + 4 metrics + 2-col grid + horizontal scroll). `tsc --noEmit` clean + ESLint clean (no new errors).
+**Stage 7 Phase B pending:** F3 Recommended Jobs + F2 Followed Companies + F4 Application Timeline + Kanban.
+**Stage 7 Phase C pending:** F8 Multiple CVs + F6 Profile Public View + F7 Job Comparison.
 
 **Deployed URLs:**
 - Frontend: `https://job-hub-two.vercel.app`
