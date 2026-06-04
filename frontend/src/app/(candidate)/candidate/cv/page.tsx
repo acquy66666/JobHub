@@ -96,12 +96,20 @@ export default function CandidateCVPage() {
               Tải lên nhiều CV cho từng vị trí khác nhau. Tối đa 5MB / file PDF.
             </p>
           </div>
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="btn-primary px-5 py-2.5 rounded-xl text-[14px] font-semibold"
-          >
-            + Tải CV lên
-          </button>
+          <div className="flex gap-2">
+            <a
+              href="/candidate/cv/builder"
+              className="px-4 py-2.5 rounded-xl text-[14px] font-semibold border border-border-dark text-t1 hover:border-[rgba(124,58,237,.4)] hover:text-t0 transition-colors"
+            >
+              ✨ Tạo từ mẫu
+            </a>
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="btn-primary px-5 py-2.5 rounded-xl text-[14px] font-semibold"
+            >
+              + Tải CV lên
+            </button>
+          </div>
         </div>
       </ScrollReveal>
 

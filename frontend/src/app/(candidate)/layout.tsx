@@ -20,6 +20,7 @@ const NAV_GROUPS = [
     items: [
       { href: "/candidate/profile", label: "Hồ sơ cá nhân", icon: "👤" },
       { href: "/candidate/cv", label: "CV của tôi", icon: "📄" },
+      { href: "/candidate/cv/builder", label: "Tạo CV từ mẫu", icon: "✨" },
       { href: "/candidate/preview", label: "Xem hồ sơ public", icon: "🔗" },
     ],
   },
