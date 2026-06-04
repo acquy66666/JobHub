@@ -37,7 +37,7 @@ export default function SavedJobsPage() {
   const totalPages = data?.totalPages ?? 1;
 
   return (
-    <div className="p-8 max-w-5xl space-y-6">
+    <div className="p-4 sm:p-8 max-w-5xl space-y-6">
       <ScrollReveal direction="up">
         <h1 className="text-[24px] font-extrabold text-t0 mb-1">Việc làm đã lưu</h1>
         <p className="text-[14px] text-t1">Các tin tuyển dụng bạn đã đánh dấu yêu thích.</p>

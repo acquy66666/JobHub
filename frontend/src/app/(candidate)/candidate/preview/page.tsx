@@ -73,7 +73,7 @@ export default function PreviewPage() {
   const profileUrl = slug ? `${SITE_URL}/u/${slug}` : null;
 
   return (
-    <div className="p-8 max-w-2xl space-y-8">
+    <div className="p-4 sm:p-8 max-w-2xl space-y-8">
       <ScrollReveal direction="up">
         <h1 className="text-[24px] font-extrabold text-t0 mb-1">Hồ sơ công khai</h1>
         <p className="text-[14px] text-t1">

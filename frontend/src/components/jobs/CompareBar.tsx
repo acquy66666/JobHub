@@ -27,8 +27,8 @@ export function CompareBar() {
         >
           <div className="max-w-3xl mx-auto pointer-events-auto">
             <div className="bg-bg-1 border border-border-dark rounded-2xl shadow-[0_8px_40px_rgba(0,0,0,.5)] p-3 flex items-center gap-3">
-              {/* Slots */}
-              <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
+              {/* Slots — desktop */}
+              <div className="hidden sm:flex flex-1 items-center gap-2 min-w-0 overflow-hidden">
                 {[0, 1, 2].map((i) => {
                   const job = compareJobs[i];
                   return job ? (
@@ -53,12 +53,29 @@ export function CompareBar() {
                   ) : (
                     <div
                       key={`empty-${i}`}
-                      className="hidden sm:flex items-center justify-center flex-1 h-[52px] rounded-xl border border-dashed border-border-dark"
+                      className="flex items-center justify-center flex-1 h-[52px] rounded-xl border border-dashed border-border-dark"
                     >
                       <p className="text-[10px] text-t2">+ Thêm việc làm</p>
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Slots — mobile compact */}
+              <div className="sm:hidden flex-1 min-w-0">
+                <p className="text-[12px] font-semibold text-t0">{compareJobs.length} việc đã chọn</p>
+                <div className="flex gap-2 mt-0.5 flex-wrap">
+                  {compareJobs.map((j) => (
+                    <button
+                      key={j.id}
+                      onClick={() => removeJob(j.id)}
+                      className="flex items-center gap-1 text-[10px] text-t2 hover:text-[#EF4444] transition-colors"
+                    >
+                      <span className="max-w-[72px] truncate">{j.title}</span>
+                      <span>×</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Actions */}

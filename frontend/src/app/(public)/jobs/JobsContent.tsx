@@ -1,5 +1,6 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { queryKeys } from "@/lib/queryKeys";
@@ -15,6 +16,7 @@ import api from "@/lib/api";
 export function JobsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuthStore();
 
   const filters = {
@@ -85,9 +87,23 @@ export function JobsContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
         {/* Filter sidebar */}
-        <ScrollReveal direction="left">
-          <JobFilters initial={initialFilters} />
-        </ScrollReveal>
+        <div>
+          {/* Mobile toggle */}
+          <button
+            className="lg:hidden w-full mb-3 flex items-center justify-between px-4 py-3 bg-bg-2 border border-border-dark rounded-2xl text-[13px] font-semibold text-t1 hover:text-t0 transition-colors"
+            onClick={() => setFilterOpen((o) => !o)}
+          >
+            <span>Bộ lọc tìm kiếm</span>
+            <svg className={`w-4 h-4 transition-transform ${filterOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div className={`${filterOpen ? "block" : "hidden"} lg:block`}>
+            <ScrollReveal direction="left">
+              <JobFilters initial={initialFilters} />
+            </ScrollReveal>
+          </div>
+        </div>
 
         {/* Job list */}
         <div>

@@ -257,7 +257,7 @@ export default function CandidateApplicationsPage() {
   ];
 
   return (
-    <div className="p-8 max-w-5xl space-y-6">
+    <div className="p-4 sm:p-8 max-w-5xl space-y-6">
       <ScrollReveal direction="up">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>

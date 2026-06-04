@@ -135,7 +135,7 @@ export default function CandidateProfilePage() {
   if (isLoading) return <div className="p-8 animate-pulse"><div className="h-8 bg-bg-2 rounded w-1/3 mb-4" /><div className="h-64 bg-bg-2 rounded-2xl" /></div>;
 
   return (
-    <div className="p-8 max-w-4xl space-y-8">
+    <div className="p-4 sm:p-8 max-w-4xl space-y-8">
       <ScrollReveal direction="up">
         <h1 className="text-[24px] font-extrabold text-t0 mb-1">Hồ sơ cá nhân</h1>
         <p className="text-[14px] text-t1">Cập nhật thông tin để tăng cơ hội được tuyển dụng.</p>
@@ -321,7 +321,7 @@ function ExperienceModal({ initial, onClose, onSaved }: { initial: (ExpForm & { 
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <form onSubmit={handleSubmit(onSubmit)} onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-bg-2 border border-border-dark rounded-2xl p-6 space-y-4 shadow-[0_24px_80px_rgba(0,0,0,.6)]">
+      <form onSubmit={handleSubmit(onSubmit)} onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-bg-2 border border-border-dark rounded-2xl p-6 space-y-4 shadow-[0_24px_80px_rgba(0,0,0,.6)] max-h-[90vh] overflow-y-auto">
         <h3 className="text-[17px] font-bold text-t0">{initial ? "Sửa kinh nghiệm" : "Thêm kinh nghiệm"}</h3>
         <div><label className={labelClass}>Tên công ty *</label><input {...register("company")} className={inputClass} />{errors.company && <p className="text-[12px] text-red-400 mt-1">{errors.company.message}</p>}</div>
         <div><label className={labelClass}>Chức vụ *</label><input {...register("position")} className={inputClass} />{errors.position && <p className="text-[12px] text-red-400 mt-1">{errors.position.message}</p>}</div>
@@ -361,7 +361,7 @@ function EducationModal({ initial, onClose, onSaved }: { initial: (EduForm & { i
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <form onSubmit={handleSubmit(onSubmit)} onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-bg-2 border border-border-dark rounded-2xl p-6 space-y-4 shadow-[0_24px_80px_rgba(0,0,0,.6)]">
+      <form onSubmit={handleSubmit(onSubmit)} onClick={(e) => e.stopPropagation()} className="w-full max-w-md bg-bg-2 border border-border-dark rounded-2xl p-6 space-y-4 shadow-[0_24px_80px_rgba(0,0,0,.6)] max-h-[90vh] overflow-y-auto">
         <h3 className="text-[17px] font-bold text-t0">{initial ? "Sửa học vấn" : "Thêm học vấn"}</h3>
         <div><label className={labelClass}>Tên trường *</label><input {...register("school")} className={inputClass} />{errors.school && <p className="text-[12px] text-red-400 mt-1">{errors.school.message}</p>}</div>
         <div><label className={labelClass}>Bằng cấp *</label><input {...register("degree")} placeholder="VD: Cử nhân, Thạc sĩ..." className={inputClass} /></div>

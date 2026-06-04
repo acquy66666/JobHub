@@ -87,7 +87,7 @@ export default function CandidateCVPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl space-y-8">
+    <div className="p-4 sm:p-8 max-w-3xl space-y-8">
       <ScrollReveal direction="up">
         <div className="flex items-center justify-between">
           <div>
