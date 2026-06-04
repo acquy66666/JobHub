@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/employer/profile", label: "Hồ sơ công ty", icon: "🏢" },
   { href: "/employer/jobs/new", label: "Đăng tin", icon: "➕" },
   { href: "/employer/jobs", label: "Quản lý tin", icon: "📋" },
+  { href: "/employer/stats", label: "Thống kê", icon: "📊" },
   { href: "/employer/candidates", label: "Tìm ứng viên", icon: "🔍" },
 ];
 

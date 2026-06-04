@@ -171,7 +171,7 @@ export const employerService = {
       },
     }).catch(console.error);
 
-    sendApplicationStatusEmail(application.candidate.user.email, job.title, status).catch(console.error);
+    sendApplicationStatusEmail(application.candidate.user.email, job.title, status, note).catch(console.error);
 
     createNotification({
       userId: application.candidate.userId,
@@ -353,6 +353,59 @@ export const employerService = {
     }));
 
     return { candidates, total, page, limit, totalPages: Math.ceil(total / limit) };
+  },
+
+  async getJobStats(userId: string) {
+    const employer = await prisma.employer.findUnique({ where: { userId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+
+    const jobs = await prisma.job.findMany({
+      where: { employerId: employer.id },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        viewCount: true,
+        createdAt: true,
+        _count: { select: { applications: true } },
+      },
+    });
+
+    const jobIds = jobs.map(j => j.id);
+    const acceptedCounts = await prisma.application.groupBy({
+      by: ['jobId'],
+      where: { jobId: { in: jobIds }, status: ApplicationStatus.ACCEPTED },
+      _count: { id: true },
+    });
+    const acceptedMap: Record<string, number> = Object.fromEntries(
+      acceptedCounts.map(a => [a.jobId, a._count.id])
+    );
+
+    const totalViews = jobs.reduce((s, j) => s + j.viewCount, 0);
+    const totalApps = jobs.reduce((s, j) => s + j._count.applications, 0);
+
+    const jobStats = jobs.map(job => ({
+      id: job.id,
+      title: job.title,
+      status: job.status,
+      viewCount: job.viewCount,
+      applicationCount: job._count.applications,
+      acceptedCount: acceptedMap[job.id] ?? 0,
+      conversionRate: job.viewCount > 0 ? Math.round((job._count.applications / job.viewCount) * 100) : 0,
+      createdAt: job.createdAt,
+    }));
+
+    return {
+      jobs: jobStats,
+      summary: {
+        totalJobs: jobs.length,
+        totalViews,
+        totalApplications: totalApps,
+        avgConversionRate: totalViews > 0 ? Math.round((totalApps / totalViews) * 100) : 0,
+      },
+    };
   },
 
   async getPublicCompany(employerId: string) {

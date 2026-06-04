@@ -82,21 +82,62 @@ export async function sendApplicationEmail(to: string, jobTitle: string, candida
   await sendMail(to, `Đơn ứng tuyển mới: ${jobTitle}`, html);
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: "Chờ xét duyệt",
-  REVIEWING: "Đang xem xét",
-  ACCEPTED: "Đã chấp nhận",
-  REJECTED: "Bị từ chối",
+const STATUS_CONFIG: Record<string, { label: string; color: string; emoji: string; message: string }> = {
+  REVIEWING: {
+    label: "Đang xem xét",
+    color: "#3B82F6",
+    emoji: "🔍",
+    message: "Hồ sơ của bạn đang được nhà tuyển dụng xem xét. Chúng tôi sẽ phản hồi sớm nhất có thể.",
+  },
+  ACCEPTED: {
+    label: "Đã chấp nhận",
+    color: "#22C55E",
+    emoji: "🎉",
+    message: "Chúc mừng! Hồ sơ của bạn đã được chấp nhận. Nhà tuyển dụng sẽ liên hệ để trao đổi các bước tiếp theo.",
+  },
+  REJECTED: {
+    label: "Không phù hợp",
+    color: "#EF4444",
+    emoji: "📋",
+    message: "Cảm ơn bạn đã ứng tuyển. Rất tiếc hồ sơ chưa phù hợp với vị trí này lần này. Chúc bạn may mắn ở các cơ hội khác.",
+  },
+  PENDING: {
+    label: "Chờ xét duyệt",
+    color: "#F59E0B",
+    emoji: "⏳",
+    message: "Đơn ứng tuyển của bạn đã được ghi nhận và đang chờ xét duyệt.",
+  },
 };
 
-export async function sendApplicationStatusEmail(to: string, jobTitle: string, status: string): Promise<void> {
-  const label = STATUS_LABELS[status] ?? status;
+export async function sendApplicationStatusEmail(to: string, jobTitle: string, status: string, note?: string): Promise<void> {
+  const cfg = STATUS_CONFIG[status] ?? { label: status, color: "#7C3AED", emoji: "ℹ️", message: "Trạng thái đơn ứng tuyển của bạn đã được cập nhật." };
+  const noteHtml = note
+    ? `<div style="margin-top:16px;padding:14px 16px;background:#1A1A28;border-radius:12px;border-left:3px solid ${cfg.color}">
+         <p style="margin:0 0 6px;font-size:11px;font-weight:600;color:#9494B0;text-transform:uppercase;letter-spacing:.06em">Ghi chú từ nhà tuyển dụng</p>
+         <p style="margin:0;font-size:14px;color:#F5F5FF">${note}</p>
+       </div>`
+    : "";
   const html = `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
-      <h2 style="color:#7C3AED">Cập nhật đơn ứng tuyển — JobHub</h2>
-      <p>Đơn ứng tuyển của bạn cho vị trí <strong>${jobTitle}</strong> đã được cập nhật.</p>
-      <p>Trạng thái mới: <strong style="color:#7C3AED">${label}</strong></p>
-      <p style="color:#666">Đăng nhập vào JobHub để xem chi tiết.</p>
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0E0E18;color:#F5F5FF;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#7C3AED,#3B82F6);padding:28px 32px">
+        <h1 style="margin:0;font-size:20px;font-weight:800;color:#fff">JobHub</h1>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,.7)">Cập nhật đơn ứng tuyển</p>
+      </div>
+      <div style="padding:28px 32px">
+        <div style="font-size:32px;margin-bottom:12px">${cfg.emoji}</div>
+        <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:${cfg.color}">${cfg.label}</h2>
+        <p style="margin:0 0 16px;font-size:14px;color:#9494B0">
+          Vị trí: <strong style="color:#F5F5FF">${jobTitle}</strong>
+        </p>
+        <p style="margin:0;font-size:14px;color:#9494B0;line-height:1.6">${cfg.message}</p>
+        ${noteHtml}
+      </div>
+      <div style="padding:20px 32px;border-top:1px solid #252538;text-align:center">
+        <a href="${env.CLIENT_URL}/candidate/applications"
+           style="display:inline-block;background:linear-gradient(135deg,#7C3AED,#3B82F6);color:#fff;text-decoration:none;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600">
+          Xem chi tiết đơn ứng tuyển
+        </a>
+      </div>
     </div>`;
-  await sendMail(to, `Cập nhật đơn ứng tuyển: ${jobTitle}`, html);
+  await sendMail(to, `${cfg.emoji} ${cfg.label}: ${jobTitle}`, html);
 }

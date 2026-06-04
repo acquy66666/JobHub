@@ -1,7 +1,8 @@
 import { prisma } from '../lib/prisma';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationEmail } from '../utils/email';
-import { JobStatus } from '../generated/prisma/client';
+import { JobStatus, NotificationType } from '../generated/prisma/client';
+import { createNotification } from './notification.service';
 
 function generateSlug(name: string): string {
   const base = name
@@ -151,6 +152,14 @@ export const candidateService = {
     });
 
     sendApplicationEmail(job.employer.user.email, job.title, candidate.fullName).catch(console.error);
+
+    createNotification({
+      userId: job.employer.userId,
+      type: NotificationType.NEW_APPLICATION,
+      title: 'Đơn ứng tuyển mới',
+      message: `${candidate.fullName} vừa ứng tuyển vị trí "${job.title}"`,
+      link: `/employer/jobs/${jobId}/applications`,
+    }).catch(console.error);
 
     return application;
   },
