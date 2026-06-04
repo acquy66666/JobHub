@@ -1,6 +1,6 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-04 (session 24 — QW-2..5 done, all Quick Wins complete)
+Last Updated: 2026-06-04 (session 25 — IMP-1 employer applications accordion done + production QA pass)
 Current Stage: Stage 8
 Status: Stage 5 ✅ COMPLETE | Stage 6 ✅ COMPLETE | Stage 7 ✅ COMPLETE | Stage 8 Sprint 1 ✅ Sprint 2 ✅ Sprint 3 partial (E6✅ E9✅ E10 pending) | **UI/UX Sprint planned (priority #1)**
 
@@ -318,7 +318,7 @@ Xây dựng website tuyển dụng full-stack (JobHub) với 3 nhóm người d�
 - [x] **QW-5 — Empty state `/candidate/compare`** — Commit `f49d5b6`. Empty state đã có sẵn từ Phase C, tinh chỉnh text + inline icon ⚖ visual + inline link "Tìm việc làm" để rõ ràng hơn.
 
 **Improvements lớn hơn (nửa ngày trở lên, sau QW):**
-- [ ] **IMP-1 — Employer Applications collapsed/expanded mode** — Pattern accordion: compact row (avatar + tên + status + tag) → click expand cover letter + screening answers + note input + NotesAccordion + InterviewAccordion. Giảm cognitive load. File: [(employer)/employer/jobs/[id]/applications/page.tsx](frontend/src/app/(employer)/employer/jobs/[id]/applications/page.tsx).
+- [x] **IMP-1 — Employer Applications collapsed/expanded mode** ✅ Commit `8f321e5`. Refactor list view: compact button row (avatar + tên + status badge + tag badge + meta + CV + chevron) → click expand AnimatePresence panel (email + cover letter + screening + status/note form + tag + NotesAccordion + InterviewAccordion). Single-expand `expandedId`, auto-reset khi đổi filter/page. CV button `stopPropagation`. tsc clean. Production QA Playwright PASS (collapsed ✅, expanded ✅, filter reset ✅, mobile 375 ✅).
 - [ ] **IMP-2 — Employer Dashboard redesign ngang Candidate** — HERO block (company name + logo + completeness % cho employer) + 4 stat cards gradient + section "Đơn mới gần đây" (PENDING apps tất cả jobs). Visual weight cân với Candidate Dashboard.
 - [ ] **IMP-3 — Recharts responsive mobile** — Wrapper `overflow-x: auto` với `minWidth: 600px` cho `(employer)/employer/stats/page.tsx` + `(admin)/admin/dashboard/page.tsx`. Hoặc switch sang HorizontalBarChart < 768px.
 - [ ] **IMP-4 — Keyboard accessibility full pass** — Audit toàn `components/jobs/`, `components/employer/`, `components/layout/` thêm focus-visible ring. ~8-10 file.
