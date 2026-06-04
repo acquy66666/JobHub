@@ -398,9 +398,6 @@ export const employerService = {
       acceptedCounts.map(a => [a.jobId, a._count.id])
     );
 
-    const totalViews = jobs.reduce((s, j) => s + j.viewCount, 0);
-    const totalApps = jobs.reduce((s, j) => s + j._count.applications, 0);
-
     const jobStats = jobs.map(job => ({
       id: job.id,
       title: job.title,
@@ -412,13 +409,22 @@ export const employerService = {
       createdAt: job.createdAt,
     }));
 
+    const [totalJobs, activeJobs, viewsAgg, totalApplications] = await Promise.all([
+      prisma.job.count({ where: { employerId: employer.id } }),
+      prisma.job.count({ where: { employerId: employer.id, status: 'ACTIVE' } }),
+      prisma.job.aggregate({ where: { employerId: employer.id }, _sum: { viewCount: true } }),
+      prisma.application.count({ where: { job: { employerId: employer.id } } }),
+    ]);
+    const totalViews = viewsAgg._sum.viewCount ?? 0;
+
     return {
       jobs: jobStats,
       summary: {
-        totalJobs: jobs.length,
+        totalJobs,
+        activeJobs,
         totalViews,
-        totalApplications: totalApps,
-        avgConversionRate: totalViews > 0 ? Math.round((totalApps / totalViews) * 100) : 0,
+        totalApplications,
+        avgConversionRate: totalViews > 0 ? Math.round((totalApplications / totalViews) * 100) : 0,
       },
     };
   },
