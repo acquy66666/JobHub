@@ -19,6 +19,10 @@ export default function EmployerLayout({ children }: { children: React.ReactNode
   const { user } = useAuthStore();
   const logoLetter = user?.profile?.companyName?.[0]?.toUpperCase() ?? "E";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const currentLabel =
+    NAV_ITEMS.find((i) =>
+      i.href === "/employer" ? pathname === i.href : pathname.startsWith(i.href),
+    )?.label ?? "Nhà tuyển dụng";
 
   const sidebarInner = (
     <>
@@ -95,7 +99,7 @@ export default function EmployerLayout({ children }: { children: React.ReactNode
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-[13px] font-semibold text-t0">Dashboard</span>
+          <span className="text-[13px] font-semibold text-t0">{currentLabel}</span>
         </div>
         {children}
       </main>

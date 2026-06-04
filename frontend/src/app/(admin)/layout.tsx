@@ -15,6 +15,8 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const currentLabel =
+    NAV_ITEMS.find((i) => pathname === i.href || pathname.startsWith(i.href + "/"))?.label ?? "Admin Panel";
 
   const sidebarInner = (
     <>
@@ -86,7 +88,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-[13px] font-semibold text-t0">Admin Panel</span>
+          <span className="text-[13px] font-semibold text-t0">{currentLabel}</span>
         </div>
         {children}
       </main>

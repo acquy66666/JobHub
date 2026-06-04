@@ -45,6 +45,14 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
   const { user } = useAuthStore();
   const avatarLetter = user?.profile?.fullName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "C";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navItemsFlat = NAV_GROUPS.flatMap((g) => g.items);
+  const currentLabel =
+    navItemsFlat.find((i) => i.href === pathname)?.label ??
+    navItemsFlat
+      .filter((i) => i.href !== "/candidate")
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((i) => pathname.startsWith(i.href))?.label ??
+    "Ứng viên";
 
   const sidebarInner = (
     <>
@@ -130,7 +138,7 @@ export default function CandidateLayout({ children }: { children: React.ReactNod
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <span className="text-[13px] font-semibold text-t0">Dashboard</span>
+          <span className="text-[13px] font-semibold text-t0">{currentLabel}</span>
         </div>
         {children}
       </main>
