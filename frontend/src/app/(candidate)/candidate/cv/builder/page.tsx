@@ -33,11 +33,14 @@ function TemplateCard({ tmpl, index }: { tmpl: TemplateConfig; index: number }) 
           <Comp data={SAMPLE_CV_DATA} />
         </div>
         {/* Overlay on hover */}
-        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <Link
+          href={`/candidate/cv/builder/${tmpl.id}`}
+          className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100"
+        >
           <span className="text-[13px] font-semibold text-white bg-[rgba(124,58,237,.9)] px-4 py-2 rounded-xl">
             Chọn mẫu này
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Info */}
