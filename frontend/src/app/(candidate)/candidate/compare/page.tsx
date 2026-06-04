@@ -71,11 +71,11 @@ export default function ComparePage() {
 
   if (compareJobs.length === 0) {
     return (
-      <div className="p-8 flex flex-col items-center justify-center min-h-[400px] text-center gap-4">
-        <div className="text-5xl">⚖️</div>
-        <h1 className="text-[22px] font-bold text-t0">Chưa chọn việc làm nào</h1>
-        <p className="text-[14px] text-t1 max-w-sm">
-          Thêm tối đa 3 việc làm từ danh sách tìm kiếm để so sánh chi tiết.
+      <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
+        <div className="text-6xl">⚖️</div>
+        <h1 className="text-[22px] font-bold text-t0">Chưa có việc làm để so sánh</h1>
+        <p className="text-[14px] text-t1 max-w-md leading-relaxed">
+          Vào trang <Link href="/jobs" className="text-[#B09BF8] hover:underline">Tìm việc làm</Link> và nhấn nút <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-bg-3 border border-border-dark text-[13px] mx-1">⚖</span> trên thẻ việc để thêm vào danh sách so sánh (tối đa 3 việc).
         </p>
         <Link href="/jobs" className="btn-primary px-6 py-2.5 rounded-xl text-[14px] font-semibold mt-2">
           Tìm việc làm →
