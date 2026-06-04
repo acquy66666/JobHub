@@ -194,6 +194,18 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getRecentApplications(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const statusRaw = typeof req.query.status === 'string' ? req.query.status : undefined;
+      const limit = Math.min(20, Math.max(1, parseInt(String(req.query.limit ?? '5'), 10) || 5));
+      const result = await employerService.getRecentApplications(req.user!.userId, {
+        status: statusRaw as never,
+        limit,
+      });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async getScreeningQuestions(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const result = await employerService.getScreeningQuestions(req.user!.userId, String(req.params.jobId));

@@ -26,6 +26,7 @@ export const queryKeys = {
   applicationTimeline: (appId: string) => ['candidate', 'applications', appId, 'timeline'] as const,
   candidateCvs: () => ['candidate', 'cvs'] as const,
   employerJobStats: () => ['employer', 'job-stats'] as const,
+  employerRecentApplications: (status?: string, limit?: number) => ['employer', 'recent-applications', status ?? 'all', limit ?? 5] as const,
   applicationNotes: (jobId: string, appId: string) => ['employer', 'jobs', jobId, 'applications', appId, 'notes'] as const,
   screeningQuestions: (jobId: string) => ['employer', 'jobs', jobId, 'screening-questions'] as const,
   interviewSchedules: (jobId: string, appId: string) => ['employer', 'jobs', jobId, 'applications', appId, 'interviews'] as const,

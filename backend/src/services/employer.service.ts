@@ -630,4 +630,25 @@ export const employerService = {
     void where;
     return { employers, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
+
+  async getRecentApplications(userId: string, opts: { status?: ApplicationStatus; limit: number }) {
+    const employer = await prisma.employer.findUnique({ where: { userId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+    const applications = await prisma.application.findMany({
+      where: {
+        job: { employerId: employer.id },
+        ...(opts.status ? { status: opts.status } : {}),
+      },
+      orderBy: { appliedAt: 'desc' },
+      take: opts.limit,
+      select: {
+        id: true,
+        status: true,
+        appliedAt: true,
+        job: { select: { id: true, title: true } },
+        candidate: { select: { fullName: true, avatarUrl: true, headline: true } },
+      },
+    });
+    return applications;
+  },
 };
