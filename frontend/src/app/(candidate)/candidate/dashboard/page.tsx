@@ -32,6 +32,7 @@ export default function CandidateDashboard() {
   const { data: appsData } = useQuery({
     queryKey: queryKeys.candidateApplications(1),
     queryFn: () => api.get("/candidate/applications", { params: { page: 1, limit: 5 } }).then((r) => r.data),
+    staleTime: 30_000,
   });
 
   const { data: savedData } = useQuery({
@@ -42,6 +43,7 @@ export default function CandidateDashboard() {
   const { data: notifData } = useQuery({
     queryKey: queryKeys.notifications(1),
     queryFn: () => api.get("/notifications?page=1&limit=5").then((r) => r.data),
+    staleTime: 30_000,
   });
 
   const { data: recommendedJobs = [] } = useQuery<{ id: string; title: string; matchScore: number; matchedSkills: string[]; location: string; jobType: string; workMode: string; salaryMin: number | null; salaryMax: number | null; salaryCurrency: string; employer: { companyName: string; logoUrl: string | null } }[]>({

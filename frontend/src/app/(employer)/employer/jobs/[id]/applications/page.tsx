@@ -197,12 +197,14 @@ export default function JobApplicationsPage() {
       },
     }).then((r) => r.data),
     enabled: !!jobId && viewMode === "list",
+    staleTime: 30_000,
   });
 
   const { data: kanbanData, isLoading: kanbanLoading } = useQuery({
     queryKey: [...queryKeys.employerJobApplications(jobId), "kanban"],
     queryFn: () => api.get(`/employer/jobs/${jobId}/applications`, { params: { page: 1, limit: 200 } }).then((r) => r.data),
     enabled: !!jobId && viewMode === "kanban",
+    staleTime: 30_000,
   });
 
   const listQueryKey = [...queryKeys.employerJobApplications(jobId, page), filterStatus, filterTag];

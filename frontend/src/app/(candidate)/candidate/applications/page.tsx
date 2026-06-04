@@ -322,6 +322,7 @@ export default function CandidateApplicationsPage() {
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.candidateApplications(page),
     queryFn: () => api.get("/candidate/applications", { params: { page, limit: 10 } }).then((r) => r.data),
+    staleTime: 30_000,
   });
 
   const applications: Application[] = data?.applications ?? [];

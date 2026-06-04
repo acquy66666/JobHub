@@ -43,6 +43,7 @@ export default function NotificationsPage() {
     queryKey: queryKeys.notifications(page),
     queryFn: () =>
       api.get(`/notifications?page=${page}&limit=20`).then((r) => r.data as { notifications: Notification[]; total: number; totalPages: number }),
+    staleTime: 30_000,
   });
 
   const markReadMutation = useMutation({

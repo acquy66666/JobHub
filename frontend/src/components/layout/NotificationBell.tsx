@@ -45,6 +45,7 @@ export function NotificationBell() {
     queryFn: () =>
       api.get("/notifications?page=1&limit=5").then((r) => r.data as { notifications: Notification[] }),
     enabled: open && user?.role === "CANDIDATE",
+    staleTime: 30_000,
   });
 
   const markReadMutation = useMutation({
