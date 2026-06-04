@@ -107,7 +107,13 @@ const FILTER_TABS = [
   { value: "REVIEWING", label: "Đang xem" },
   { value: "ACCEPTED", label: "Chấp nhận" },
   { value: "REJECTED", label: "Từ chối" },
-  { value: "__SHORTLISTED__", label: "⭐ Shortlist" },
+];
+
+const TAG_FILTER_TABS = [
+  { value: "", label: "Mọi nhãn" },
+  { value: "SHORTLISTED", label: "⭐ Tiềm năng cao" },
+  { value: "POTENTIAL",   label: "💡 Tiềm năng" },
+  { value: "ON_HOLD",     label: "⏸ Tạm giữ" },
 ];
 
 const KANBAN_COLUMNS = [
@@ -140,6 +146,7 @@ export default function JobApplicationsPage() {
   const toast = useToast();
   const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterTag, setFilterTag] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [taggingId, setTaggingId] = useState<string | null>(null);
   const [noteInputs, setNoteInputs] = useState<Record<string, string>>({});
@@ -172,8 +179,15 @@ export default function JobApplicationsPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: queryKeys.employerJobApplications(jobId, page),
-    queryFn: () => api.get(`/employer/jobs/${jobId}/applications`, { params: { page, limit: 10 } }).then((r) => r.data),
+    queryKey: [...queryKeys.employerJobApplications(jobId, page), filterStatus, filterTag],
+    queryFn: () => api.get(`/employer/jobs/${jobId}/applications`, {
+      params: {
+        page,
+        limit: 10,
+        ...(filterStatus && { status: filterStatus }),
+        ...(filterTag && { tag: filterTag }),
+      },
+    }).then((r) => r.data),
     enabled: !!jobId && viewMode === "list",
   });
 
@@ -183,13 +197,15 @@ export default function JobApplicationsPage() {
     enabled: !!jobId && viewMode === "kanban",
   });
 
+  const listQueryKey = [...queryKeys.employerJobApplications(jobId, page), filterStatus, filterTag];
+
   const updateMutation = useMutation({
     mutationFn: ({ appId, status, note }: { appId: string; status: string; note?: string }) =>
       api.patch(`/employer/jobs/${jobId}/applications/${appId}`, { status, note }),
     onMutate: async ({ appId, status }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.employerJobApplications(jobId, page) });
-      const previous = qc.getQueryData(queryKeys.employerJobApplications(jobId, page));
-      qc.setQueryData(queryKeys.employerJobApplications(jobId, page), (old: Record<string, unknown> | undefined) => ({
+      await qc.cancelQueries({ queryKey: listQueryKey });
+      const previous = qc.getQueryData(listQueryKey);
+      qc.setQueryData(listQueryKey, (old: Record<string, unknown> | undefined) => ({
         ...old,
         applications: (old?.applications as Application[] | undefined)?.map((a) =>
           a.id === appId ? { ...a, status } : a
@@ -199,7 +215,7 @@ export default function JobApplicationsPage() {
     },
     onSuccess: () => toast.success("Đã cập nhật trạng thái đơn"),
     onError: (_err, _vars, ctx) => {
-      qc.setQueryData(queryKeys.employerJobApplications(jobId, page), ctx?.previous);
+      qc.setQueryData(listQueryKey, ctx?.previous);
       toast.error("Có lỗi xảy ra, vui lòng thử lại");
     },
     onSettled: () => {
@@ -212,9 +228,9 @@ export default function JobApplicationsPage() {
     mutationFn: ({ appId, tag }: { appId: string; tag: string | null }) =>
       api.patch(`/employer/jobs/${jobId}/applications/${appId}/tag`, { tag }),
     onMutate: async ({ appId, tag }) => {
-      await qc.cancelQueries({ queryKey: queryKeys.employerJobApplications(jobId, page) });
-      const previous = qc.getQueryData(queryKeys.employerJobApplications(jobId, page));
-      qc.setQueryData(queryKeys.employerJobApplications(jobId, page), (old: Record<string, unknown> | undefined) => ({
+      await qc.cancelQueries({ queryKey: listQueryKey });
+      const previous = qc.getQueryData(listQueryKey);
+      qc.setQueryData(listQueryKey, (old: Record<string, unknown> | undefined) => ({
         ...old,
         applications: (old?.applications as Application[] | undefined)?.map((a) =>
           a.id === appId ? { ...a, tag } : a
@@ -224,7 +240,7 @@ export default function JobApplicationsPage() {
     },
     onSuccess: () => toast.success("Đã cập nhật tag"),
     onError: (_err, _vars, ctx) => {
-      qc.setQueryData(queryKeys.employerJobApplications(jobId, page), ctx?.previous);
+      qc.setQueryData(listQueryKey, ctx?.previous);
       toast.error("Có lỗi xảy ra, vui lòng thử lại");
     },
     onSettled: () => {
@@ -235,11 +251,7 @@ export default function JobApplicationsPage() {
 
   const allApplications: Application[] = data?.applications ?? [];
   const kanbanApplications: Application[] = kanbanData?.applications ?? [];
-  const filtered = (() => {
-    if (filterStatus === "__SHORTLISTED__") return allApplications.filter((a) => a.tag === "SHORTLISTED");
-    if (filterStatus) return allApplications.filter((a) => a.status === filterStatus);
-    return allApplications;
-  })();
+  const filtered = allApplications;
   const totalPages = data?.totalPages ?? 1;
 
   return (
@@ -286,13 +298,28 @@ export default function JobApplicationsPage() {
       {/* ─── LIST VIEW ─── */}
       {viewMode === "list" && (
         <>
-          <ScrollReveal direction="up" delay={0.05} className="flex gap-2 mb-6 overflow-x-auto pb-1">
+          <ScrollReveal direction="up" delay={0.05} className="flex gap-2 mb-3 overflow-x-auto pb-1">
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab.value}
-                onClick={() => setFilterStatus(tab.value)}
+                onClick={() => { setFilterStatus(tab.value); setPage(1); }}
                 className={`px-4 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-colors ${
                   filterStatus === tab.value ? "bg-[rgba(124,58,237,.15)] text-primary border border-[rgba(124,58,237,.3)]" : "border border-border-dark text-t1 hover:bg-white/[.04] hover:text-t0"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </ScrollReveal>
+          <ScrollReveal direction="up" delay={0.08} className="flex gap-2 mb-6 overflow-x-auto pb-1">
+            {TAG_FILTER_TABS.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => { setFilterTag(tab.value); setPage(1); }}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-colors ${
+                  filterTag === tab.value
+                    ? "bg-[rgba(124,58,237,.12)] text-[#B09BF8] border border-[rgba(124,58,237,.3)]"
+                    : "border border-border-dark/60 text-t2 hover:bg-white/[.04] hover:text-t1"
                 }`}
               >
                 {tab.label}

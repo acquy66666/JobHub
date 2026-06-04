@@ -81,7 +81,9 @@ export const employerController = {
     try {
       const page = parseInt(String(req.query.page)) || 1;
       const limit = parseInt(String(req.query.limit)) || 10;
-      const result = await employerService.getJobApplications(req.user!.userId, String(req.params.jobId), page, limit);
+      const status = req.query.status ? String(req.query.status) : undefined;
+      const tag = req.query.tag ? String(req.query.tag) : undefined;
+      const result = await employerService.getJobApplications(req.user!.userId, String(req.params.jobId), page, limit, status, tag);
       res.json(result);
     } catch (err) { next(err); }
   },

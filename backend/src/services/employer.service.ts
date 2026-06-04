@@ -124,12 +124,20 @@ export const employerService = {
     return prisma.job.update({ where: { id: jobId }, data: { status: newStatus } });
   },
 
-  async getJobApplications(userId: string, jobId: string, page: number, limit: number) {
+  async getJobApplications(userId: string, jobId: string, page: number, limit: number, status?: string, tag?: string) {
     const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
     if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
     if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
     const skip = (page - 1) * limit;
-    const where = { jobId };
+    const where: Record<string, unknown> = { jobId };
+    if (status && Object.values(ApplicationStatus).includes(status as ApplicationStatus)) {
+      where.status = status as ApplicationStatus;
+    }
+    if (tag === 'NONE') {
+      where.tag = null;
+    } else if (tag && Object.values(ApplicationTag).includes(tag as ApplicationTag)) {
+      where.tag = tag as ApplicationTag;
+    }
     const [applications, total] = await Promise.all([
       prisma.application.findMany({
         where,
