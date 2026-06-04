@@ -8,6 +8,7 @@ import { formatApplicationStatus, formatApplicationTag, timeAgo } from "@/lib/fo
 import api from "@/lib/api";
 import { useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/store/toastStore";
 import { InterviewAccordion } from "@/components/employer/InterviewAccordion";
 
@@ -161,6 +162,7 @@ export default function JobApplicationsPage() {
   const [statusSelects, setStatusSelects] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
   const [viewMode, setViewMode] = useState<"list" | "kanban">("list");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   async function handleExport() {
     if (exporting) return;
@@ -312,7 +314,7 @@ export default function JobApplicationsPage() {
             {FILTER_TABS.map((tab) => (
               <button
                 key={tab.value}
-                onClick={() => { setFilterStatus(tab.value); setPage(1); }}
+                onClick={() => { setFilterStatus(tab.value); setPage(1); setExpandedId(null); }}
                 className={`px-4 py-2 rounded-xl text-[13px] font-medium whitespace-nowrap transition-colors ${
                   filterStatus === tab.value ? "bg-[rgba(124,58,237,.15)] text-primary border border-[rgba(124,58,237,.3)]" : "border border-border-dark text-t1 hover:bg-white/[.04] hover:text-t0"
                 }`}
@@ -325,7 +327,7 @@ export default function JobApplicationsPage() {
             {TAG_FILTER_TABS.map((tab) => (
               <button
                 key={tab.value}
-                onClick={() => { setFilterTag(tab.value); setPage(1); }}
+                onClick={() => { setFilterTag(tab.value); setPage(1); setExpandedId(null); }}
                 className={`px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-colors ${
                   filterTag === tab.value
                     ? "bg-[rgba(124,58,237,.12)] text-[#B09BF8] border border-[rgba(124,58,237,.3)]"
@@ -354,103 +356,143 @@ export default function JobApplicationsPage() {
                 const initial = app.candidate.fullName?.[0]?.toUpperCase() ?? "?";
                 const currentStatus = statusSelects[app.id] ?? app.status;
                 const hasChange = currentStatus !== app.status;
+                const isExpanded = expandedId === app.id;
 
                 return (
                   <ScrollReveal key={app.id} direction="up" delay={i * 0.05}>
-                    <div className="card-dark p-5 rounded-2xl space-y-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-full bg-bg-3 flex items-center justify-center shrink-0">
+                    <div className={`card-dark rounded-2xl transition-colors ${isExpanded ? "border-[rgba(124,58,237,.4)]" : ""}`}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedId((prev) => (prev === app.id ? null : app.id))}
+                        aria-expanded={isExpanded}
+                        className="w-full flex items-center gap-4 p-4 text-left hover:bg-white/[.02] rounded-2xl transition-colors"
+                      >
+                        <div className="w-11 h-11 rounded-full bg-bg-3 flex items-center justify-center shrink-0">
                           {app.candidate.avatarUrl ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img src={app.candidate.avatarUrl} alt="" className="w-full h-full object-cover rounded-full" />
                           ) : (
-                            <span className="text-[18px] font-black gradient-text">{initial}</span>
+                            <span className="text-[16px] font-black gradient-text">{initial}</span>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-[14px] font-bold text-t0">{app.candidate.fullName}</p>
-                            <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border ${color}`}>{label}</span>
+                            <p className="text-[14px] font-bold text-t0 truncate">{app.candidate.fullName}</p>
+                            <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${color}`}>{label}</span>
                             {tagInfo && (
-                              <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border ${tagInfo.color}`}>
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${tagInfo.color}`}>
                                 {tagInfo.icon} {tagInfo.label}
                               </span>
                             )}
                           </div>
-                          {app.candidate.headline && <p className="text-[12px] text-t1">{app.candidate.headline}</p>}
-                          <p className="text-[11px] text-t2">{app.candidate.user.email} · Nộp đơn {timeAgo(app.appliedAt)}</p>
+                          <p className="text-[11px] text-t2 truncate mt-0.5">
+                            {app.candidate.headline ? `${app.candidate.headline} · ` : ""}
+                            {timeAgo(app.appliedAt)}
+                          </p>
                         </div>
-                        <a href={app.cvUrl} target="_blank" rel="noreferrer" className="shrink-0 px-4 py-2 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">
-                          📄 Xem CV
-                        </a>
-                      </div>
-
-                      {app.coverLetter && (
-                        <div className="bg-bg-3/50 rounded-xl p-3">
-                          <p className="text-[11px] font-semibold text-t2 uppercase tracking-wide mb-1.5">Thư giới thiệu</p>
-                          <p className="text-[12px] text-t1 leading-relaxed">{app.coverLetter}</p>
-                        </div>
-                      )}
-
-                      {app.screeningAnswers && app.screeningAnswers.length > 0 && (
-                        <div className="bg-bg-3/50 rounded-xl p-3 space-y-2">
-                          <p className="text-[11px] font-semibold text-t2 uppercase tracking-wide">Câu hỏi sàng lọc ({app.screeningAnswers.length})</p>
-                          {app.screeningAnswers.map((sa) => (
-                            <div key={sa.id}>
-                              <p className="text-[11px] text-t2 italic">{sa.question.question}</p>
-                              <p className="text-[12px] text-t0 font-medium mt-0.5">{sa.answer}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex items-start gap-3 pt-2 border-t border-border-dark/50">
-                        <div className="flex-1 space-y-2">
-                          <select
-                            value={currentStatus}
-                            onChange={(e) => setStatusSelects((prev) => ({ ...prev, [app.id]: e.target.value }))}
-                            className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[13px] text-t0 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all"
-                          >
-                            {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                          </select>
-                          <input
-                            type="text"
-                            placeholder="Ghi chú cho ứng viên (tùy chọn)..."
-                            value={noteInputs[app.id] ?? app.note ?? ""}
-                            onChange={(e) => setNoteInputs((prev) => ({ ...prev, [app.id]: e.target.value }))}
-                            className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all"
-                          />
-                        </div>
-                        <button
-                          disabled={!hasChange || updatingId === app.id}
-                          onClick={() => {
-                            setUpdatingId(app.id);
-                            updateMutation.mutate({ appId: app.id, status: currentStatus, note: noteInputs[app.id] });
-                          }}
-                          className="btn-primary px-4 py-2 rounded-xl text-[13px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                        <a
+                          href={app.cvUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="shrink-0 px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors"
                         >
-                          {updatingId === app.id ? "Đang lưu..." : "Cập nhật"}
-                        </button>
+                          📄 CV
+                        </a>
+                        <svg
+                          className={`w-4 h-4 text-t2 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
 
-                        <div className="shrink-0">
-                          <select
-                            value={app.tag ?? ""}
-                            onChange={(e) => {
-                              const newTag = e.target.value || null;
-                              setTaggingId(app.id);
-                              tagMutation.mutate({ appId: app.id, tag: newTag });
-                            }}
-                            disabled={taggingId === app.id}
-                            className="bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[12px] text-t1 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all disabled:opacity-50 cursor-pointer"
+                      <AnimatePresence initial={false}>
+                        {isExpanded && (
+                          <motion.div
+                            key="expanded"
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="overflow-hidden"
                           >
-                            {TAG_OPTIONS.map((opt) => (
-                              <option key={String(opt.value)} value={opt.value ?? ""}>{opt.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      <NotesAccordion jobId={jobId} appId={app.id} />
-                      <InterviewAccordion jobId={jobId} appId={app.id} />
+                            <div className="px-5 pb-5 pt-1 space-y-4 border-t border-border-dark/40">
+                              <p className="text-[11px] text-t2 pt-3">{app.candidate.user.email}</p>
+
+                              {app.coverLetter && (
+                                <div className="bg-bg-3/50 rounded-xl p-3">
+                                  <p className="text-[11px] font-semibold text-t2 uppercase tracking-wide mb-1.5">Thư giới thiệu</p>
+                                  <p className="text-[12px] text-t1 leading-relaxed">{app.coverLetter}</p>
+                                </div>
+                              )}
+
+                              {app.screeningAnswers && app.screeningAnswers.length > 0 && (
+                                <div className="bg-bg-3/50 rounded-xl p-3 space-y-2">
+                                  <p className="text-[11px] font-semibold text-t2 uppercase tracking-wide">Câu hỏi sàng lọc ({app.screeningAnswers.length})</p>
+                                  {app.screeningAnswers.map((sa) => (
+                                    <div key={sa.id}>
+                                      <p className="text-[11px] text-t2 italic">{sa.question.question}</p>
+                                      <p className="text-[12px] text-t0 font-medium mt-0.5">{sa.answer}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="flex items-start gap-3 pt-2 border-t border-border-dark/50 flex-wrap sm:flex-nowrap">
+                                <div className="flex-1 min-w-[200px] space-y-2">
+                                  <select
+                                    value={currentStatus}
+                                    onChange={(e) => setStatusSelects((prev) => ({ ...prev, [app.id]: e.target.value }))}
+                                    className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[13px] text-t0 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all"
+                                  >
+                                    {STATUS_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                  </select>
+                                  <input
+                                    type="text"
+                                    placeholder="Ghi chú cho ứng viên (tùy chọn)..."
+                                    value={noteInputs[app.id] ?? app.note ?? ""}
+                                    onChange={(e) => setNoteInputs((prev) => ({ ...prev, [app.id]: e.target.value }))}
+                                    className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all"
+                                  />
+                                </div>
+                                <button
+                                  disabled={!hasChange || updatingId === app.id}
+                                  onClick={() => {
+                                    setUpdatingId(app.id);
+                                    updateMutation.mutate({ appId: app.id, status: currentStatus, note: noteInputs[app.id] });
+                                  }}
+                                  className="btn-primary px-4 py-2 rounded-xl text-[13px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                                >
+                                  {updatingId === app.id ? "Đang lưu..." : "Cập nhật"}
+                                </button>
+
+                                <div className="shrink-0">
+                                  <select
+                                    value={app.tag ?? ""}
+                                    onChange={(e) => {
+                                      const newTag = e.target.value || null;
+                                      setTaggingId(app.id);
+                                      tagMutation.mutate({ appId: app.id, tag: newTag });
+                                    }}
+                                    disabled={taggingId === app.id}
+                                    className="bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[12px] text-t1 focus:outline-none focus:border-[rgba(124,58,237,.5)] transition-all disabled:opacity-50 cursor-pointer"
+                                  >
+                                    {TAG_OPTIONS.map((opt) => (
+                                      <option key={String(opt.value)} value={opt.value ?? ""}>{opt.label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <NotesAccordion jobId={jobId} appId={app.id} />
+                              <InterviewAccordion jobId={jobId} appId={app.id} />
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </ScrollReveal>
                 );
@@ -458,7 +500,7 @@ export default function JobApplicationsPage() {
             </div>
           )}
 
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <Pagination page={page} totalPages={totalPages} onPageChange={(p) => { setPage(p); setExpandedId(null); }} />
         </>
       )}
 
