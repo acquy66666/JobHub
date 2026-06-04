@@ -64,6 +64,10 @@ export const jobService = {
         employer: {
           select: { id: true, companyName: true, logoUrl: true, location: true, industry: true, website: true, description: true, companySize: true },
         },
+        screeningQuestions: {
+          orderBy: { order: 'asc' },
+          select: { id: true, question: true, type: true, isRequired: true, order: true },
+        },
       },
     });
     return job;

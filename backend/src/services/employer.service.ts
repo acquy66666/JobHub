@@ -148,6 +148,13 @@ export const employerService = {
           candidate: {
             include: { user: { select: { email: true } } },
           },
+          screeningAnswers: {
+            select: {
+              id: true,
+              answer: true,
+              question: { select: { question: true, type: true } },
+            },
+          },
         },
       }),
       prisma.application.count({ where }),
@@ -459,6 +466,39 @@ export const employerService = {
     });
     if (!employer) throw Object.assign(new Error('Không tìm thấy công ty'), { status: 404 });
     return employer;
+  },
+
+  async getScreeningQuestions(userId: string, jobId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    return prisma.screeningQuestion.findMany({
+      where: { jobId },
+      orderBy: { order: 'asc' },
+      select: { id: true, question: true, type: true, isRequired: true, order: true },
+    });
+  },
+
+  async createScreeningQuestion(userId: string, jobId: string, data: { question: string; type: string; isRequired: boolean }) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    const count = await prisma.screeningQuestion.count({ where: { jobId } });
+    if (count >= 5) throw Object.assign(new Error('Tối đa 5 câu hỏi mỗi tin tuyển dụng'), { status: 400 });
+    const { QuestionType } = await import('../generated/prisma/client');
+    const type = Object.values(QuestionType).includes(data.type as never) ? data.type as import('../generated/prisma/client').QuestionType : QuestionType.TEXT;
+    return prisma.screeningQuestion.create({
+      data: { jobId, question: data.question, type, isRequired: data.isRequired, order: count },
+    });
+  },
+
+  async deleteScreeningQuestion(userId: string, jobId: string, questionId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    const q = await prisma.screeningQuestion.findUnique({ where: { id: questionId } });
+    if (!q || q.jobId !== jobId) throw Object.assign(new Error('Không tìm thấy câu hỏi'), { status: 404 });
+    await prisma.screeningQuestion.delete({ where: { id: questionId } });
   },
 
   async getPublicList(page: number, limit: number) {

@@ -91,13 +91,19 @@ export const candidateController = {
   async applyJob(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { jobId, cvUrl, coverLetter } = applyJobSchema.parse(req.body);
+      const screeningAnswers = Array.isArray(req.body.screeningAnswers)
+        ? (req.body.screeningAnswers as unknown[]).filter(
+            (a): a is { questionId: string; answer: string } =>
+              typeof a === 'object' && a !== null && typeof (a as Record<string, unknown>).questionId === 'string' && typeof (a as Record<string, unknown>).answer === 'string',
+          )
+        : undefined;
       const candidate = await candidateService.getProfile(req.user!.userId);
       const resolvedCvUrl = cvUrl || candidate.cvUrl;
       if (!resolvedCvUrl) {
         res.status(400).json({ message: 'Vui lòng upload CV trước khi ứng tuyển' });
         return;
       }
-      const result = await candidateService.applyJob(req.user!.userId, jobId, resolvedCvUrl, coverLetter);
+      const result = await candidateService.applyJob(req.user!.userId, jobId, resolvedCvUrl, coverLetter, screeningAnswers);
       res.status(201).json(result);
     } catch (err) { next(err); }
   },

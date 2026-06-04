@@ -123,6 +123,9 @@ export default function EmployerJobsPage() {
                     <Link href={`/employer/jobs/${job.id}/applications`} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">
                       Đơn ({job._count.applications})
                     </Link>
+                    <Link href={`/employer/jobs/${job.id}/screening`} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors" title="Câu hỏi sàng lọc">
+                      ❓ Câu hỏi
+                    </Link>
                     <Link href={`/employer/jobs/${job.id}/edit`} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">
                       Sửa
                     </Link>

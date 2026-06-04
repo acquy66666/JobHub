@@ -194,6 +194,31 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getScreeningQuestions(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await employerService.getScreeningQuestions(req.user!.userId, String(req.params.jobId));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async createScreeningQuestion(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const question = String(req.body.question ?? '').trim();
+      if (!question) { res.status(400).json({ message: 'Nội dung câu hỏi không được trống' }); return; }
+      const type = String(req.body.type ?? 'TEXT');
+      const isRequired = req.body.isRequired !== false;
+      const result = await employerService.createScreeningQuestion(req.user!.userId, String(req.params.jobId), { question, type, isRequired });
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
+  async deleteScreeningQuestion(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await employerService.deleteScreeningQuestion(req.user!.userId, String(req.params.jobId), String(req.params.questionId));
+      res.json({ message: 'Đã xóa câu hỏi' });
+    } catch (err) { next(err); }
+  },
+
   async getPublicList(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;

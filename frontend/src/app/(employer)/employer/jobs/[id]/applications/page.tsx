@@ -123,6 +123,12 @@ const KANBAN_COLUMNS = [
   { status: "REJECTED",  label: "Từ chối",      color: "border-[rgba(239,68,68,.4)]",   headerColor: "text-red-400",   bg: "bg-[rgba(239,68,68,.06)]" },
 ];
 
+interface ScreeningAnswer {
+  id: string;
+  answer: string;
+  question: { question: string; type: string };
+}
+
 interface Application {
   id: string;
   status: string;
@@ -131,6 +137,7 @@ interface Application {
   cvUrl: string;
   coverLetter?: string;
   note?: string;
+  screeningAnswers?: ScreeningAnswer[];
   candidate: {
     id: string;
     fullName: string;
@@ -379,6 +386,18 @@ export default function JobApplicationsPage() {
                         <div className="bg-bg-3/50 rounded-xl p-3">
                           <p className="text-[11px] font-semibold text-t2 uppercase tracking-wide mb-1.5">Thư giới thiệu</p>
                           <p className="text-[12px] text-t1 leading-relaxed">{app.coverLetter}</p>
+                        </div>
+                      )}
+
+                      {app.screeningAnswers && app.screeningAnswers.length > 0 && (
+                        <div className="bg-bg-3/50 rounded-xl p-3 space-y-2">
+                          <p className="text-[11px] font-semibold text-t2 uppercase tracking-wide">Câu hỏi sàng lọc ({app.screeningAnswers.length})</p>
+                          {app.screeningAnswers.map((sa) => (
+                            <div key={sa.id}>
+                              <p className="text-[11px] text-t2 italic">{sa.question.question}</p>
+                              <p className="text-[12px] text-t0 font-medium mt-0.5">{sa.answer}</p>
+                            </div>
+                          ))}
                         </div>
                       )}
 

@@ -341,6 +341,7 @@ export default function JobDetailPage() {
       <ApplyModal
         jobId={id}
         jobTitle={job.title}
+        screeningQuestions={job.screeningQuestions}
         isOpen={applyOpen}
         onClose={() => setApplyOpen(false)}
       />

@@ -30,6 +30,10 @@ router.patch('/jobs/:jobId/applications/:appId/tag', employerController.updateAp
 router.get('/jobs/:jobId/applications/:appId/notes', employerController.getApplicationNotes);
 router.post('/jobs/:jobId/applications/:appId/notes', employerController.createApplicationNote);
 
+router.get('/jobs/:jobId/screening-questions', employerController.getScreeningQuestions);
+router.post('/jobs/:jobId/screening-questions', employerController.createScreeningQuestion);
+router.delete('/jobs/:jobId/screening-questions/:questionId', employerController.deleteScreeningQuestion);
+
 router.get('/templates', employerController.getTemplates);
 router.post('/templates', employerController.createTemplate);
 router.delete('/templates/:templateId', employerController.deleteTemplate);

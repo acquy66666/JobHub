@@ -100,6 +100,11 @@ enum NotificationType {
   SYSTEM
 }
 
+enum QuestionType {
+  TEXT
+  YES_NO
+}
+
 // ─── Models ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -248,8 +253,9 @@ model Job {
   flagReason     String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  applications   Application[]
-  savedBy        SavedJob[]
+  applications        Application[]
+  savedBy             SavedJob[]
+  screeningQuestions  ScreeningQuestion[]
 
   @@index([status, expiresAt])
   @@index([isFlagged])
@@ -271,8 +277,9 @@ model Application {
 
   @@unique([jobId, candidateId])
   @@index([jobId, candidateId])
-  statusHistory ApplicationStatusHistory[]
-  internalNotes ApplicationNote[]
+  statusHistory     ApplicationStatusHistory[]
+  internalNotes     ApplicationNote[]
+  screeningAnswers  ScreeningAnswer[]
 }
 
 model ApplicationNote {
@@ -284,6 +291,33 @@ model ApplicationNote {
   content       String
   createdAt     DateTime    @default(now())
 
+  @@index([applicationId])
+}
+
+model ScreeningQuestion {
+  id         String          @id @default(cuid())
+  jobId      String
+  job        Job             @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  question   String
+  type       QuestionType    @default(TEXT)
+  isRequired Boolean         @default(true)
+  order      Int             @default(0)
+  createdAt  DateTime        @default(now())
+  answers    ScreeningAnswer[]
+
+  @@index([jobId])
+}
+
+model ScreeningAnswer {
+  id            String            @id @default(cuid())
+  questionId    String
+  question      ScreeningQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  answer        String
+  createdAt     DateTime          @default(now())
+
+  @@unique([questionId, applicationId])
   @@index([applicationId])
 }
 

@@ -130,7 +130,7 @@ export const candidateService = {
     await prisma.education.delete({ where: { id: educationId } });
   },
 
-  async applyJob(userId: string, jobId: string, cvUrl: string, coverLetter?: string) {
+  async applyJob(userId: string, jobId: string, cvUrl: string, coverLetter?: string, screeningAnswers?: { questionId: string; answer: string }[]) {
     const candidate = await prisma.candidate.findUnique({ where: { userId } });
     if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
 
@@ -147,8 +147,21 @@ export const candidateService = {
     });
     if (existing) throw Object.assign(new Error('Bạn đã ứng tuyển vị trí này rồi'), { status: 409 });
 
-    const application = await prisma.application.create({
-      data: { jobId, candidateId: candidate.id, cvUrl, coverLetter },
+    const application = await prisma.$transaction(async (tx) => {
+      const app = await tx.application.create({
+        data: { jobId, candidateId: candidate.id, cvUrl, coverLetter },
+      });
+      if (screeningAnswers && screeningAnswers.length > 0) {
+        await tx.screeningAnswer.createMany({
+          data: screeningAnswers.map(({ questionId, answer }) => ({
+            questionId,
+            applicationId: app.id,
+            answer,
+          })),
+          skipDuplicates: true,
+        });
+      }
+      return app;
     });
 
     sendApplicationEmail(job.employer.user.email, job.title, candidate.fullName).catch(console.error);

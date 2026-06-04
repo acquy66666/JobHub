@@ -13,17 +13,26 @@ interface CandidateCV {
   isDefault: boolean;
 }
 
+interface ScreeningQuestion {
+  id: string;
+  question: string;
+  type: "TEXT" | "YES_NO";
+  isRequired: boolean;
+}
+
 interface Props {
   jobId: string;
   jobTitle: string;
   isOpen: boolean;
   onClose: () => void;
+  screeningQuestions?: ScreeningQuestion[];
 }
 
-export function ApplyModal({ jobId, jobTitle, isOpen, onClose }: Props) {
+export function ApplyModal({ jobId, jobTitle, isOpen, onClose, screeningQuestions = [] }: Props) {
   const [coverLetter, setCoverLetter] = useState("");
   const [selectedCvId, setSelectedCvId] = useState<string>("__new__");
   const [newCvFile, setNewCvFile] = useState<File | null>(null);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +62,14 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose }: Props) {
       return;
     }
 
+    const unanswered = screeningQuestions.filter(
+      (q) => q.isRequired && !answers[q.id]?.trim()
+    );
+    if (unanswered.length > 0) {
+      setError(`Vui lòng trả lời ${unanswered.length} câu hỏi bắt buộc`);
+      return;
+    }
+
     setLoading(true);
     try {
       let cvUrl: string | undefined;
@@ -74,7 +91,16 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose }: Props) {
         return;
       }
 
-      await api.post("/candidate/applications", { jobId, cvUrl, coverLetter: coverLetter || undefined });
+      const screeningAnswers = screeningQuestions
+        .filter((q) => answers[q.id]?.trim())
+        .map((q) => ({ questionId: q.id, answer: answers[q.id].trim() }));
+
+      await api.post("/candidate/applications", {
+        jobId,
+        cvUrl,
+        coverLetter: coverLetter || undefined,
+        ...(screeningAnswers.length > 0 && { screeningAnswers }),
+      });
       setSuccess(true);
       toast.success("Ứng tuyển thành công!");
     } catch (err: unknown) {
@@ -195,6 +221,49 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose }: Props) {
                     className="w-full bg-bg-3 border border-border-dark rounded-xl px-4 py-3 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] focus:shadow-[0_0_0_3px_rgba(124,58,237,.1)] resize-none transition-all"
                   />
                 </div>
+
+                {/* Screening questions */}
+                {screeningQuestions.length > 0 && (
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-semibold text-t1 uppercase tracking-wide">
+                      Câu hỏi từ nhà tuyển dụng
+                    </label>
+                    {screeningQuestions.map((q) => (
+                      <div key={q.id} className="space-y-1.5">
+                        <p className="text-[13px] text-t0 leading-relaxed">
+                          {q.question}
+                          {q.isRequired && <span className="text-red-400 ml-1">*</span>}
+                        </p>
+                        {q.type === "YES_NO" ? (
+                          <div className="flex gap-2">
+                            {["Có", "Không"].map((opt) => (
+                              <button
+                                key={opt}
+                                type="button"
+                                onClick={() => setAnswers((prev) => ({ ...prev, [q.id]: opt }))}
+                                className={`px-4 py-2 rounded-xl text-[13px] font-medium border transition-colors ${
+                                  answers[q.id] === opt
+                                    ? "bg-[rgba(124,58,237,.15)] text-primary border-[rgba(124,58,237,.4)]"
+                                    : "border-border-dark text-t1 hover:bg-white/[.04]"
+                                }`}
+                              >
+                                {opt}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <textarea
+                            rows={2}
+                            placeholder="Nhập câu trả lời..."
+                            value={answers[q.id] ?? ""}
+                            onChange={(e) => setAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))}
+                            className="w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2.5 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] resize-none transition-all"
+                          />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {error && <p className="text-[13px] text-red-400">{error}</p>}
 

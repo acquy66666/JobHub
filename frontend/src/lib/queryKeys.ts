@@ -27,4 +27,5 @@ export const queryKeys = {
   candidateCvs: () => ['candidate', 'cvs'] as const,
   employerJobStats: () => ['employer', 'job-stats'] as const,
   applicationNotes: (jobId: string, appId: string) => ['employer', 'jobs', jobId, 'applications', appId, 'notes'] as const,
+  screeningQuestions: (jobId: string) => ['employer', 'jobs', jobId, 'screening-questions'] as const,
 };
