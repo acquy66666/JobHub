@@ -134,6 +134,31 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getApplicationNotes(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await employerService.getApplicationNotes(
+        req.user!.userId,
+        String(req.params.jobId),
+        String(req.params.appId),
+      );
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async createApplicationNote(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const content = String(req.body.content ?? '').trim();
+      if (!content) { res.status(400).json({ message: 'Nội dung ghi chú không được trống' }); return; }
+      const result = await employerService.createApplicationNote(
+        req.user!.userId,
+        String(req.params.jobId),
+        String(req.params.appId),
+        content,
+      );
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
   async exportApplications(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { csv, jobTitle } = await employerService.exportApplicationsCsv(

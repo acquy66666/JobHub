@@ -27,6 +27,8 @@ router.get('/jobs/:jobId/applications', employerController.getJobApplications);
 router.get('/jobs/:jobId/applications/export', employerController.exportApplications);
 router.patch('/jobs/:jobId/applications/:appId', employerController.updateApplicationStatus);
 router.patch('/jobs/:jobId/applications/:appId/tag', employerController.updateApplicationTag);
+router.get('/jobs/:jobId/applications/:appId/notes', employerController.getApplicationNotes);
+router.post('/jobs/:jobId/applications/:appId/notes', employerController.createApplicationNote);
 
 router.get('/templates', employerController.getTemplates);
 router.post('/templates', employerController.createTemplate);

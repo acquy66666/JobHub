@@ -408,6 +408,31 @@ export const employerService = {
     };
   },
 
+  async getApplicationNotes(userId: string, jobId: string, appId: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    const app = await prisma.application.findFirst({ where: { id: appId, jobId } });
+    if (!app) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
+    return prisma.applicationNote.findMany({
+      where: { applicationId: appId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, content: true, createdAt: true },
+    });
+  },
+
+  async createApplicationNote(userId: string, jobId: string, appId: string, content: string) {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
+    if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
+    if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
+    const app = await prisma.application.findFirst({ where: { id: appId, jobId } });
+    if (!app) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
+    return prisma.applicationNote.create({
+      data: { applicationId: appId, authorId: userId, content },
+      select: { id: true, content: true, createdAt: true },
+    });
+  },
+
   async getPublicCompany(employerId: string) {
     const employer = await prisma.employer.findUnique({
       where: { id: employerId },

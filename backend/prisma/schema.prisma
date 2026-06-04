@@ -121,6 +121,7 @@ model User {
   reports              Report[]
   auditLogs            AuditLog[]
   notifications        Notification[]
+  applicationNotes     ApplicationNote[]
 }
 
 model Candidate {
@@ -271,6 +272,19 @@ model Application {
   @@unique([jobId, candidateId])
   @@index([jobId, candidateId])
   statusHistory ApplicationStatusHistory[]
+  internalNotes ApplicationNote[]
+}
+
+model ApplicationNote {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content       String
+  createdAt     DateTime    @default(now())
+
+  @@index([applicationId])
 }
 
 model SavedJob {

@@ -10,6 +10,83 @@ import { useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/store/toastStore";
 
+interface ApplicationNote {
+  id: string;
+  content: string;
+  createdAt: string;
+}
+
+function NotesAccordion({ jobId, appId }: { jobId: string; appId: string }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState("");
+  const qc = useQueryClient();
+  const toast = useToast();
+
+  const { data: notes = [], isLoading } = useQuery<ApplicationNote[]>({
+    queryKey: queryKeys.applicationNotes(jobId, appId),
+    queryFn: () => api.get(`/employer/jobs/${jobId}/applications/${appId}/notes`).then((r) => r.data),
+    enabled: open,
+  });
+
+  const addMutation = useMutation({
+    mutationFn: (content: string) => api.post(`/employer/jobs/${jobId}/applications/${appId}/notes`, { content }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.applicationNotes(jobId, appId) });
+      setDraft("");
+      toast.success("Đã lưu ghi chú");
+    },
+    onError: () => toast.error("Lưu ghi chú thất bại"),
+  });
+
+  return (
+    <div className="border-t border-border-dark/50 pt-3">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 text-[12px] text-t2 hover:text-t0 transition-colors"
+      >
+        <svg className={`w-3.5 h-3.5 transition-transform ${open ? "rotate-90" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+        Ghi chú nội bộ {notes.length > 0 && !isLoading && `(${notes.length})`}
+      </button>
+      {open && (
+        <div className="mt-3 space-y-2">
+          {isLoading ? (
+            <div className="h-8 bg-bg-3 rounded-lg animate-pulse" />
+          ) : notes.length === 0 ? (
+            <p className="text-[12px] text-t2 italic">Chưa có ghi chú nào.</p>
+          ) : (
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {notes.map((n) => (
+                <div key={n.id} className="bg-bg-3/60 rounded-xl px-3 py-2">
+                  <p className="text-[12px] text-t0 leading-relaxed whitespace-pre-wrap">{n.content}</p>
+                  <p className="text-[10px] text-t2 mt-1">{new Date(n.createdAt).toLocaleString("vi-VN")}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 mt-2">
+            <input
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && draft.trim()) { e.preventDefault(); addMutation.mutate(draft.trim()); } }}
+              placeholder="Thêm ghi chú nội bộ... (Enter để lưu)"
+              className="flex-1 bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[12px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.4)] transition-all"
+            />
+            <button
+              type="button"
+              disabled={!draft.trim() || addMutation.isPending}
+              onClick={() => addMutation.mutate(draft.trim())}
+              className="px-3 py-2 rounded-xl bg-[rgba(124,58,237,.15)] border border-[rgba(124,58,237,.3)] text-[11px] text-[#B09BF8] hover:bg-[rgba(124,58,237,.25)] transition-colors disabled:opacity-40"
+            >
+              {addMutation.isPending ? "..." : "Lưu"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const STATUS_OPTIONS = [
   { value: "PENDING", label: "Chờ xét duyệt" },
   { value: "REVIEWING", label: "Đang xem xét" },
@@ -323,6 +400,7 @@ export default function JobApplicationsPage() {
                           </select>
                         </div>
                       </div>
+                      <NotesAccordion jobId={jobId} appId={app.id} />
                     </div>
                   </ScrollReveal>
                 );
