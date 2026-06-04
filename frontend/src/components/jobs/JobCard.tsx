@@ -3,8 +3,9 @@ import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import { formatSalary, formatJobType, formatWorkMode, timeAgo } from "@/lib/formatters";
 import { scoreColor } from "@/lib/matchScore";
+import { useCompareStore } from "@/store/compareStore";
 import api from "@/lib/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/store/toastStore";
 
 interface Job {
@@ -39,8 +40,23 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave, matchScore 
   const { user } = useAuthStore();
   const [saved, setSaved] = useState(isSaved);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const initial = job.employer.companyName?.[0]?.toUpperCase() ?? "?";
   const toast = useToast();
+  const { addJob, removeJob, isInCompare, compareJobs } = useCompareStore();
+  const inCompare = mounted && isInCompare(job.id);
+  const atMax = mounted && compareJobs.length >= 3;
+
+  function handleCompare(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (inCompare) {
+      removeJob(job.id);
+    } else {
+      addJob({ id: job.id, title: job.title, company: job.employer.companyName });
+    }
+  }
 
   async function handleSave(e: React.MouseEvent) {
     e.preventDefault();
@@ -115,7 +131,21 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave, matchScore 
 
       {/* Footer */}
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border-dark/50">
-        <span className="text-[11px] text-t2">{job.industry}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-t2">{job.industry}</span>
+          <button
+            onClick={handleCompare}
+            disabled={atMax && !inCompare}
+            title={inCompare ? "Bỏ so sánh" : atMax ? "Tối đa 3 việc làm" : "Thêm vào so sánh"}
+            className={`text-[11px] font-medium px-2 py-0.5 rounded-md border transition-colors ${
+              inCompare
+                ? "border-[rgba(124,58,237,.4)] text-[#B09BF8] bg-[rgba(124,58,237,.1)]"
+                : "border-border-dark text-t2 hover:border-[rgba(124,58,237,.3)] hover:text-[#B09BF8] disabled:opacity-40 disabled:cursor-not-allowed"
+            }`}
+          >
+            ⚖ {inCompare ? "Đã chọn" : "So sánh"}
+          </button>
+        </div>
         <div className="flex items-center gap-2">
           {matchScore !== undefined && matchScore !== null && (
             <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md border ${scoreColor(matchScore)}`}>
