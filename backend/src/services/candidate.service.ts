@@ -1,7 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationEmail } from '../utils/email';
-import { JobStatus, NotificationType } from '../generated/prisma/client';
+import { JobStatus, NotificationType, InterviewStatus } from '../generated/prisma/client';
 import { createNotification } from './notification.service';
 
 function generateSlug(name: string): string {
@@ -193,6 +193,11 @@ export const candidateService = {
             include: {
               employer: { select: { id: true, companyName: true, logoUrl: true, location: true } },
             },
+          },
+          interviews: {
+            orderBy: { scheduledAt: 'desc' },
+            take: 1,
+            select: { id: true, scheduledAt: true, status: true, location: true, meetingLink: true },
           },
         },
       }),
@@ -528,5 +533,42 @@ export const candidateService = {
     }
 
     return { success: true };
+  },
+
+  async getInterviews(userId: string, appId: string) {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const app = await prisma.application.findFirst({ where: { id: appId, candidateId: candidate.id } });
+    if (!app) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
+    return prisma.interviewSchedule.findMany({
+      where: { applicationId: appId },
+      orderBy: { scheduledAt: 'asc' },
+    });
+  },
+
+  async respondInterview(userId: string, appId: string, interviewId: string, action: 'confirm' | 'cancel') {
+    const candidate = await prisma.candidate.findUnique({ where: { userId } });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+    const app = await prisma.application.findFirst({
+      where: { id: appId, candidateId: candidate.id },
+      include: { job: { include: { employer: { include: { user: true } } } } },
+    });
+    if (!app) throw Object.assign(new Error('Không tìm thấy đơn ứng tuyển'), { status: 404 });
+    const interview = await prisma.interviewSchedule.findFirst({ where: { id: interviewId, applicationId: appId } });
+    if (!interview) throw Object.assign(new Error('Không tìm thấy lịch phỏng vấn'), { status: 404 });
+
+    const newStatus = action === 'confirm' ? InterviewStatus.CONFIRMED : InterviewStatus.CANCELLED;
+    const updated = await prisma.interviewSchedule.update({ where: { id: interviewId }, data: { status: newStatus } });
+
+    // Notify employer
+    void createNotification({
+      userId: app.job.employer.userId,
+      type: NotificationType.SYSTEM,
+      title: action === 'confirm' ? 'Ứng viên xác nhận lịch phỏng vấn' : 'Ứng viên từ chối lịch phỏng vấn',
+      message: `${candidate.fullName} đã ${action === 'confirm' ? 'xác nhận' : 'từ chối'} lịch phỏng vấn vị trí ${app.job.title}`,
+      link: `/employer/jobs/${app.jobId}/applications`,
+    }).catch(() => {});
+
+    return updated;
   },
 };

@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { Pagination } from "@/components/common/Pagination";
 import { formatApplicationStatus, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
+import { useToast } from "@/store/toastStore";
 
 interface StatusHistory {
   id: string;
@@ -15,6 +16,14 @@ interface StatusHistory {
   createdAt: string;
 }
 
+interface InterviewInfo {
+  id: string;
+  scheduledAt: string;
+  status: "PENDING" | "CONFIRMED" | "CANCELLED";
+  location: string | null;
+  meetingLink: string | null;
+}
+
 interface Application {
   id: string;
   status: string;
@@ -22,6 +31,7 @@ interface Application {
   coverLetter?: string;
   note?: string;
   cvUrl: string;
+  interviews?: InterviewInfo[];
   job: {
     id: string;
     title: string;
@@ -111,6 +121,65 @@ function TimelineView({ appId }: { appId: string }) {
   );
 }
 
+const INTERVIEW_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  PENDING: { label: "Chờ xác nhận", color: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20" },
+  CONFIRMED: { label: "Đã xác nhận", color: "text-green-400 bg-green-400/10 border-green-400/20" },
+  CANCELLED: { label: "Đã từ chối", color: "text-red-400 bg-red-400/10 border-red-400/20" },
+};
+
+function InterviewBadge({ appId, interview }: { appId: string; interview: InterviewInfo }) {
+  const qc = useQueryClient();
+  const toast = useToast();
+  const cfg = INTERVIEW_STATUS_LABELS[interview.status];
+  const dateStr = new Date(interview.scheduledAt).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+  const respondMutation = useMutation({
+    mutationFn: (action: "confirm" | "cancel") =>
+      api.patch(`/candidate/applications/${appId}/interviews/${interview.id}/respond`, { action }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.candidateApplications() });
+      toast.success("Đã phản hồi lịch phỏng vấn");
+    },
+    onError: () => toast.error("Có lỗi xảy ra"),
+  });
+
+  return (
+    <div className="mt-3 rounded-xl border border-[rgba(124,58,237,.25)] bg-[rgba(124,58,237,.04)] p-3">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px]">📅</span>
+          <span className="text-[13px] font-semibold text-t0">Lịch phỏng vấn: {dateStr}</span>
+          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${cfg.color}`}>{cfg.label}</span>
+        </div>
+        {interview.status === "PENDING" && (
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => respondMutation.mutate("confirm")}
+              disabled={respondMutation.isPending}
+              className="px-3 py-1 rounded-lg bg-green-500/15 border border-green-500/30 text-[12px] text-green-400 hover:bg-green-500/25 transition-colors disabled:opacity-60"
+            >
+              ✓ Xác nhận
+            </button>
+            <button
+              onClick={() => respondMutation.mutate("cancel")}
+              disabled={respondMutation.isPending}
+              className="px-3 py-1 rounded-lg bg-red-500/15 border border-red-500/30 text-[12px] text-red-400 hover:bg-red-500/25 transition-colors disabled:opacity-60"
+            >
+              ✕ Từ chối
+            </button>
+          </div>
+        )}
+      </div>
+      {interview.location && <p className="text-[12px] text-t1 mt-1.5">📍 {interview.location}</p>}
+      {interview.meetingLink && (
+        <a href={interview.meetingLink} target="_blank" rel="noreferrer" className="text-[12px] text-[#7C3AED] hover:underline block mt-1 truncate">
+          🔗 {interview.meetingLink}
+        </a>
+      )}
+    </div>
+  );
+}
+
 function ListView({ applications, totalPages, page, setPage }: {
   applications: Application[];
   totalPages: number;
@@ -145,7 +214,12 @@ function ListView({ applications, totalPages, page, setPage }: {
                     <p className="text-[14px] font-semibold text-t0 truncate">{app.job.title}</p>
                     <p className="text-[12px] text-t2">{app.job.employer.companyName} · {app.job.location} · {timeAgo(app.appliedAt)}</p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
+                    {app.interviews && app.interviews.length > 0 && app.interviews[0].status !== "CANCELLED" && (
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md border text-[#B09BF8] bg-[rgba(124,58,237,.1)] border-[rgba(124,58,237,.2)]">
+                        📅 PV
+                      </span>
+                    )}
                     <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border ${color}`}>{label}</span>
                     <svg className={`w-4 h-4 text-t2 transition-transform ${isExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -172,6 +246,9 @@ function ListView({ applications, totalPages, page, setPage }: {
                           <p className="text-[12px] font-semibold text-t2 uppercase tracking-wide mb-1.5">Ghi chú từ nhà tuyển dụng</p>
                           <p className="text-[13px] text-t1 leading-relaxed">{app.note}</p>
                         </div>
+                      )}
+                      {app.interviews && app.interviews.length > 0 && (
+                        <InterviewBadge appId={app.id} interview={app.interviews[0]} />
                       )}
                     </div>
                     <div className="border-t border-border-dark">

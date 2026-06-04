@@ -46,5 +46,7 @@ router.post('/followed-companies/:employerId', candidateController.followCompany
 router.delete('/followed-companies/:employerId', candidateController.unfollowCompany);
 
 router.get('/applications/:appId/timeline', candidateController.getApplicationTimeline);
+router.get('/applications/:appId/interviews', candidateController.getInterviews);
+router.patch('/applications/:appId/interviews/:interviewId/respond', candidateController.respondInterview);
 
 export default router;

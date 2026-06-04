@@ -34,6 +34,11 @@ router.get('/jobs/:jobId/screening-questions', employerController.getScreeningQu
 router.post('/jobs/:jobId/screening-questions', employerController.createScreeningQuestion);
 router.delete('/jobs/:jobId/screening-questions/:questionId', employerController.deleteScreeningQuestion);
 
+router.get('/jobs/:jobId/applications/:appId/interviews', employerController.getInterviewsForApp);
+router.post('/jobs/:jobId/applications/:appId/interviews', employerController.createInterview);
+router.patch('/jobs/:jobId/applications/:appId/interviews/:interviewId', employerController.updateInterview);
+router.delete('/jobs/:jobId/applications/:appId/interviews/:interviewId', employerController.deleteInterview);
+
 router.get('/templates', employerController.getTemplates);
 router.post('/templates', employerController.createTemplate);
 router.delete('/templates/:templateId', employerController.deleteTemplate);

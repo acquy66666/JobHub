@@ -97,12 +97,19 @@ enum NotificationType {
   NEW_MATCHED_JOB
   JOB_EXPIRING_SOON
   NEW_APPLICATION
+  INTERVIEW_SCHEDULED
   SYSTEM
 }
 
 enum QuestionType {
   TEXT
   YES_NO
+}
+
+enum InterviewStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
 }
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -280,6 +287,7 @@ model Application {
   statusHistory     ApplicationStatusHistory[]
   internalNotes     ApplicationNote[]
   screeningAnswers  ScreeningAnswer[]
+  interviews        InterviewSchedule[]
 }
 
 model ApplicationNote {
@@ -423,4 +431,19 @@ model JobAlert {
   lastSentAt  DateTime?
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
+}
+
+model InterviewSchedule {
+  id            String          @id @default(cuid())
+  applicationId String
+  application   Application     @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  scheduledAt   DateTime
+  location      String?
+  meetingLink   String?
+  note          String?
+  status        InterviewStatus @default(PENDING)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([applicationId])
 }

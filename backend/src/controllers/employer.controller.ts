@@ -219,6 +219,37 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getInterviewsForApp(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await employerService.getInterviewsForApp(req.user!.userId, String(req.params.jobId), String(req.params.appId));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async createInterview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { scheduledAt, location, meetingLink, note } = req.body;
+      if (!scheduledAt) { res.status(400).json({ message: 'Vui lòng chọn thời gian phỏng vấn' }); return; }
+      const result = await employerService.createInterview(req.user!.userId, String(req.params.jobId), String(req.params.appId), { scheduledAt, location, meetingLink, note });
+      res.status(201).json(result);
+    } catch (err) { next(err); }
+  },
+
+  async updateInterview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const { scheduledAt, location, meetingLink, note } = req.body;
+      const result = await employerService.updateInterview(req.user!.userId, String(req.params.jobId), String(req.params.appId), String(req.params.interviewId), { scheduledAt, location, meetingLink, note });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async deleteInterview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      await employerService.deleteInterview(req.user!.userId, String(req.params.jobId), String(req.params.appId), String(req.params.interviewId));
+      res.json({ message: 'Đã xóa lịch phỏng vấn' });
+    } catch (err) { next(err); }
+  },
+
   async getPublicList(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const page = parseInt(req.query.page as string) || 1;

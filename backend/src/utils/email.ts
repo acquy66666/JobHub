@@ -109,6 +109,61 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; emoji: strin
   },
 };
 
+export async function sendInterviewInviteEmail(
+  to: string,
+  candidateName: string,
+  companyName: string,
+  jobTitle: string,
+  scheduledAt: Date,
+  location?: string,
+  meetingLink?: string,
+): Promise<void> {
+  const dateStr = scheduledAt.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = scheduledAt.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const locationHtml = location
+    ? `<div style="margin-top:12px;padding:12px 16px;background:#1A1A28;border-radius:10px">
+         <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9494B0;text-transform:uppercase;letter-spacing:.06em">Địa điểm</p>
+         <p style="margin:0;font-size:14px;color:#F5F5FF">${location}</p>
+       </div>`
+    : '';
+  const meetingHtml = meetingLink
+    ? `<div style="margin-top:12px;padding:12px 16px;background:#1A1A28;border-radius:10px">
+         <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9494B0;text-transform:uppercase;letter-spacing:.06em">Link phỏng vấn</p>
+         <a href="${meetingLink}" style="font-size:14px;color:#7C3AED">${meetingLink}</a>
+       </div>`
+    : '';
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0E0E18;color:#F5F5FF;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#7C3AED,#3B82F6);padding:28px 32px">
+        <h1 style="margin:0;font-size:20px;font-weight:800;color:#fff">JobHub</h1>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,.7)">Thư mời phỏng vấn</p>
+      </div>
+      <div style="padding:28px 32px">
+        <div style="font-size:32px;margin-bottom:12px">📅</div>
+        <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#7C3AED">Bạn có lịch phỏng vấn mới!</h2>
+        <p style="margin:0 0 4px;font-size:14px;color:#9494B0">Xin chào <strong style="color:#F5F5FF">${candidateName}</strong>,</p>
+        <p style="margin:0 0 20px;font-size:14px;color:#9494B0;line-height:1.6">
+          <strong style="color:#F5F5FF">${companyName}</strong> mời bạn tham gia phỏng vấn cho vị trí
+          <strong style="color:#F5F5FF">${jobTitle}</strong>.
+        </p>
+        <div style="padding:16px;background:#13131E;border-radius:12px;border:1px solid #252538">
+          <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#9494B0;text-transform:uppercase;letter-spacing:.06em">Thời gian</p>
+          <p style="margin:0;font-size:16px;font-weight:700;color:#F5F5FF">${dateStr} — ${timeStr}</p>
+        </div>
+        ${locationHtml}
+        ${meetingHtml}
+        <p style="margin:20px 0 0;font-size:13px;color:#9494B0">Vui lòng xác nhận hoặc từ chối lịch phỏng vấn trong ứng dụng JobHub.</p>
+      </div>
+      <div style="padding:20px 32px;border-top:1px solid #252538;text-align:center">
+        <a href="${env.CLIENT_URL}/candidate/applications"
+           style="display:inline-block;background:linear-gradient(135deg,#7C3AED,#3B82F6);color:#fff;text-decoration:none;padding:10px 24px;border-radius:10px;font-size:13px;font-weight:600">
+          Xem lịch phỏng vấn
+        </a>
+      </div>
+    </div>`;
+  await sendMail(to, `📅 Thư mời phỏng vấn: ${jobTitle} — ${companyName}`, html);
+}
+
 export async function sendApplicationStatusEmail(to: string, jobTitle: string, status: string, note?: string): Promise<void> {
   const cfg = STATUS_CONFIG[status] ?? { label: status, color: "#7C3AED", emoji: "ℹ️", message: "Trạng thái đơn ứng tuyển của bạn đã được cập nhật." };
   const noteHtml = note

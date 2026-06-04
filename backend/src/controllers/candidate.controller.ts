@@ -255,4 +255,23 @@ export const candidateController = {
       res.json(result);
     } catch (err) { next(err); }
   },
+
+  async getInterviews(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.getInterviews(req.user!.userId, String(req.params.appId));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
+  async respondInterview(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const action = String(req.body.action ?? '');
+      if (action !== 'confirm' && action !== 'cancel') {
+        res.status(400).json({ message: 'action phải là confirm hoặc cancel' });
+        return;
+      }
+      const result = await candidateService.respondInterview(req.user!.userId, String(req.params.appId), String(req.params.interviewId), action);
+      res.json(result);
+    } catch (err) { next(err); }
+  },
 };

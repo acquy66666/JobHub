@@ -9,6 +9,7 @@ import api from "@/lib/api";
 import { useState } from "react";
 import Link from "next/link";
 import { useToast } from "@/store/toastStore";
+import { InterviewAccordion } from "@/components/employer/InterviewAccordion";
 
 interface ApplicationNote {
   id: string;
@@ -447,6 +448,7 @@ export default function JobApplicationsPage() {
                         </div>
                       </div>
                       <NotesAccordion jobId={jobId} appId={app.id} />
+                      <InterviewAccordion jobId={jobId} appId={app.id} />
                     </div>
                   </ScrollReveal>
                 );
