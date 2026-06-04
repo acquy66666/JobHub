@@ -96,7 +96,7 @@ export default function CVEditorPage() {
   // Load profile to pre-fill
   const { data: profile, isLoading } = useQuery<ProfileData>({
     queryKey: queryKeys.candidateProfile(),
-    queryFn: () => api.get("/candidates/me").then((r) => r.data),
+    queryFn: () => api.get("/candidate/profile").then((r) => r.data),
   });
 
   useEffect(() => {
