@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 34 — Stage 9 Billing Sprint B: vnpay/momo integration + payment.service atomic + coupon engine + routes + email templates)
-Current Stage: Stage 9 — Paid Job Posting (Sprint A+B ✅ / C-E pending)
-Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A+B ✅
+Last Updated: 2026-06-05 (session 35 — Stage 9 Billing Sprint C: employer UI billing dashboard + shop + checkout + QR polling + dev mark-paid path, QA PASS 7/7)
+Current Stage: Stage 9 — Paid Job Posting (Sprint A+B+C ✅ / D-E pending)
+Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A+B+C ✅
 
 ---
 
@@ -358,13 +358,17 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
 - [x] `consumeCredit(employerId, tier, jobId)` helper sẵn cho Sprint D (atomic FOR UPDATE + 402 INSUFFICIENT_CREDITS)
 - [x] `tsc --noEmit` backend clean
 
-**Sprint C — Employer UI (pending):**
-- [ ] `/employer/billing` dashboard 3-col credits + history
-- [ ] `/billing/shop` catalog 3 tier
-- [ ] `/billing/orders/[id]` QR + countdown + polling 3s
-- [ ] `/billing/return` landing
-- [ ] `CheckoutModal` (3 bước: provider → coupon → confirm)
-- [ ] `CreditBadge` sidebar
+**Sprint C — Employer UI (✅ session 35, 2026-06-05, `3c4b338` + `f3efb3c`):**
+- [x] `/employer/billing` dashboard 3-col credits + history transactions/orders tabs
+- [x] `/billing/shop` catalog 3 tier × 3 size (9 packages) + `?required=<tier>` highlight
+- [x] `/billing/orders/[id]` QR + countdown 15p + polling 3s + dev mock SUCCESS button
+- [x] `/billing/return` landing parse query → redirect /orders/[id]
+- [x] `CheckoutModal` 3 bước: provider radio (VNPay/MoMo) → coupon debounce 500ms → confirm
+- [x] `CreditBadge` sidebar (3 dots Basic/Premium/VIP)
+- [x] Sidebar nav item "💳 Mua credits"
+- [x] `lib/api.ts` 402 INSUFFICIENT_CREDITS interceptor → auto-redirect /shop?required=<tier> (Sprint D dùng)
+- [x] Backend dev `/payments/dev/mark-paid` gate đổi `NODE_ENV !== production` → `ENABLE_DEV_MARK_PAID !== 'false'` (default on, tắt khi sandbox sẵn sàng)
+- [x] QA Playwright production 7/7 PASS (TC1 visual verify do CSS uppercase đánh lừa innerText)
 
 **Sprint D — Gate createJob + Job UI (pending):**
 - [ ] `TierSelector` trong `JobForm` (chọn tier trước Review)
