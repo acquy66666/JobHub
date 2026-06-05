@@ -4,6 +4,31 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 30 — 2026-06-05
+
+**Commits:** `81afd83` feat(imp-5) notification filter tabs (5 type tabs + client-side filter)
+
+**Done:**
+- IMP-5 ✅ — 5 tab filter ở [(candidate)/candidate/notifications/page.tsx](frontend/src/app/(candidate)/candidate/notifications/page.tsx): Tất cả / Cập nhật đơn (APPLICATION_STATUS_CHANGED) / Công ty theo dõi (NEW_JOB_FROM_FOLLOWED_COMPANY) / Việc phù hợp (NEW_MATCHED_JOB) / Phỏng vấn (INTERVIEW_SCHEDULED). Client-side filter trên `notifications` đã fetch của page hiện tại. `role=tablist`/`role=tab`/`aria-selected`. Count badge `(N)` từ list page. Active style gradient purple→blue. Mobile `overflow-x-auto` cho row tab (scrollWidth 665 > clientWidth 391 @ 375px). Empty state riêng "Không có thông báo nào ở mục này" khi `filtered.length === 0` nhưng `notifications.length > 0`. TYPE_LABEL bổ sung `INTERVIEW_SCHEDULED: "Phỏng vấn"`.
+
+**Why / Rationale:**
+- **Client-side filter thay server-side**: 0 backend change, không cần thêm endpoint hay query param. Trade-off: count badge phản ánh page hiện tại, không phải toàn bộ DB. Acceptable vì page size 20, đa số user < 20 notification cùng lúc.
+- **Không reset page khi đổi filter**: filter là client-side trong scope page, pagination vẫn dùng cho cross-page.
+- **Empty state 2 tầng**: `notifications.length === 0` → outer "Chưa có thông báo nào" (như cũ). `filtered.length === 0 && notifications.length > 0` → "Không có thông báo nào ở mục này". Phân biệt user 0 noti vs filter rỗng.
+- **role=tab/tablist + aria-selected**: minimal ARIA tab pattern, không full keyboard arrow navigation (overkill cho thesis demo). Click + Tab key đủ.
+- **Count badge sống động `(N)`**: user thấy ngay tab nào có nội dung, không phải click thử rồi mới biết.
+- **TC3 QA fix smart skip**: TC3 ban đầu fail vì candidate@jobhub.vn page 1 có 0 notification → outer empty state render, không phải filtered empty. QA detect bằng cách đọc text tab "Tất cả(N)" — nếu (0) → skip TC3 (PASS vacuously). Đây là QA robustness, không phải bug code.
+
+**Verified:** Production QA PASS 5/5 — `node qa-scripts/imp5/qa_imp5.js` trên `job-hub-two.vercel.app`. TC1 5 tabs render, TC2 filter "Cập nhật đơn" aria-selected + filtered list, TC3 skip (0 noti), TC4 "Tất cả" restore, TC5 mobile 375 tablist scrollable (665>391) + 5 tab click được.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **E10 — Salary Benchmark**. Backend: `GET /employer/salary-benchmark?title=&industry=` GROUP BY trên `Job.salaryMin`/`salaryMax` (AVG/MIN/MAX/COUNT). Frontend: widget ở job form (Stage 8 Sprint 3 task cuối → đóng Stage 8). Task chính → cần plan chi tiết trước (per `feedback_plan_before_main_task`), đợi "ok" mới code.
+
+**Blocker:** Không có. Vercel auto-deploy hoạt động bình thường (chỉ chậm ~90s sau push).
+
+---
+
 ## Session 29 — 2026-06-05
 
 **Commits:** `5d54525` feat(imp-4) keyboard a11y — ESC close dialogs/menus + aria roles + JobFilters form submit
