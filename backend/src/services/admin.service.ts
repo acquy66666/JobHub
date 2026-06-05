@@ -128,7 +128,7 @@ export const adminService = {
           isVerified: true,
           createdAt: true,
           candidate: { select: { fullName: true, avatarUrl: true } },
-          employer: { select: { companyName: true, logoUrl: true, isVerified: true } },
+          employer: { select: { id: true, companyName: true, logoUrl: true, isVerified: true } },
         },
       }),
       prisma.user.count({ where }),
