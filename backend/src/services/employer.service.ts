@@ -694,4 +694,76 @@ export const employerService = {
     });
     return applications;
   },
+
+  async getAllApplications(
+    userId: string,
+    opts: { jobId?: string; status?: string; tag?: string; keyword?: string; page: number; limit: number },
+  ) {
+    const employer = await prisma.employer.findUnique({ where: { userId } });
+    if (!employer) throw Object.assign(new Error('Không tìm thấy hồ sơ công ty'), { status: 404 });
+
+    const where: Record<string, unknown> = { job: { employerId: employer.id } };
+    if (opts.jobId) (where.job as Record<string, unknown>) = { employerId: employer.id, id: opts.jobId };
+    if (opts.status && Object.values(ApplicationStatus).includes(opts.status as ApplicationStatus)) {
+      where.status = opts.status as ApplicationStatus;
+    }
+    if (opts.tag === 'NONE') {
+      where.tag = null;
+    } else if (opts.tag && Object.values(ApplicationTag).includes(opts.tag as ApplicationTag)) {
+      where.tag = opts.tag as ApplicationTag;
+    }
+    if (opts.keyword && opts.keyword.length >= 2) {
+      where.candidate = {
+        OR: [
+          { fullName: { contains: opts.keyword, mode: 'insensitive' } },
+          { user: { email: { contains: opts.keyword, mode: 'insensitive' } } },
+        ],
+      };
+    }
+
+    const skip = (opts.page - 1) * opts.limit;
+    const [applications, total, jobOptions, summary] = await Promise.all([
+      prisma.application.findMany({
+        where,
+        skip,
+        take: opts.limit,
+        orderBy: { appliedAt: 'desc' },
+        include: {
+          candidate: { include: { user: { select: { email: true } } } },
+          job: { select: { id: true, title: true } },
+          screeningAnswers: {
+            select: { id: true, answer: true, question: { select: { question: true, type: true } } },
+          },
+          interviews: { orderBy: { scheduledAt: 'desc' }, take: 1 },
+        },
+      }),
+      prisma.application.count({ where }),
+      prisma.job.findMany({
+        where: { employerId: employer.id },
+        select: { id: true, title: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.application.groupBy({
+        by: ['status'],
+        where: { job: { employerId: employer.id } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const counts = { total: 0, PENDING: 0, REVIEWING: 0, ACCEPTED: 0, REJECTED: 0 } as Record<string, number>;
+    for (const row of summary) {
+      counts[row.status] = row._count._all;
+      counts.total += row._count._all;
+    }
+
+    return {
+      applications,
+      total,
+      page: opts.page,
+      limit: opts.limit,
+      totalPages: Math.ceil(total / opts.limit),
+      jobOptions,
+      summary: counts,
+    };
+  },
 };

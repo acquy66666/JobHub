@@ -45,6 +45,7 @@ router.delete('/templates/:templateId', employerController.deleteTemplate);
 
 router.get('/job-stats', employerController.getJobStats);
 router.get('/recent-applications', employerController.getRecentApplications);
+router.get('/applications', employerController.getAllApplications);
 router.get('/salary-benchmark', employerController.getSalaryBenchmark);
 router.get('/candidates/search', employerController.searchCandidates);
 

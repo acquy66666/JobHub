@@ -206,6 +206,21 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getAllApplications(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const page = Math.max(1, parseInt(String(req.query.page)) || 1);
+      const limit = Math.min(50, Math.max(1, parseInt(String(req.query.limit)) || 20));
+      const jobId = typeof req.query.jobId === 'string' && req.query.jobId ? req.query.jobId : undefined;
+      const status = typeof req.query.status === 'string' && req.query.status ? req.query.status : undefined;
+      const tag = typeof req.query.tag === 'string' && req.query.tag ? req.query.tag : undefined;
+      const keyword = typeof req.query.keyword === 'string' ? req.query.keyword.trim() : undefined;
+      const result = await employerService.getAllApplications(req.user!.userId, {
+        jobId, status, tag, keyword: keyword || undefined, page, limit,
+      });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async getSalaryBenchmark(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const title = typeof req.query.title === 'string' ? req.query.title.trim() : '';
