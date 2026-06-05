@@ -4,6 +4,31 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 27 — 2026-06-05
+
+**Commits:** `23b4bc4` IMP-3 Recharts responsive mobile wrapper
+
+**Done:**
+- IMP-3 ✅ — Wrap 3 chart blocks (1 employer BarChart + 1 admin monthly BarChart + 1 admin weekly LineChart) trong `overflow-x-auto` wrapper với inner `minWidth` riêng. Admin dashboard container `p-8 → p-4 sm:p-8`. Admin weekly card legend chuyển `flex-col sm:flex-row + flex-wrap` để không tràn header trên mobile.
+
+**Why / Rationale:**
+- **Chọn `overflow-x-auto` + `minWidth` thay vì switch HorizontalBarChart < 768px**: HorizontalBarChart cần component thứ hai + `useMediaQuery` runtime → tăng code path, dễ hydration mismatch SSR. Wrapper scroll giữ nguyên logic biểu đồ, user vuốt ngang đọc — đã có precedent cùng repo (table chi tiết `employer/stats` dùng `overflow-x-auto` line 127).
+- **`minWidth` khác nhau theo độ phức tạp chart**: 480 cho 6 cột đơn series (admin monthly), 560 cho 10 cột × 3 series (employer), 640 cho 8 cột × 3 series có dot Line (admin weekly). Không dùng 1 hằng số chung vì sẽ thừa hoặc thiếu.
+- **Negative margin `-mx-2 px-2`**: scrollbar nếu sát border-radius card sẽ cắt góc tròn. Đẩy ra 2px rồi padding lại giữ visual gọn.
+- **Skeleton loading không bọc wrapper**: skeleton `h-[240px]` đã 100% width đúng, bọc thêm sẽ tạo overflow thừa. Chỉ Real ResponsiveContainer cần `minWidth`.
+- **Weekly legend `flex-wrap` thay vì ẩn ở mobile**: legend là key để đọc LineChart 3 series — không thể ẩn. Wrap xuống 2 dòng vẫn dùng được.
+- **`p-8 → p-4 sm:p-8` cho admin dashboard**: đồng bộ pattern session 15 (Candidate pages cùng padding scheme). Tiết kiệm 32px viewport mỗi bên ở mobile.
+
+**Verified:** tsc clean. **Chưa QA production** — user chọn "code thôi" thay vì "code + QA" do còn 91% context lúc bắt đầu IMP-3, ưu tiên giữ buffer cho session sau. Vercel auto-deploy đang chạy.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **QA IMP-3 production** trước rồi đến **IMP-4** — Keyboard accessibility pass cho `frontend/src/components/jobs/` + `frontend/src/components/employer/` + `frontend/src/components/layout/` (~8-10 component, focus-visible rings, tabindex check, ESC handler cho dropdown/modal). Hoặc nếu user muốn skip QA → vào IMP-4 luôn.
+
+**Blocker:** Không có. Vercel auto-deploy commit `23b4bc4` đang xử lý — verify URL `https://job-hub-two.vercel.app/admin/dashboard` + `/employer/stats` mobile 375px sau khi deploy xong.
+
+---
+
 ## Session 26 — 2026-06-05
 
 **Commits:** `087dcf4` IMP-2 employer dashboard redesign — HERO + gradient stats + recent applications
