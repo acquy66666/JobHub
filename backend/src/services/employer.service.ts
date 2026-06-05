@@ -60,17 +60,15 @@ export const employerService = {
 
     const tier = ((data.tier as JobTier | undefined) ?? 'BASIC') as JobTier;
     const boostedUntil = boostedUntilForTier(tier);
-    const jobId = `job-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
-    // Atomic: consume credit + insert Job in same transaction. If credit insufficient → 402 throws, no Job inserted.
+    // Atomic: insert Job first, then consume credit (so CreditTransaction.jobId FK valid).
+    // If credit insufficient → throw → tx rollback → Job not committed.
     const { tier: _tier, ...rest } = data as Record<string, unknown> & { tier?: JobTier };
     void _tier;
     return prisma.$transaction(async (tx) => {
-      await paymentService.consumeCredit(employer.id, tier, jobId, tx);
-      return tx.job.create({
+      const newJob = await tx.job.create({
         data: {
           ...rest,
-          id: jobId,
           expiresAt: new Date(data.expiresAt as string),
           employerId: employer.id,
           status: JobStatus.PENDING,
@@ -80,6 +78,8 @@ export const employerService = {
           ...(flagReason && { flagReason }),
         } as Parameters<typeof tx.job.create>[0]['data'],
       });
+      await paymentService.consumeCredit(employer.id, tier, newJob.id, tx);
+      return newJob;
     });
   },
 

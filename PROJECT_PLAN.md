@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 35 — Stage 9 Billing Sprint C: employer UI billing dashboard + shop + checkout + QR polling + dev mark-paid path, QA PASS 7/7)
-Current Stage: Stage 9 — Paid Job Posting (Sprint A+B+C ✅ / D-E pending)
-Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A+B+C ✅
+Last Updated: 2026-06-05 (session 36 — Stage 9 Billing Sprint D: gate 402 + TierSelector + JobCard badge + listJobs sort + landing VIP. QA 8/9 PASS, TC2 pending hotfix tx order)
+Current Stage: Stage 9 — Paid Job Posting (Sprint A+B+C ✅ / D code shipped + hotfix uncommitted / E pending)
+Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A+B+C ✅ + Sprint D 80% (hotfix pending Manual Deploy)
 
 ---
 

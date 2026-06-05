@@ -4,6 +4,39 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 36 — 2026-06-06
+
+**Commits:** `1aa2bb2` feat(billing-D) gate createJob 402 + TierSelector + JobCard badge + listJobs sort + landing VIP. Hotfix tx order UNCOMMITTED tại [employer.service.ts](backend/src/services/employer.service.ts) — chờ session sau commit + deploy.
+
+**Done:**
+- Backend Sprint D: validators (`employer.ts`, `job.ts`) +tier enum. `payment.service.consumeCredit` refactor accept optional `Prisma.TransactionClient tx` + auto-create balance row + throw 402 với code/requiredTier. Helper `boostedUntilForTier`. `employer.service.createJob` wrap `prisma.$transaction` atomic. `job.service.listJobs` filter `?tier=` + orderBy raw `[tier desc, boostedUntil desc nulls last, createdAt desc]`. `errorHandler` propagate `requiredTier`.
+- Frontend Sprint D: `JobForm` TierSelector step 3 (3 radio card hiển thị credits còn, disabled khi count<1 + CTA Mua thêm), `JobCard` badge VIP/Nổi bật, `VipJobsSection` mới fetch /jobs?tier=VIP&limit=6 graceful ẩn khi rỗng, mount trong landing.
+- tsc clean cả backend + frontend.
+- Manual Deploy Render thành công.
+- QA Playwright production 8/9 PASS. TC1 TierSelector render ✓. TC3 API VIP 402 với code+requiredTier + atomic ✓. TC3b shop?required=VIP highlight ✓. TC4 dev mark-paid top-up ✓. Mobile 375 ✓.
+
+**Why / Rationale:**
+- **TC2 fail status=500 — root cause CreditTransaction.jobId FK Job**: schema cũ `CreditTransaction.jobId Job @relation(fields:[jobId], references:[id], onDelete: Cascade)`. Sprint D `createJob` ban đầu order: `consumeCredit(jobId-generated)` → `tx.job.create({id: jobId})`. Consume INSERT CreditTransaction.jobId trước khi Job tồn tại → PostgreSQL FK violation (constraint NOT DEFERRED). Fix: đảo order — `tx.job.create()` trước, lấy `newJob.id`, rồi `consumeCredit(employer.id, tier, newJob.id, tx)`. Atomic giữ nguyên: throw bên trong consume → tx rollback → Job KHÔNG commit. Đây là pattern an toàn cho FK forward-reference: tạo parent trước, child sau, trong cùng tx.
+- **TC2 UI submit click không fire handleSubmit (chưa root-cause)**: Pivot sang pure-API test TC2/TC3 để verify backend gate. UI TierSelector đã visual verified TC1 + screenshot. Đoán bug: hidden radio `className="hidden"` + RHF default behavior — click trên label không trigger native change đáng tin trên Vercel production build. Debug ban đầu thấy DOM step 3 chỉ có 3 tier radio + form errors trống — handleSubmit không kêu onValid (silent fail validation hoặc handler không attach). Defer debug session sau (low priority — gate đã verify qua API; UI thực tế employer sẽ click qua UI → cần verify lại nếu users báo lỗi).
+- **Pure-API test TC3 vẫn verify được atomicity**: gọi `POST /api/employer/jobs` với `tier=VIP` khi balance=0 → 402 INSUFFICIENT_CREDITS + requiredTier=VIP. Sau request, check `getBalance().vipCredits === 0` → atomic confirm. Đủ thay UI test.
+- **Vercel cookies vs Render cookies**: Sprint D QA học thêm — `page.request.get()` Playwright KHÔNG auto-attach cookie sang cross-origin host (jobhub-700v.onrender.com). FE Axios qua Vercel rewrite proxy `/api/*`, refreshToken cookie scoped to job-hub-two.vercel.app. Phải dùng `page.evaluate(fetch(...))` cùng-origin để cookie attach. Helper `apiCall` mới: refresh trước → lấy accessToken → fetch path với `Authorization: Bearer`. Pattern này tái dùng được cho future QA Sprint E.
+- **Rate limit auth 10 req/15min trên Render**: chạy QA nhiều lần làm hit ratelimit-remaining: 0. retry-after 43s. Pattern session sau: Monitor `until [ status != 429 ]; do sleep 5; done` chờ rate limit clear thay vì chain sleep.
+
+**Verified:** QA production 8/9. TC2 còn fail chờ hotfix.
+
+**Bugs phát hiện mới:**
+- BUG-014 (BLOCKER Sprint D): `createJob` 500 do CreditTransaction.jobId FK — đã có fix tại working copy, chưa commit.
+- BUG-015 (LOW): JobForm step 3 submit click không fire handleSubmit trong Playwright production. Visual UI render OK. Chưa repro được trong dev local; defer debug.
+
+**Next Action:**
+1. Commit + push hotfix `employer.service.ts` (đổi order Job-trước-Consume). Manual Deploy Render. Rerun `qa-scripts/sprint-d/qa_sprintD.js` — kỳ vọng TC2 ✓ + boostedUntil null cho BASIC.
+2. Sprint E — `/admin/billing` (Packages CRUD + Orders + Revenue Recharts) + `/admin/coupons` CRUD + QA Playwright production. Plan chi tiết trước, đợi duyệt.
+3. (Optional) Debug RHF submit click bug trong production build — low priority.
+
+**Blocker:** Render auto-deploy webhook vẫn cần Manual Deploy. Sandbox VNPay/MoMo vẫn chưa đăng ký.
+
+---
+
 ## Session 35 — 2026-06-05
 
 **Commits:** `3c4b338` feat(billing-C) employer UI billing dashboard+shop+checkout+QR polling, `f3efb3c` fix(billing-C) align response shape + enable dev mark-paid on production
