@@ -11,4 +11,5 @@ export const jobQuerySchema = z.object({
   salaryMin: z.coerce.number().int().positive().optional(),
   salaryMax: z.coerce.number().int().positive().optional(),
   employerId: z.string().optional(),
+  tier: z.enum(['BASIC', 'PREMIUM', 'VIP']).optional(),
 });

@@ -2,7 +2,8 @@ import { prisma } from '../lib/prisma';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationStatusEmail, sendInterviewInviteEmail } from '../utils/email';
 import { createNotification } from './notification.service';
-import { JobStatus, ApplicationStatus, ApplicationTag, NotificationType, InterviewStatus } from '../generated/prisma/client';
+import { JobStatus, ApplicationStatus, ApplicationTag, NotificationType, InterviewStatus, JobTier } from '../generated/prisma/client';
+import { paymentService, boostedUntilForTier } from './payment.service';
 
 export const employerService = {
   async getProfile(userId: string) {
@@ -57,15 +58,28 @@ export const employerService = {
       flagReason = `Đăng quá 10 tin trong 24 giờ (${dailyCount + 1} tin)`;
     }
 
-    return prisma.job.create({
-      data: {
-        ...data,
-        expiresAt: new Date(data.expiresAt as string),
-        employerId: employer.id,
-        status: JobStatus.PENDING,
-        isFlagged,
-        ...(flagReason && { flagReason }),
-      } as Parameters<typeof prisma.job.create>[0]['data'],
+    const tier = ((data.tier as JobTier | undefined) ?? 'BASIC') as JobTier;
+    const boostedUntil = boostedUntilForTier(tier);
+    const jobId = `job-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+    // Atomic: consume credit + insert Job in same transaction. If credit insufficient → 402 throws, no Job inserted.
+    const { tier: _tier, ...rest } = data as Record<string, unknown> & { tier?: JobTier };
+    void _tier;
+    return prisma.$transaction(async (tx) => {
+      await paymentService.consumeCredit(employer.id, tier, jobId, tx);
+      return tx.job.create({
+        data: {
+          ...rest,
+          id: jobId,
+          expiresAt: new Date(data.expiresAt as string),
+          employerId: employer.id,
+          status: JobStatus.PENDING,
+          tier,
+          boostedUntil,
+          isFlagged,
+          ...(flagReason && { flagReason }),
+        } as Parameters<typeof tx.job.create>[0]['data'],
+      });
     });
   },
 

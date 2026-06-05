@@ -11,10 +11,14 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
 
   if (err instanceof Error) {
-    const status = (err as Error & { status?: number }).status ?? 500;
-    const code = (err as Error & { code?: string }).code;
+    const e = err as Error & { status?: number; code?: string; requiredTier?: string };
+    const status = e.status ?? 500;
     if (status >= 500) console.error(err.stack);
-    res.status(status).json({ message: err.message, ...(code && { code }) });
+    res.status(status).json({
+      message: err.message,
+      ...(e.code && { code: e.code }),
+      ...(e.requiredTier && { requiredTier: e.requiredTier }),
+    });
     return;
   }
 

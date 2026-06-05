@@ -10,6 +10,8 @@ import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { useToast } from "@/store/toastStore";
 import api from "@/lib/api";
 import { SalaryBenchmarkWidget } from "./SalaryBenchmarkWidget";
+import { billingApi, TIER_META, type JobTier, type CreditBalance } from "@/lib/api/billing";
+import Link from "next/link";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Tiêu đề ít nhất 3 ký tự"),
@@ -25,8 +27,15 @@ const jobSchema = z.object({
   salaryMax: z.number().int().positive().optional(),
   salaryCurrency: z.string().optional(),
   expiresAt: z.string().min(1, "Chọn ngày hết hạn"),
+  tier: z.enum(["BASIC", "PREMIUM", "VIP"]),
 });
 type JobForm = z.infer<typeof jobSchema>;
+
+const TIER_TAGLINE: Record<JobTier, string> = {
+  BASIC: "Tin thường · hạn 30 ngày",
+  PREMIUM: "Badge Nổi bật · boost top list · 45 ngày",
+  VIP: "Badge VIP · trang chủ + boost top · 60 ngày",
+};
 
 const JOB_TYPES: Array<{ value: JobForm["jobType"]; label: string }> = [
   { value: "FULL_TIME", label: "Toàn thời gian" },
@@ -85,8 +94,16 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
       jobType: "FULL_TIME",
       workMode: "ON_SITE",
       salaryCurrency: "VND",
+      tier: "BASIC",
       ...defaultValues,
     },
+  });
+
+  const { data: balance } = useQuery<CreditBalance>({
+    queryKey: ["billing", "balance"],
+    queryFn: () => billingApi.getBalance(),
+    staleTime: 30_000,
+    enabled: mode === "create",
   });
 
   const { data: templates = [] } = useQuery<JobTemplate[]>({
@@ -353,6 +370,67 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
             <p className="text-[12px] font-semibold text-t2 uppercase tracking-wide mb-2">Mô tả</p>
             <p className="text-[13px] text-t1 whitespace-pre-wrap line-clamp-4">{watched.description}</p>
           </div>
+
+          {/* TierSelector — only when creating new */}
+          {mode === "create" && (
+            <div className="card-dark p-5 rounded-2xl">
+              <p className="text-[12px] font-semibold text-t2 uppercase tracking-wide mb-3">Chọn gói tin *</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {(["BASIC", "PREMIUM", "VIP"] as const).map((tier) => {
+                  const meta = TIER_META[tier];
+                  const count =
+                    tier === "BASIC"
+                      ? balance?.basicCredits ?? 0
+                      : tier === "PREMIUM"
+                      ? balance?.premiumCredits ?? 0
+                      : balance?.vipCredits ?? 0;
+                  const disabled = count < 1;
+                  const checked = watched.tier === tier;
+                  return (
+                    <label
+                      key={tier}
+                      data-tier={tier}
+                      className={`relative block p-4 rounded-xl border cursor-pointer transition-all ${
+                        checked
+                          ? `${meta.ring} bg-gradient-to-br ${meta.gradient}`
+                          : "border-border-dark hover:border-[rgba(124,58,237,.3)]"
+                      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <input
+                        type="radio"
+                        value={tier}
+                        {...register("tier")}
+                        className="hidden"
+                        disabled={disabled}
+                      />
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-[12px] uppercase tracking-wider font-bold ${meta.text}`}>
+                          {meta.label}
+                        </span>
+                        <span className={`text-[16px] font-black ${disabled ? "text-red-400" : "text-t0"}`}>
+                          {count}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-t1 leading-relaxed">{TIER_TAGLINE[tier]}</p>
+                      {disabled && (
+                        <Link
+                          href={`/employer/billing/shop?required=${tier}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-2 inline-block text-[11px] text-yellow-300 hover:text-yellow-200 underline"
+                        >
+                          ➕ Mua thêm
+                        </Link>
+                      )}
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-t2 mt-2">
+                Đăng tin sẽ trừ 1 credit từ gói tương ứng. Hết credits → tin không đăng được.
+              </p>
+            </div>
+          )}
+
           {error && <p className="text-[13px] text-red-400">{error}</p>}
 
           {/* Save as template */}

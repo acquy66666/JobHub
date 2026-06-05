@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { HowItWorksSection } from "@/components/home/HowItWorksSection";
 import { FeaturedJobsSection } from "@/components/home/FeaturedJobsSection";
+import { VipJobsSection } from "@/components/home/VipJobsSection";
 import { EmployerSection } from "@/components/home/EmployerSection";
 import { StatsSection } from "@/components/home/StatsSection";
 import { CompaniesSection } from "@/components/home/CompaniesSection";
@@ -17,6 +18,7 @@ export default function HomePage() {
         <HeroSection />
         <FeaturesSection />
         <HowItWorksSection />
+        <VipJobsSection />
         <FeaturedJobsSection />
         <EmployerSection />
         <StatsSection />

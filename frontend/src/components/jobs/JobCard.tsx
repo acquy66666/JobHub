@@ -19,6 +19,7 @@ interface Job {
   salaryCurrency?: string;
   industry: string;
   createdAt: string;
+  tier?: "BASIC" | "PREMIUM" | "VIP";
   employer: {
     id: string;
     companyName: string;
@@ -98,6 +99,24 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave, matchScore 
         </div>
 
         <div className="flex-1 min-w-0">
+          {/* Tier badge */}
+          {job.tier === "VIP" && (
+            <span
+              data-tier="VIP"
+              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-gradient-to-r from-yellow-400 to-amber-500 text-black mb-1.5"
+            >
+              👑 VIP
+            </span>
+          )}
+          {job.tier === "PREMIUM" && (
+            <span
+              data-tier="PREMIUM"
+              className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-500/20 text-purple-300 border border-purple-500/40 mb-1.5"
+            >
+              ⭐ Nổi bật
+            </span>
+          )}
+
           {/* Title row */}
           <div className="flex items-start justify-between gap-2">
             <h3 className="text-[15px] font-bold text-t0 leading-snug group-hover:text-white transition-colors line-clamp-2">

@@ -263,22 +263,42 @@ export const paymentService = {
     }
   },
 
-  // Helper for Sprint D — consume 1 credit when posting a job, atomic with FOR UPDATE
-  async consumeCredit(employerId: string, tier: JobTier, jobId: string) {
-    return prisma.$transaction(async (tx) => {
-      await tx.$queryRawUnsafe(
+  // Helper for Sprint D — consume 1 credit when posting a job, atomic with FOR UPDATE.
+  // If `tx` is passed, runs inside caller's transaction (so credit deduct + Job insert can be atomic).
+  async consumeCredit(
+    employerId: string,
+    tier: JobTier,
+    jobId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<number> {
+    const exec = async (t: Prisma.TransactionClient): Promise<number> => {
+      await t.$queryRawUnsafe(
         `SELECT id FROM "EmployerCreditBalance" WHERE "employerId" = $1 FOR UPDATE`,
         employerId,
       );
-      const balance = await tx.employerCreditBalance.findUnique({ where: { employerId } });
-      if (!balance) throw Object.assign(new Error('Chưa có credits — vui lòng mua gói'), { status: 402 });
+      let balance = await t.employerCreditBalance.findUnique({ where: { employerId } });
+      if (!balance) {
+        balance = await t.employerCreditBalance.create({
+          data: {
+            id: `bal-${employerId}`,
+            employerId,
+            basicCredits: 0,
+            premiumCredits: 0,
+            vipCredits: 0,
+          },
+        });
+      }
       const field = fieldFor(tier);
       if (balance[field] < 1) {
-        throw Object.assign(new Error(`Hết credits ${tier} — vui lòng mua thêm`), { status: 402, code: 'INSUFFICIENT_CREDITS' });
+        throw Object.assign(new Error(`Hết credits ${tier} — vui lòng mua thêm`), {
+          status: 402,
+          code: 'INSUFFICIENT_CREDITS',
+          requiredTier: tier,
+        });
       }
       const balanceAfter = balance[field] - 1;
-      await tx.employerCreditBalance.update({ where: { id: balance.id }, data: { [field]: balanceAfter } });
-      await tx.creditTransaction.create({
+      await t.employerCreditBalance.update({ where: { id: balance.id }, data: { [field]: balanceAfter } });
+      await t.creditTransaction.create({
         data: {
           id: genId('txn'),
           employerId,
@@ -290,6 +310,15 @@ export const paymentService = {
         },
       });
       return balanceAfter;
-    });
+    };
+    if (tx) return exec(tx);
+    return prisma.$transaction(exec);
   },
 };
+
+export function boostedUntilForTier(tier: JobTier): Date | null {
+  const now = Date.now();
+  if (tier === 'PREMIUM') return new Date(now + 45 * 24 * 60 * 60 * 1000);
+  if (tier === 'VIP') return new Date(now + 60 * 24 * 60 * 60 * 1000);
+  return null;
+}

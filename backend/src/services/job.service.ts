@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { JobStatus, JobType, WorkMode, Prisma } from '../generated/prisma/client';
+import { JobStatus, JobType, WorkMode, JobTier, Prisma } from '../generated/prisma/client';
 
 interface JobQuery {
   page: number;
@@ -12,11 +12,12 @@ interface JobQuery {
   salaryMin?: number;
   salaryMax?: number;
   employerId?: string;
+  tier?: string;
 }
 
 export const jobService = {
   async getJobs(query: JobQuery) {
-    const { page, limit, keyword, location, industry, jobType, workMode, salaryMin, salaryMax, employerId } = query;
+    const { page, limit, keyword, location, industry, jobType, workMode, salaryMin, salaryMax, employerId, tier } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.JobWhereInput = {
@@ -37,13 +38,18 @@ export const jobService = {
     if (salaryMin) where.salaryMax = { gte: salaryMin };
     if (salaryMax) where.salaryMin = { lte: salaryMax };
     if (employerId) where.employerId = employerId;
+    if (tier && ['BASIC', 'PREMIUM', 'VIP'].includes(tier)) where.tier = tier as JobTier;
 
     const [jobs, total] = await Promise.all([
       prisma.job.findMany({
         where,
         skip,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy: [
+          { tier: 'desc' },
+          { boostedUntil: { sort: 'desc', nulls: 'last' } },
+          { createdAt: 'desc' },
+        ],
         include: {
           employer: {
             select: { id: true, companyName: true, logoUrl: true, location: true, industry: true },
