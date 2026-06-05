@@ -53,7 +53,7 @@ export default function AdminDashboard() {
   });
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-4 sm:p-8 max-w-5xl">
       <ScrollReveal direction="up" className="mb-8">
         <h1 className="text-[28px] font-extrabold text-t0 tracking-tight">Tổng quan hệ thống</h1>
         <p className="text-[15px] text-t1 mt-1">Thống kê và quản lý toàn bộ nền tảng JobHub.</p>
@@ -83,18 +83,22 @@ export default function AdminDashboard() {
           {isLoading ? (
             <div className="h-[240px] bg-bg-3 rounded-xl animate-pulse" />
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#252538" />
-                <XAxis dataKey="name" tick={{ fill: "#9494B0", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#9494B0", fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: "#13131E", border: "1px solid #252538", borderRadius: 10, color: "#F5F5FF" }}
-                  cursor={{ fill: "rgba(124,58,237,.08)" }}
-                />
-                <Bar dataKey="Tin đăng" fill="#7C3AED" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <div style={{ minWidth: 480 }}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#252538" />
+                    <XAxis dataKey="name" tick={{ fill: "#9494B0", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#9494B0", fontSize: 12 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ background: "#13131E", border: "1px solid #252538", borderRadius: 10, color: "#F5F5FF" }}
+                      cursor={{ fill: "rgba(124,58,237,.08)" }}
+                    />
+                    <Bar dataKey="Tin đăng" fill="#7C3AED" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           )}
         </div>
       </ScrollReveal>
@@ -102,9 +106,9 @@ export default function AdminDashboard() {
       {/* Weekly trend LineChart */}
       <ScrollReveal direction="up" delay={0.2}>
         <div className="card-dark rounded-2xl p-6 mt-6">
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
             <h3 className="text-[15px] font-bold text-t0">Xu hướng 8 tuần gần nhất</h3>
-            <div className="flex items-center gap-4 text-[12px] text-t2">
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[12px] text-t2">
               <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full bg-[#B09BF8]" />Người dùng</span>
               <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full bg-[#60A5FA]" />Tin đăng</span>
               <span className="flex items-center gap-1.5"><span className="inline-block w-3 h-3 rounded-full bg-[#4ADE80]" />Đơn nộp</span>
@@ -115,20 +119,24 @@ export default function AdminDashboard() {
           ) : weeklyChartData.length === 0 ? (
             <div className="h-[240px] flex items-center justify-center text-t2 text-[13px]">Chưa có dữ liệu tuần</div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <LineChart data={weeklyChartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#252538" />
-                <XAxis dataKey="name" tick={{ fill: "#9494B0", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#9494B0", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip
-                  contentStyle={{ background: "#13131E", border: "1px solid #252538", borderRadius: 10, color: "#F5F5FF", fontSize: 13 }}
-                  cursor={{ stroke: "rgba(124,58,237,.2)", strokeWidth: 1 }}
-                />
-                <Line type="monotone" dataKey="Người dùng" stroke="#B09BF8" strokeWidth={2} dot={{ r: 3, fill: "#B09BF8" }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="Tin đăng" stroke="#60A5FA" strokeWidth={2} dot={{ r: 3, fill: "#60A5FA" }} activeDot={{ r: 5 }} />
-                <Line type="monotone" dataKey="Đơn nộp" stroke="#4ADE80" strokeWidth={2} dot={{ r: 3, fill: "#4ADE80" }} activeDot={{ r: 5 }} />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <div style={{ minWidth: 640 }}>
+                <ResponsiveContainer width="100%" height={240}>
+                  <LineChart data={weeklyChartData} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#252538" />
+                    <XAxis dataKey="name" tick={{ fill: "#9494B0", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#9494B0", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{ background: "#13131E", border: "1px solid #252538", borderRadius: 10, color: "#F5F5FF", fontSize: 13 }}
+                      cursor={{ stroke: "rgba(124,58,237,.2)", strokeWidth: 1 }}
+                    />
+                    <Line type="monotone" dataKey="Người dùng" stroke="#B09BF8" strokeWidth={2} dot={{ r: 3, fill: "#B09BF8" }} activeDot={{ r: 5 }} />
+                    <Line type="monotone" dataKey="Tin đăng" stroke="#60A5FA" strokeWidth={2} dot={{ r: 3, fill: "#60A5FA" }} activeDot={{ r: 5 }} />
+                    <Line type="monotone" dataKey="Đơn nộp" stroke="#4ADE80" strokeWidth={2} dot={{ r: 3, fill: "#4ADE80" }} activeDot={{ r: 5 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           )}
         </div>
       </ScrollReveal>

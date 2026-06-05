@@ -91,18 +91,22 @@ export default function EmployerStatsPage() {
         <ScrollReveal direction="up" delay={0.1}>
           <div className="card-dark p-6 rounded-2xl">
             <h3 className="text-[15px] font-bold text-t0 mb-6">So sánh hiệu quả các tin đăng</h3>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(37,37,56,.6)" />
-                <XAxis dataKey="name" tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(124,58,237,.06)" }} />
-                <Legend wrapperStyle={{ fontSize: 12, color: "#9494B0", paddingTop: 12 }} />
-                <Bar dataKey="Lượt xem" fill="rgba(59,130,246,.7)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Đơn nhận" fill="rgba(124,58,237,.8)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="Chấp nhận" fill="rgba(34,197,94,.7)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <div style={{ minWidth: 560 }}>
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(37,37,56,.6)" />
+                    <XAxis dataKey="name" tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(124,58,237,.06)" }} />
+                    <Legend wrapperStyle={{ fontSize: 12, color: "#9494B0", paddingTop: 12 }} />
+                    <Bar dataKey="Lượt xem" fill="rgba(59,130,246,.7)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Đơn nhận" fill="rgba(124,58,237,.8)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Chấp nhận" fill="rgba(34,197,94,.7)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
           </div>
         </ScrollReveal>
       )}
