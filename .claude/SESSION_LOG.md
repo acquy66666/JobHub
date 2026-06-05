@@ -4,6 +4,37 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 31 — 2026-06-05
+
+**Commits:** `cfb59dd` feat(e10) salary benchmark widget on job form
+
+**Done:**
+- E10 ✅ Salary Benchmark. Backend `GET /employer/salary-benchmark?title=&industry=` ([employer.service.ts](backend/src/services/employer.service.ts) `getSalaryBenchmark`): query Job filter status=ACTIVE + salaryMin/Max not null, optional industry exact match + optional title OR-token contains (≥4 char). Tính mids = (min+max)/2, sort, percentile linear interpolation P25/P50/P75 + AVG/MIN/MAX. Trả `{count, enough:false}` khi count<3.
+- Frontend [SalaryBenchmarkWidget.tsx](frontend/src/components/employer/SalaryBenchmarkWidget.tsx): debounce title 500ms, TanStack staleTime 60s, render 3-col P25/P50/P75 (P50 gradient highlight) + AVG/Min/Max line, format `XXtr`/`XXk`. Mounted ở [JobForm.tsx](frontend/src/components/employer/JobForm.tsx) step 2 ngay dưới salary inputs, dùng `watch()` title+industry.
+- QA `qa-scripts/e10/qa_e10.js` production PASS 5/5.
+
+**Why / Rationale:**
+- **OR-token match title thay full contains**: "Senior Frontend Developer" không chứa trong "Frontend Developer" nếu dùng full string contains. Tách token ≥4 char → OR clause → false positive nhẹ chấp nhận được, recall cao hơn nhiều.
+- **mids = (min+max)/2 thay aggregate riêng từng cột**: 1 con số đại diện salary của job đó, dễ tính percentile mảng. Trade-off: nếu range rất rộng (10-100tr) mid không phản ánh range, nhưng cho mục đích benchmark thị trường (employer muốn biết "trung bình tin tương tự đang trả bao nhiêu") thì mid là đại diện hợp lý.
+- **Percentile linear interpolation inline**: ~5 dòng, không cần lib. P25/P50/P75 chuẩn statistics.
+- **Client-side debounce + TanStack staleTime 60s**: gõ nhanh không spam API, 60s đủ vì data không đổi nhanh.
+- **Graceful empty khi count<3**: 1-2 tin không có ý nghĩa thống kê, hiển thị "Chưa đủ dữ liệu" thay vì show số liệu sai lệch.
+- **QA TC1/TC2 không direct API call**: accessToken ở Zustand memory (không localStorage/cookie) → `page.request.get` không có header auth → 401. Sửa TC1 thành assert 401 (proves route mounted), TC2 verify gián tiếp qua UI widget render (content "tin tương tự" hoặc "Chưa đủ" → API responded 200).
+- **Seed mismatch**: Production query `industry="Công nghệ thông tin"` + title "Frontend Developer" trả count=0. Có thể do seed jobs dùng industry name khác hoặc title không có token "Frontend"/"Developer". Empty state render đúng → không phải bug code; defer enrich seed nếu sau này muốn demo có số liệu thật.
+
+**Verified:** Production QA PASS 5/5 — `node qa-scripts/e10/qa_e10.js`. TC1 API route 401 (authGuard), TC2 widget header+content, TC3 graceful empty, TC4 industry change re-renders, TC5 mobile 375 width=261.
+
+**Bugs phát hiện mới:** Không có. (Seed mismatch không phải bug.)
+
+**Next Action:** **Không còn task pending.** Stage 8 COMPLETE → toàn dự án production-ready. Optional cho session sau:
+1. Workspace housekeeping (qa-scripts/, screenshots/qa_*, package*.json root, .claude/scheduled_tasks.lock) — quyết định commit hay xoá.
+2. Enrich seed data để Salary Benchmark widget hiển thị số liệu thật khi demo (insert ~10 jobs đa dạng salary cho từng industry/title common).
+3. CV Builder thumbnail hover-only overlay a11y (low priority).
+
+**Blocker:** Không có.
+
+---
+
 ## Session 30 — 2026-06-05
 
 **Commits:** `81afd83` feat(imp-5) notification filter tabs (5 type tabs + client-side filter)

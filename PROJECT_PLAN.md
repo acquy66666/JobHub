@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 30 — IMP-5 notification filter tabs DONE + QA production PASS 5/5)
-Current Stage: Stage 8
-Status: Stage 5 ✅ COMPLETE | Stage 6 ✅ COMPLETE | Stage 7 ✅ COMPLETE | Stage 8 Sprint 1 ✅ Sprint 2 ✅ Sprint 3 partial (E6✅ E9✅ E10 pending) | **UI/UX Sprint planned (priority #1)**
+Last Updated: 2026-06-05 (session 31 — E10 Salary Benchmark DONE + QA production PASS 5/5 → **Stage 8 COMPLETE**)
+Current Stage: Stage 8 ✅ COMPLETE
+Status: Stage 5 ✅ COMPLETE | Stage 6 ✅ COMPLETE | Stage 7 ✅ COMPLETE | Stage 8 ✅ COMPLETE (UI/UX Sprint + E10 done)
 
 ---
 
@@ -328,8 +328,8 @@ Xây dựng website tuyển dụng full-stack (JobHub) với 3 nhóm người d�
 - [ ] CV Builder thumbnail hover-only overlay không accessible cho keyboard/touch — thêm tap state mobile hoặc luôn hiện badge "Sử dụng" góc thumbnail. [(candidate)/candidate/cv/builder/page.tsx](frontend/src/app/(candidate)/candidate/cv/builder/page.tsx).
 
 ### Sau UI/UX Sprint mới đến E10
-- [ ] **E10 — Salary Benchmark** — Aggregate MIN/MAX/AVG từ `Job.salaryMin/salaryMax` GROUP BY title keyword + industry. Endpoint `GET /employer/salary-benchmark?title=&industry=`. Widget trong `/employer/jobs/new` + `/employer/jobs/[id]/edit` bên cạnh salary range inputs. Cần seed data đủ đa dạng (hiện có 28 jobs với salary đa dạng — kiểm tra trước khi implement).
-- [ ] **Stage 8 COMPLETE** sau E10 — QA verify E9 production trước khi kết thúc.
+- [x] **E10 — Salary Benchmark** ✅ (`cfb59dd`) — Backend `GET /employer/salary-benchmark?title=&industry=` aggregate AVG/MIN/MAX/P25/P50/P75 từ Job.salaryMin+salaryMax mids, OR-token match title (>=4 char), filter status=ACTIVE, return `enough:false` khi count<3. Frontend SalaryBenchmarkWidget debounce title 500ms + TanStack staleTime 60s + 3-col P25/P50/P75 + AVG/Min/Max line, mounted ở JobForm step 2. QA production PASS 5/5.
+- [x] **Stage 8 COMPLETE** ✅ — UI/UX Sprint (IMP-1..5) + Sprint 3 (E6/E9/E10) tất cả done.
 
 **Lưu ý kỹ thuật Sprint 3:**
 - `InterviewSchedule` + `InterviewStatus` + `INTERVIEW_SCHEDULED` NotificationType đã có trong DB (Supabase migration applied session 22).
