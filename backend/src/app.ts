@@ -12,6 +12,9 @@ import adminRouter from './routes/admin';
 import reportRouter from './routes/report';
 import notificationRouter from './routes/notification';
 import publicRouter from './routes/public';
+import employerBillingRouter from './routes/employer-billing';
+import paymentWebhookRouter from './routes/payment-webhook';
+import adminBillingRouter from './routes/admin-billing';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -30,6 +33,9 @@ app.use('/api/admin', adminRouter);
 app.use('/api/reports', reportRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/public', publicRouter);
+app.use('/api/employer/billing', employerBillingRouter);
+app.use('/api/payments', paymentWebhookRouter);
+app.use('/api/admin', adminBillingRouter);
 
 app.use(errorHandler);
 

@@ -196,3 +196,52 @@ export async function sendApplicationStatusEmail(to: string, jobTitle: string, s
     </div>`;
   await sendMail(to, `${cfg.emoji} ${cfg.label}: ${jobTitle}`, html);
 }
+
+export async function sendPaymentSuccessEmail(to: string, orderId: string, credits: number, tier: string): Promise<void> {
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0E0E18;color:#F5F5FF;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#7C3AED,#3B82F6);padding:28px 32px">
+        <h1 style="margin:0;font-size:20px;font-weight:800;color:#fff">JobHub</h1>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,.7)">Thanh toán thành công</p>
+      </div>
+      <div style="padding:28px 32px">
+        <div style="font-size:32px;margin-bottom:12px">✅</div>
+        <h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:#22C55E">Đã cộng credits vào tài khoản</h2>
+        <p style="margin:0 0 6px;font-size:14px;color:#9494B0">Mã đơn: <strong style="color:#F5F5FF">${orderId}</strong></p>
+        <p style="margin:0;font-size:14px;color:#9494B0">Đã cộng: <strong style="color:#F5F5FF">+${credits} credits ${tier}</strong></p>
+      </div>
+    </div>`;
+  await sendMail(to, `✅ Thanh toán thành công — Đơn ${orderId}`, html);
+}
+
+export async function sendPaymentFailedEmail(to: string, orderId: string): Promise<void> {
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0E0E18;color:#F5F5FF;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#7C3AED,#3B82F6);padding:28px 32px">
+        <h1 style="margin:0;font-size:20px;font-weight:800;color:#fff">JobHub</h1>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,.7)">Thanh toán thất bại</p>
+      </div>
+      <div style="padding:28px 32px">
+        <div style="font-size:32px;margin-bottom:12px">❌</div>
+        <h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:#EF4444">Đơn hàng không thành công</h2>
+        <p style="margin:0;font-size:14px;color:#9494B0">Mã đơn <strong style="color:#F5F5FF">${orderId}</strong> đã thất bại hoặc bị huỷ. Vui lòng thử lại.</p>
+      </div>
+    </div>`;
+  await sendMail(to, `❌ Thanh toán thất bại — Đơn ${orderId}`, html);
+}
+
+export async function sendCreditLowEmail(to: string, tier: string, remaining: number): Promise<void> {
+  const html = `
+    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#0E0E18;color:#F5F5FF;border-radius:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#7C3AED,#3B82F6);padding:28px 32px">
+        <h1 style="margin:0;font-size:20px;font-weight:800;color:#fff">JobHub</h1>
+        <p style="margin:8px 0 0;font-size:13px;color:rgba(255,255,255,.7)">Sắp hết credits</p>
+      </div>
+      <div style="padding:28px 32px">
+        <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+        <h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:#F59E0B">Bạn còn ${remaining} credits ${tier}</h2>
+        <p style="margin:0;font-size:14px;color:#9494B0">Mua thêm credits để tiếp tục đăng tin tuyển dụng.</p>
+      </div>
+    </div>`;
+  await sendMail(to, `⚠️ Bạn còn ${remaining} credits ${tier}`, html);
+}
