@@ -429,6 +429,49 @@ export const employerService = {
     };
   },
 
+  async getSalaryBenchmark({ title, industry }: { title?: string; industry?: string }) {
+    const where: any = {
+      status: 'ACTIVE',
+      salaryMin: { not: null },
+      salaryMax: { not: null },
+    };
+    if (industry) where.industry = industry;
+    if (title && title.trim().length >= 3) {
+      const tokens = title.split(/\s+/).filter((w) => w.length >= 4);
+      if (tokens.length > 0) {
+        where.OR = tokens.map((t) => ({ title: { contains: t, mode: 'insensitive' } }));
+      } else {
+        where.title = { contains: title.trim(), mode: 'insensitive' };
+      }
+    }
+    const jobs = await prisma.job.findMany({ where, select: { salaryMin: true, salaryMax: true } });
+    const mids = jobs
+      .map((j) => ((j.salaryMin ?? 0) + (j.salaryMax ?? 0)) / 2)
+      .filter((v) => v > 0)
+      .sort((a, b) => a - b);
+    const count = mids.length;
+    if (count < 3) return { count, enough: false as const, currency: 'VND' };
+    const percentile = (arr: number[], p: number) => {
+      const idx = (arr.length - 1) * p;
+      const lo = Math.floor(idx);
+      const hi = Math.ceil(idx);
+      if (lo === hi) return arr[lo];
+      return arr[lo] + (arr[hi] - arr[lo]) * (idx - lo);
+    };
+    const sum = mids.reduce((a, b) => a + b, 0);
+    return {
+      count,
+      enough: true as const,
+      currency: 'VND',
+      min: Math.round(mids[0]),
+      max: Math.round(mids[count - 1]),
+      avg: Math.round(sum / count),
+      p25: Math.round(percentile(mids, 0.25)),
+      p50: Math.round(percentile(mids, 0.5)),
+      p75: Math.round(percentile(mids, 0.75)),
+    };
+  },
+
   async getApplicationNotes(userId: string, jobId: string, appId: string) {
     const job = await prisma.job.findUnique({ where: { id: jobId }, include: { employer: true } });
     if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });

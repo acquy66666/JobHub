@@ -9,6 +9,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { useToast } from "@/store/toastStore";
 import api from "@/lib/api";
+import { SalaryBenchmarkWidget } from "./SalaryBenchmarkWidget";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Tiêu đề ít nhất 3 ký tự"),
@@ -323,6 +324,7 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
             <div><label className={labelClass}>Lương tối thiểu (VND)</label><input type="number" {...register("salaryMin", { valueAsNumber: true })} placeholder="15000000" className={inputClass} /></div>
             <div><label className={labelClass}>Lương tối đa (VND)</label><input type="number" {...register("salaryMax", { valueAsNumber: true })} placeholder="25000000" className={inputClass} /></div>
           </div>
+          <SalaryBenchmarkWidget title={watched.title ?? ""} industry={watched.industry ?? ""} />
           <div><label className={labelClass}>Ngày hết hạn *</label><input type="date" {...register("expiresAt")} min={minExpiry} className={inputClass} />{errors.expiresAt && <p className="text-[12px] text-red-400 mt-1">{errors.expiresAt.message}</p>}</div>
           <div className="flex justify-between">
             <button type="button" onClick={() => setStep(1)} className="px-6 py-2.5 rounded-xl border border-border-dark text-[14px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">← Quay lại</button>

@@ -206,6 +206,22 @@ export const employerController = {
     } catch (err) { next(err); }
   },
 
+  async getSalaryBenchmark(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const title = typeof req.query.title === 'string' ? req.query.title.trim() : '';
+      const industry = typeof req.query.industry === 'string' ? req.query.industry.trim() : '';
+      if (!title && !industry) {
+        res.status(400).json({ message: 'Cần ít nhất title hoặc industry' });
+        return;
+      }
+      const result = await employerService.getSalaryBenchmark({
+        title: title || undefined,
+        industry: industry || undefined,
+      });
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async getScreeningQuestions(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const result = await employerService.getScreeningQuestions(req.user!.userId, String(req.params.jobId));
