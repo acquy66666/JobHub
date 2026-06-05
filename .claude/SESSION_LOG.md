@@ -4,6 +4,43 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 34 — 2026-06-05
+
+**Commits:** `1d76560` feat(billing-B) payment integration + webhook + coupon engine
+
+**Done:**
+- Sprint B Backend payment: 9 file mới + sửa 3 (env/app/email).
+- `integrations/vnpay.ts` — buildPaymentUrl SHA512 HMAC + verifyResponse, sort alphabet manual (KHÔNG `URLSearchParams.toString()`), constant-time compare.
+- `integrations/momo.ts` — createPayment POST `/v2/gateway/api/create` + verifyIpn SHA256 HMAC; fallback placeholder URL khi `MOMO_PARTNER_CODE`/`MOMO_SECRET_KEY` rỗng (sandbox chưa đăng ký).
+- `services/coupon.service.ts` — validate 5 rule (status+date / maxRedemptions / perEmployerLimit / minAmount / appliesTo) + apply PERCENT/FIXED/BONUS_CREDITS + preview cho FE.
+- `services/payment.service.ts` — createOrder (validate coupon → insert PENDING → gọi gateway → update payUrl/qrCode/providerTxnRef). `markPaid` atomic `$transaction` với 2× `$queryRawUnsafe SELECT ... FOR UPDATE` (PaymentOrder + EmployerCreditBalance) + idempotency check `status === 'SUCCESS'` → return ack. Side effect (email/notification) ngoài transaction try/catch. `markFailed` riêng. `consumeCredit(employerId, tier, jobId)` helper sẵn cho Sprint D (FOR UPDATE balance + throw 402 + code `INSUFFICIENT_CREDITS`).
+- `services/billing.service.ts` — getBalance auto-create row nếu thiếu, listPackages/Orders/Transactions, admin listAllOrders + revenueStats raw SQL (groupBy month + by provider) + adminGrantCredits với AuditLog.
+- 3 router mới mount tại `app.ts`: `/api/employer/billing` (7 endpoint, EMPLOYER auth), `/api/payments` (webhook public + dev-only `/dev/mark-paid`), `/api/admin` (CRUD packages + coupons + revenue + grant credits).
+- `utils/email.ts` thêm sendPaymentSuccessEmail / sendPaymentFailedEmail / sendCreditLowEmail (branded gradient JobHub).
+- `config/env.ts` +11 env var sandbox fallback rỗng để dev local không crash.
+- `tsc --noEmit` backend clean.
+
+**Why / Rationale:**
+- **Dev-only `/payments/dev/mark-paid` route**: Sandbox VNPay/MoMo onboarding 1-2 ngày, user chưa đăng ký. Để Sprint C UI có thể test luồng end-to-end với fake "đã thanh toán", thêm route ack manual `if (env.NODE_ENV !== 'production')`. Production tự động ẩn — không có rủi ro lộ. Trade-off: 1 dòng `if` đổi lấy unblock toàn bộ Sprint C polling/redirect.
+- **`$queryRawUnsafe SELECT ... FOR UPDATE` thay vì Prisma `findUnique`**: Prisma client KHÔNG hỗ trợ row-level lock. `findUnique` chỉ SELECT thường → 2 webhook IPN bắn cùng lúc có thể cùng đọc `status=PENDING` rồi cộng credit 2 lần. Raw SQL `FOR UPDATE` bên trong `$transaction` ép Postgres lock row đến khi tx commit. Đôi `unsafe` chấp nhận được vì query không nhận user input — chỉ ID cố định.
+- **Idempotency tại `markPaid` chứ KHÔNG tại route handler**: Cùng business rule (status === SUCCESS → ack) phải đặt sâu trong service vì có 3 entry point: VNPay IPN, MoMo IPN, dev mark-paid. Nếu check ở handler thì duplicate logic 3 lần + race condition giữa check và update vẫn còn. Service-level check bên trong transaction = atomic.
+- **MoMo placeholder URL khi env trống**: Không throw error mà trả URL giả `https://test-payment.momo.vn/pay/placeholder?orderId=...`. Sprint C có thể dev UI test luồng "redirect tới gateway" mà chưa cần credentials thật. Khi onboarded chỉ cần set env var, không sửa code.
+- **Encode `%20` thành `+` trong VNPay signature**: VNPay docs yêu cầu encoding kiểu form-urlencoded (space=+), không phải percent-encoded (space=%20) như chuẩn URI. Mismatch encoding → signature fail. Đã handle trong `encode()` helper.
+- **Mount admin-billing tại `/api/admin` (cùng prefix với admin hiện có)**: Express cho phép 2 router chung prefix, các path con không trùng (`/billing/*` + `/coupons/*` không chạm các route admin hiện có). Tránh phải refactor route admin cũ.
+- **`packageSchema.partial()` cho PATCH**: Zod giúp cho phép update từng field, không bắt full payload. Đỡ phải viết 2 schema create/update riêng.
+
+**Verified:**
+- `npx tsc --noEmit` backend clean (no output).
+- Chưa runtime test — sandbox VNPay/MoMo chưa đăng ký, FE chưa có để gọi endpoint. Sprint C sẽ là vòng test runtime đầu tiên.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **Sprint C — Employer UI billing.** Scope: 4 page mới `(employer)/employer/billing/page.tsx` (dashboard 3-col credits + history transactions), `/billing/shop/page.tsx` (catalog 3 tier × 3 size từ `GET /packages`), `/billing/orders/[id]/page.tsx` (QR + countdown 15 phút + polling `GET /orders/:id` 3s đến SUCCESS/FAILED/EXPIRED), `/billing/return/page.tsx` (parse query VNPay/MoMo redirect). Component `CheckoutModal` (3 bước provider → coupon validate debounce 500ms → confirm POST `/orders`), `CreditBadge` mini hiển thị 3 số ở sidebar header. Sidebar nav thêm "💳 Mua credits". Error handler `lib/api.ts` bắt 402 INSUFFICIENT_CREDITS → toast + redirect `/employer/billing/shop?required=<tier>` (Sprint D dùng). Mobile 375 mandatory cùng session (rule `feedback_no_defer_mobile_qa`). Test luồng bằng `/dev/mark-paid` route.
+
+**Blocker:** Sandbox VNPay/MoMo CHƯA đăng ký — Sprint C vẫn code được nhờ `/dev/mark-paid` route + MoMo placeholder URL. Khi user lấy được sandbox key sẽ swap env trên Render + smoke test thật.
+
+---
+
 ## Session 33 — 2026-06-05
 
 **Commits:** `4f66258` feat(billing-A) prisma schema + supabase migration + seed packages/coupons + backfill credits

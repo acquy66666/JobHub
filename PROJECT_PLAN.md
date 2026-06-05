@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 33 — Stage 9 Billing Sprint A: Prisma billing schema + Supabase migration + seed 9 packages / 3 coupons + backfill 5 BASIC credits)
-Current Stage: Stage 9 — Paid Job Posting (Sprint A ✅ / B-E pending)
-Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A ✅
+Last Updated: 2026-06-05 (session 34 — Stage 9 Billing Sprint B: vnpay/momo integration + payment.service atomic + coupon engine + routes + email templates)
+Current Stage: Stage 9 — Paid Job Posting (Sprint A+B ✅ / C-E pending)
+Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A+B ✅
 
 ---
 
@@ -346,14 +346,17 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
 - [x] Seed 9 CreditPackage (Basic/Premium/VIP × 1/5/10) + 3 Coupon (WELCOME 20% perEmployerLimit=1, XUAN2026 fixed -50k hết hạn 28/2, BONUS3 tặng 3 credits BASIC)
 - [x] `prisma generate` + `tsc --noEmit` backend clean
 
-**Sprint B — Backend payment + integration (pending):**
-- [ ] `vnpay.ts` + `momo.ts` integration: buildPaymentUrl/createPayment + verifyIpn signature (SHA512 / SHA256 HMAC)
-- [ ] `payment.service.ts`: createOrder, markPaid atomic transaction (SET order=SUCCESS + INSERT CreditTransaction + UPDATE EmployerCreditBalance + Coupon.redeemedCount + CouponRedemption)
-- [ ] `coupon.service.ts`: validate 5 rules (code/status/range/maxRedemptions/perEmployerLimit/minAmount/appliesTo) + apply PERCENT/FIXED/BONUS_CREDITS
-- [ ] `billing.service.ts`: getBalance, listOrders, listTransactions
-- [ ] Routes: `/employer/billing/*` (employer auth) + `/payments/{vnpay,momo}/*` (public webhook + signature verify) + `/admin/billing/*` + `/admin/coupons/*`
-- [ ] Env vars sandbox: VNPAY_TMN_CODE/HASH_SECRET/URL/RETURN_URL/IPN_URL + MOMO_PARTNER_CODE/ACCESS_KEY/SECRET_KEY/ENDPOINT/REDIRECT_URL/IPN_URL
-- [ ] Idempotency IPN (check order.status SUCCESS rồi return ack) + pessimistic lock SELECT FOR UPDATE khi consume
+**Sprint B — Backend payment + integration (✅ session 34, 2026-06-05, `1d76560`):**
+- [x] `vnpay.ts` + `momo.ts` integration: buildPaymentUrl/createPayment + verify signature (SHA512 / SHA256 HMAC, manual sort không URLSearchParams, constant-time compare)
+- [x] `payment.service.ts`: createOrder + markPaid atomic `$transaction` với 2× `SELECT FOR UPDATE` (PaymentOrder + EmployerCreditBalance) + idempotency check status SUCCESS
+- [x] `coupon.service.ts`: validate 5 rules + apply PERCENT/FIXED/BONUS_CREDITS + preview cho frontend
+- [x] `billing.service.ts`: getBalance, listOrders, listTransactions + admin listAllOrders, revenueStats (groupBy month + by provider), adminGrantCredits
+- [x] Routes: `/api/employer/billing/*` (7 endpoint) + `/api/payments/{vnpay,momo}/*` (webhook public, verify signature) + `/api/admin/billing/*` + `/api/admin/coupons/*` (CRUD + audit log)
+- [x] Env vars 11 placeholder trong config/env.ts (sandbox chưa đăng ký — fallback rỗng, momo trả URL placeholder)
+- [x] Email templates: sendPaymentSuccessEmail / sendPaymentFailedEmail / sendCreditLowEmail (branded gradient)
+- [x] Dev-only `POST /api/payments/dev/mark-paid` (NODE_ENV !== production) cho smoke test khi chưa có sandbox key
+- [x] `consumeCredit(employerId, tier, jobId)` helper sẵn cho Sprint D (atomic FOR UPDATE + 402 INSUFFICIENT_CREDITS)
+- [x] `tsc --noEmit` backend clean
 
 **Sprint C — Employer UI (pending):**
 - [ ] `/employer/billing` dashboard 3-col credits + history
