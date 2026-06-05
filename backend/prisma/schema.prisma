@@ -78,12 +78,20 @@ enum AuditAction {
   EMPLOYER_UNVERIFIED
   REPORT_REVIEWED
   REPORT_DISMISSED
+  COUPON_CREATED
+  COUPON_UPDATED
+  PACKAGE_CREATED
+  PACKAGE_UPDATED
+  CREDITS_GRANTED
 }
 
 enum AuditTargetType {
   JOB
   USER
   REPORT
+  COUPON
+  PACKAGE
+  EMPLOYER_CREDITS
 }
 
 enum JobAlertFrequency {
@@ -98,6 +106,9 @@ enum NotificationType {
   JOB_EXPIRING_SOON
   NEW_APPLICATION
   INTERVIEW_SCHEDULED
+  CREDIT_PURCHASED
+  CREDIT_LOW
+  PAYMENT_FAILED
   SYSTEM
 }
 
@@ -110,6 +121,44 @@ enum InterviewStatus {
   PENDING
   CONFIRMED
   CANCELLED
+}
+
+enum JobTier {
+  BASIC
+  PREMIUM
+  VIP
+}
+
+enum PaymentProvider {
+  VNPAY
+  MOMO
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  CANCELLED
+  EXPIRED
+}
+
+enum TransactionType {
+  PURCHASE_CREDITS
+  REFUND
+  ADMIN_GRANT
+  JOB_POST_DEDUCT
+}
+
+enum CouponDiscountType {
+  PERCENT
+  FIXED
+  BONUS_CREDITS
+}
+
+enum CouponStatus {
+  ACTIVE
+  PAUSED
+  EXPIRED
 }
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -214,6 +263,10 @@ model Employer {
   jobs        Job[]
   templates   JobTemplate[]
   followedBy  FollowedCompany[]
+  creditBalance     EmployerCreditBalance?
+  paymentOrders     PaymentOrder[]
+  creditTxns        CreditTransaction[]
+  couponRedemptions CouponRedemption[]
 }
 
 model JobTemplate {
@@ -258,14 +311,18 @@ model Job {
   viewCount      Int           @default(0)
   isFlagged      Boolean       @default(false)
   flagReason     String?
+  tier           JobTier       @default(BASIC)
+  boostedUntil   DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   applications        Application[]
   savedBy             SavedJob[]
   screeningQuestions  ScreeningQuestion[]
+  creditTxns          CreditTransaction[]
 
   @@index([status, expiresAt])
   @@index([isFlagged])
+  @@index([tier, boostedUntil])
 }
 
 model Application {
@@ -446,4 +503,117 @@ model InterviewSchedule {
   updatedAt     DateTime        @updatedAt
 
   @@index([applicationId])
+}
+
+model CreditPackage {
+  id           String         @id @default(cuid())
+  name         String
+  tier         JobTier
+  creditAmount Int
+  priceVnd     Int
+  bonusCredits Int            @default(0)
+  isActive     Boolean        @default(true)
+  sortOrder    Int            @default(0)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  orders       PaymentOrder[]
+
+  @@index([tier, isActive])
+}
+
+model EmployerCreditBalance {
+  id             String   @id @default(cuid())
+  employerId     String   @unique
+  employer       Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  basicCredits   Int      @default(0)
+  premiumCredits Int      @default(0)
+  vipCredits     Int      @default(0)
+  updatedAt      DateTime @updatedAt
+}
+
+model PaymentOrder {
+  id                   String              @id @default(cuid())
+  employerId           String
+  employer             Employer            @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  packageId            String
+  package              CreditPackage       @relation(fields: [packageId], references: [id])
+  couponId             String?
+  coupon               Coupon?             @relation(fields: [couponId], references: [id])
+  provider             PaymentProvider
+  status               PaymentStatus       @default(PENDING)
+  amountGross          Int
+  discountAmount       Int                 @default(0)
+  amountNet            Int
+  qrCodeUrl            String?
+  payUrl               String?
+  providerTxnRef       String?             @unique
+  providerResponseCode String?
+  ipnPayload           Json?
+  expiresAt            DateTime
+  paidAt               DateTime?
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  transactions         CreditTransaction[]
+  redemptions          CouponRedemption[]
+
+  @@index([employerId, status])
+  @@index([status, createdAt])
+}
+
+model CreditTransaction {
+  id             String          @id @default(cuid())
+  employerId     String
+  employer       Employer        @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  type           TransactionType
+  tier           JobTier?
+  delta          Int
+  balanceAfter   Int
+  paymentOrderId String?
+  paymentOrder   PaymentOrder?   @relation(fields: [paymentOrderId], references: [id])
+  jobId          String?
+  job            Job?            @relation(fields: [jobId], references: [id])
+  adminUserId    String?
+  note           String?
+  createdAt      DateTime        @default(now())
+
+  @@index([employerId, createdAt])
+}
+
+model Coupon {
+  id               String             @id @default(cuid())
+  code             String             @unique
+  name             String
+  description      String?
+  discountType     CouponDiscountType
+  discountValue    Int
+  bonusCredits     Int                @default(0)
+  appliesTo        JobTier?
+  minAmount        Int?
+  maxRedemptions   Int?
+  redeemedCount    Int                @default(0)
+  perEmployerLimit Int                @default(1)
+  startsAt         DateTime
+  endsAt           DateTime
+  status           CouponStatus       @default(ACTIVE)
+  createdByAdminId String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  orders           PaymentOrder[]
+  redemptions      CouponRedemption[]
+
+  @@index([status, endsAt])
+}
+
+model CouponRedemption {
+  id             String       @id @default(cuid())
+  couponId       String
+  coupon         Coupon       @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  employerId     String
+  employer       Employer     @relation(fields: [employerId], references: [id], onDelete: Cascade)
+  paymentOrderId String
+  paymentOrder   PaymentOrder @relation(fields: [paymentOrderId], references: [id], onDelete: Cascade)
+  redeemedAt     DateTime     @default(now())
+
+  @@unique([couponId, employerId, paymentOrderId])
+  @@index([couponId])
 }
