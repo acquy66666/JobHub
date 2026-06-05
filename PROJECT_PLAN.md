@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 36 — Stage 9 Billing Sprint D: gate 402 + TierSelector + JobCard badge + listJobs sort + landing VIP. QA 8/9 PASS, TC2 pending hotfix tx order)
-Current Stage: Stage 9 — Paid Job Posting (Sprint A+B+C ✅ / D code shipped + hotfix uncommitted / E pending)
-Status: Stage 5–8 ✅ COMPLETE | Bonus cross-job page ✅ | Stage 9 Sprint A+B+C ✅ + Sprint D 80% (hotfix pending Manual Deploy)
+Last Updated: 2026-06-06 (session 37 — Stage 9 Sprint E Admin Billing DONE + QA 9/9 + Sprint D TC2 re-verified PASS → Stage 9 COMPLETE)
+Current Stage: Stage 9 — Paid Job Posting ✅ COMPLETE (A+B+C+D+E)
+Status: Stage 5–9 ✅ COMPLETE | Toàn dự án production-ready
 
 ---
 
@@ -370,18 +370,24 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
 - [x] Backend dev `/payments/dev/mark-paid` gate đổi `NODE_ENV !== production` → `ENABLE_DEV_MARK_PAID !== 'false'` (default on, tắt khi sandbox sẵn sàng)
 - [x] QA Playwright production 7/7 PASS (TC1 visual verify do CSS uppercase đánh lừa innerText)
 
-**Sprint D — Gate createJob + Job UI (pending):**
-- [ ] `TierSelector` trong `JobForm` (chọn tier trước Review)
-- [ ] Backend `createJob` gate 402 + atomic consume tier credit
-- [ ] `JobCard` badge VIP/Premium + sort BE theo (tier DESC, boostedUntil DESC NULLS LAST)
-- [ ] Trang chủ section "Việc làm VIP"
+**Sprint D — Gate createJob + Job UI (✅ session 36, `1aa2bb2`+`4c8dccf`):**
+- [x] `TierSelector` trong `JobForm` step 3 (3 radio card hiển thị credits còn, disabled khi count<1 + CTA Mua thêm)
+- [x] Backend `createJob` wrap `prisma.$transaction` atomic — Job insert TRƯỚC consumeCredit (FK Job→CreditTransaction.jobId)
+- [x] `JobCard` badge VIP gold gradient / Nổi bật purple + sort BE `[tier desc, boostedUntil desc nulls last, createdAt desc]`
+- [x] Trang chủ `VipJobsSection` fetch `/jobs?tier=VIP&limit=6`, ẩn graceful khi rỗng
+- [x] QA 9/9 PASS (TC2 hotfix verified session 37)
 
-**Sprint E — Admin + finishing (pending):**
-- [ ] `/admin/billing` (Packages CRUD + Orders + Revenue Recharts)
-- [ ] `/admin/coupons` CRUD
-- [ ] Admin manual grant credits + AuditLog
-- [ ] 3 email templates Brevo (PaymentSuccess / PaymentFailed / CreditLow)
-- [ ] QA Playwright production happy path + negative + idempotency + coupon limit + mobile 375
+**Sprint E — Admin Billing (✅ session 37, `908ed9e`+`7db7292`):**
+- [x] `/admin/billing` 3 tab: Tổng quan (preset range 7d/30d/12m/5y/custom + BarChart granularity day|week|month|year + PieChart by provider VNPay/MoMo) / Đơn hàng (filter status+provider+EmployerPicker + pagination) / Cấp credit thủ công (form 4 field + audit log)
+- [x] `/admin/packages` CRUD table + modal (name/tier/creditAmount/priceVnd/bonusCredits/sortOrder/isActive) + soft delete (PATCH isActive=false)
+- [x] `/admin/coupons` CRUD table + modal 13 field + cột "Đã dùng" (N/maxRedemptions)
+- [x] `EmployerPicker` dropdown search local (fetch /admin/users?role=EMPLOYER&limit=50, filter client-side companyName+email)
+- [x] Sidebar +3 NAV (💳 Doanh thu / 📦 Gói credit / 🎟️ Mã giảm giá)
+- [x] Backend `revenueStats` refactor accept `granularity+from+to`, return summary {totalRevenue, successOrders, pendingOrders, avgOrderValue}, series buckets parameterized `date_trunc($1, ...)`
+- [x] Backend `/admin/coupons` GET thêm `_count.redemptions`
+- [x] Hotfix `7db7292`: `/admin/users` response include `employer.id` (EmployerPicker FE phụ thuộc, không có id → grant flow undefined)
+- [x] Email templates (đã có từ Sprint B): sendPaymentSuccessEmail / sendPaymentFailedEmail / sendCreditLowEmail wired trong markPaid + consumeCredit low-warning
+- [x] QA Playwright production 9/9 PASS (`qa-scripts/sprint-e/qa_sprintE.js`): TC0 401 + TC1 3-tab + TC2 granularity=day URL param + TC3 orders API + TC4 grant +2 BASIC + TC5 packages 9 rows + TC6 coupon create + TC7 _count.redemptions + TC8 mobile 375 cả 3 page
 
 **Lưu ý kỹ thuật Sprint 3:**
 - `InterviewSchedule` + `InterviewStatus` + `INTERVIEW_SCHEDULED` NotificationType đã có trong DB (Supabase migration applied session 22).

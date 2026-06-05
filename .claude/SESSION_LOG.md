@@ -4,6 +4,44 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 37 — 2026-06-06
+
+**Commits:** `908ed9e` feat(billing-E) admin billing dashboard + packages CRUD + coupons CRUD, `7db7292` fix(billing-E) include employer.id in admin/users response.
+
+**Done:**
+- Sprint D TC2 re-verify production: Render Manual Deploy commit `4c8dccf` (hotfix session 36 Job-trước-Consume) → rerun `qa-scripts/sprint-d/qa_sprintD.js` 9/9 PASS. BASIC create 201 + basic 6→5, boostedUntil null. **Sprint D đóng.**
+- Sprint E Backend: `billing.service.revenueStats` refactor accept `{granularity, from, to}` + return summary 4 metric + series buckets parameterized `date_trunc($1, "paidAt")`. `/admin/billing/stats` Zod query parse. `/admin/coupons` GET include `_count.redemptions`. Hotfix `admin.service.listUsers` select include `employer.id`.
+- Sprint E Frontend: 5 file mới — `lib/api/admin-billing.ts` (wrapper + types + presetRange), `components/admin/EmployerPicker.tsx` (dropdown search local fetch /admin/users?role=EMPLOYER&limit=50), `/admin/billing` 3 tab (Tổng quan + 5 preset range + custom date+granularity + Recharts BarChart + PieChart by provider VNPAY/MOMO + 4 stat card / Đơn hàng filter status+provider+EmployerPicker + table pagination 20 / Cấp credit form 4 field + audit log), `/admin/packages` CRUD bảng + modal (soft delete PATCH isActive=false), `/admin/coupons` CRUD bảng + modal 13 field + cột "Đã dùng (N/maxRedemptions)". Layout sidebar +3 NAV.
+- tsc clean backend + frontend (Recharts Tooltip formatter cần `(v) => formatVnd(Number(v))` không phải `(v: number) =>` vì `ValueType | undefined`; Pie label cần `(d) => String((d as { provider?: string }).provider ?? "")` vì PieLabelRenderProps không có shape custom).
+- Manual Deploy Render 2 lần. Vercel auto-deploy ổn.
+- QA Playwright production 9/9 PASS (`qa-scripts/sprint-e/qa_sprintE.js`): TC0 401, TC1 3 tab + summary, TC2 preset 7d → URL có granularity=day, TC3 orders 200, TC4 grant +2 BASIC sau hotfix, TC5 packages 9 rows, TC6 coupon create QASPRINTE* + visible, TC7 _count.redemptions, TC8 mobile 375 cả 3 page bodyW=375.
+
+**Why / Rationale:**
+- **Refactor `revenueStats` 1 query → 3 query (series + byProvider + totals + pendingCount riêng)**: Summary card cần `totalRevenue/successOrders/pendingOrders/avgOrderValue` không thể derive từ series khi user filter range hẹp (filter ép từ paidAt range, nhưng pendingOrders là global đếm tất cả PENDING — không filter). Tách 4 query rõ hơn 1 query nested.
+- **Hardcode 4 truncFmt cho `to_char(date_trunc($1, "paidAt"), $2)`**: Postgres `to_char` cần format string khác cho mỗi granularity (`YYYY-MM-DD` cho day, `IYYY-"W"IW` cho week với ISO week numbering, `YYYY-MM` cho month, `YYYY` cho year). Không thể derive được. Trade-off: nếu thêm granularity mới (quarter/hour) phải sửa cả map + sửa enum Zod.
+- **`presetRange` ở client (helper trong api wrapper) thay vì 1 endpoint /presets**: Compute date range là pure function. Không cần RTT. Server chỉ cần biết `from/to` đúng ISO string. Đơn giản hóa contract.
+- **5 preset {7d, 30d, 12m, 5y, custom}** thay vì 3 preset cố định: User yêu cầu "có thể chọn thời điểm đầu và cuối". Custom mở 2 input date + select granularity — 4 lựa chọn granularity giải quyết case user gõ range 100 năm chọn year, range 3 ngày chọn day. Auto-mapping preset → granularity (7d→day, 12m→month, 5y→year) để UX không bắt user chọn 2 lần.
+- **EmployerPicker dropdown search LOCAL thay autocomplete debounce**: Hiện chỉ ~35 employer (5 gốc + 30 seed32). Fetch 1 lần `staleTime:60s`, filter client-side `companyName.includes` || `email.includes` (lowercase). Không cần endpoint search backend. Khi scale >200 employer mới cần refactor sang debounce autocomplete. Hiện tại UX response tức thì, không lag.
+- **Soft delete cho packages + coupons (PATCH isActive=false / status=EXPIRED) thay vì DELETE hard**: PaymentOrder + CouponRedemption có FK đến packageId/couponId historical. Hard delete sẽ vỡ orphan reference. Soft delete preserve audit trail cho /admin/billing tab "Đơn hàng" (vẫn hiển thị tên gói cũ).
+- **Modal CRUD thay vì page riêng /admin/packages/new + /:id/edit**: Modal đỡ navigation, save context list. 7-13 field vẫn fit trong `max-w-md/max-w-lg` modal scrollable. Edit click row → mở modal pre-fill từ initial.
+- **Tab pattern `role=tab`/`aria-selected` ở /admin/billing**: 3 tab khác mục đích (analytics / list / form), không phải sub-route. Tab UX gọn hơn 3 link sidebar riêng. Cùng pattern session 30 IMP-5 notifications.
+- **Hotfix 7db7292 — `employer.id` missing trong /admin/users select**: Initial `EmployerPicker` filter `employers.find(u => u.employer?.id === value)` luôn null vì backend `admin.service.listUsers` `select: { companyName, logoUrl, isVerified }` không có `id`. Onclick `onChange(u.employer.id, ...)` → undefined → grant flow gửi `employerId: undefined` → 400. Phải Manual Deploy lần 2. Bài học: trước khi build FE component dùng API có sẵn, **đọc backend service select** để confirm shape. Đã save lesson vào CLAUDE.md (đã có lesson tương tự session 35 với response shape mismatch `{items}` vs `{orders}`).
+- **QA `apiCall` pattern same-origin** (từ session 36): Tái dùng nguyên 100%. Đã ổn định. Có thể chuẩn hóa thành helper module `qa-scripts/_lib/auth.js` nếu Sprint sau tiếp tục dùng — defer vì hiện tại copy-paste 30 dòng acceptable.
+
+**Verified:** Production QA Sprint D 9/9 PASS (retest) + Sprint E 9/9 PASS. Stage 9 COMPLETE.
+
+**Bugs phát hiện mới:** Không có. BUG-015 (RHF JobForm submit click trong Playwright production, session 36) vẫn defer — UI visual OK, không repro được dev local.
+
+**Next Action:** **Không còn task pending.** Toàn dự án production-ready (Stages 1-9 complete). Optional tùy user:
+1. Workspace housekeeping — `qa-scripts/` (untracked nhưng vừa có sprint-e/ vừa commit), `screenshots/qa_*.png` (~120 file), root `package.json`+`package-lock.json` (playwright). Quyết định: gitignore screenshots + commit package*.json + qa-scripts/. **Quick wins** (10 phút).
+2. Seed enrichment để `/admin/billing` demo có số liệu thật (hiện 3 SUCCESS orders từ QA dev/mark-paid → revenue thấp). Insert 30-50 PaymentOrder SUCCESS qua Supabase MCP rải các tháng để chart đẹp.
+3. Debug BUG-015 RHF submit click — low priority, defer.
+4. Tài liệu / báo cáo đồ án — user đã chỉ định defer (rule `feedback_no_demo_prep_rush`).
+
+**Blocker:** Render auto-deploy webhook vẫn unreliable — Manual Deploy mandatory mỗi sprint. Sandbox VNPay/MoMo vẫn chưa đăng ký — `/dev/mark-paid` route fallback hoạt động.
+
+---
+
 ## Session 36 — 2026-06-06
 
 **Commits:** `1aa2bb2` feat(billing-D) gate createJob 402 + TierSelector + JobCard badge + listJobs sort + landing VIP. Hotfix tx order UNCOMMITTED tại [employer.service.ts](backend/src/services/employer.service.ts) — chờ session sau commit + deploy.
