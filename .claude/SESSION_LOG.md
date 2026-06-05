@@ -4,6 +4,41 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 32 — 2026-06-05
+
+**Commits:** `a2b229e` feat(employer) cross-job applications page + seed enrichment
+
+**Done:**
+- Backend `GET /employer/applications` ([employer.service.ts](backend/src/services/employer.service.ts) `getAllApplications`, controller, route) — query Application với `where.job = { employerId: emp.id }`, filter optional jobId/status/tag/keyword (match candidate.fullName OR user.email insensitive contains, min 2 char). Trả applications, total, jobOptions (cho dropdown filter), summary count groupBy status. Order appliedAt desc, server-side pagination limit 20.
+- Frontend `/employer/applications` ([(employer)/employer/applications/page.tsx](frontend/src/app/(employer)/employer/applications/page.tsx) NEW): stat row 5 ô (Tổng/PENDING/REVIEWING/ACCEPTED/REJECTED) + filter bar 4 select grid (job/status/tag/keyword) với debounce 400ms qua useEffect → resets page. Accordion list dùng pattern IMP-1: compact row (avatar/tên + status badge + tag badge + interview badge + job link + appliedAt + CV button + chevron) → expand panel (email/headline/location + cover letter + status quick buttons 4-way + tag quick buttons 3-way + link sang /employer/jobs/[id]/applications). Status/tag mutations gọi existing PATCH per-job (tận dụng endpoint cũ, không tạo mới). Mobile 375 responsive (`p-4 sm:p-8`, stat grid 2col→5col, filter grid 1→2→4 col).
+- Sidebar nav [(employer)/layout.tsx](frontend/src/app/(employer)/layout.tsx): thêm "👥 Quản lý ứng viên" giữa "Quản lý tin" và "Thống kê".
+- Seed enrichment qua Supabase MCP `execute_sql` (3 batch): +30 candidate VN đa nghề (IT/Marketing/Sales/Finance/Design/HR/Ops/PM) location HN/HCM/ĐN với skills array realistic; +15 ACTIVE jobs (5 industry: Công nghệ thông tin/Marketing/Bán hàng/Tài chính-Ngân hàng/Thiết kế/Nhân sự) phân đều 5 employer hiện có, salary range theo industry (IT 18-55tr, Marketing 15-55tr, Sales 12-35tr, Finance 16-32tr, Design 22-38tr, HR 25-45tr); +60 application cặp realistic theo nghề, status mix 23 PENDING / 18 REVIEWING / 12 ACCEPTED / 7 REJECTED, tag mix SHORTLISTED/POTENTIAL/ON_HOLD/null, appliedAt rải 1-20 ngày trước. ID prefix `seed32-{u|c|j|a}-NN` để dễ rollback bằng `DELETE WHERE id LIKE 'seed32-%'`.
+- QA `qa-scripts/page-applications/qa.js` production PASS 5/5: TC1 route mounted (401 authGuard), TC2 page render header+stats+20 row (API 200 trả total=27 summary {PENDING:10, REVIEWING:10, ACCEPTED:6, REJECTED:1} cho TechCorp Vietnam = employer@jobhub.vn), TC3 select status=PENDING giảm còn 10 row, TC4 keyword "Nguyễn" giảm còn 6 row, TC5 mobile 375 page width=375.
+
+**Why / Rationale:**
+- **Cross-job page riêng thay vì mở rộng candidate search**: User cần management workflow xuyên job (vd: "đơn nào còn PENDING quá 7 ngày?", "ứng viên nào tag SHORTLISTED ở nhiều job?"). Trang search `/employer/candidates` hiện tại scope vào pool toàn hệ thống (không liên quan đơn đã nộp) → 2 mục đích hoàn toàn khác nhau. Để chung sẽ rối UX.
+- **Tái dùng PATCH per-job endpoint thay vì tạo PATCH cross-job mới**: Tránh duplicate auth/validation logic. URL đã có `jobId` trong app.job.id → frontend gọi `/employer/jobs/${jobId}/applications/${appId}` trực tiếp. Đỡ thêm route, đỡ test.
+- **Accordion thay vì modal/separate detail page**: Đã có precedent từ IMP-1 (`/employer/jobs/[id]/applications`). Single-expand giữ context list. Khi cần xem context per-job sâu hơn → link sang per-job page.
+- **Debounce 400ms keyword (ngắn hơn E10 500ms)**: Filter list cảm giác phản hồi nhanh, 400ms đủ giảm spam khi gõ.
+- **Server-side filter + summary groupBy**: Học từ E7 (IMP cũ — server-side filter để pagination đúng). groupBy status trả counts cho stat row mà không cần 4 query riêng.
+- **Seed ID prefix `seed32-*`**: Idempotent insert + rollback dễ. ON CONFLICT DO NOTHING tránh re-run lỗi.
+- **Bcrypt hash reuse từ candidate@jobhub.vn**: Tránh phải tính bcrypt trong SQL (Postgres không có module bcrypt sẵn). Mọi 30 user mới đăng nhập được bằng "Demo@2026" — tốt cho demo nếu muốn login thử.
+- **QA TC1 vẫn dùng 401 từ authGuard**: Pattern từ E10 — accessToken Zustand memory only → page.request.get luôn 401. TC1 chỉ assert route mounted (không phải 404). TC2 verify gián tiếp qua API response intercept.
+
+**Verified:** Production QA PASS 5/5 — `node qa-scripts/page-applications/qa.js`.
+
+**Bugs phát hiện mới:**
+- **Render auto-deploy webhook broken (lần 3)**: Push thành công nhưng Render không tự deploy. Phát hiện qua QA test: page request có cookie auth → authGuard pass → Express 404 "Cannot GET" (route chưa mount). Phân biệt với CURL no-auth (luôn 401 từ authGuard) — không tin được 401 làm chỉ số deploy. User Manual Deploy → QA PASS ngay.
+
+**Next Action:** **Không có task pending bắt buộc.** Tuỳ user chỉ định. Optional:
+1. Workspace housekeeping — `qa-scripts/`, `screenshots/qa_*`, root `package*.json`, `.claude/scheduled_tasks.lock`, `.claude/commands+skills/session-*.md` modified → quyết định commit hay gitignore + xoá.
+2. UI: Stat row trên `/employer/applications` các ô có thể click để filter nhanh (chưa làm — không có yêu cầu).
+3. CV Builder thumbnail hover overlay a11y (low priority lâu rồi).
+
+**Blocker:** Render auto-deploy webhook tiếp tục unreliable. Mỗi push phải manual deploy. Có thể cân nhắc setup GitHub Actions workflow → Render Deploy Hook URL (free) như alternative.
+
+---
+
 ## Session 31 — 2026-06-05
 
 **Commits:** `cfb59dd` feat(e10) salary benchmark widget on job form

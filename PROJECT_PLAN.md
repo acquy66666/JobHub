@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 31 — E10 Salary Benchmark DONE + QA production PASS 5/5 → **Stage 8 COMPLETE**)
-Current Stage: Stage 8 ✅ COMPLETE
-Status: Stage 5 ✅ COMPLETE | Stage 6 ✅ COMPLETE | Stage 7 ✅ COMPLETE | Stage 8 ✅ COMPLETE (UI/UX Sprint + E10 done)
+Last Updated: 2026-06-05 (session 32 — Cross-job applications page `/employer/applications` + seed enrichment (30 cand / 15 jobs / 60 apps) + QA PASS 5/5)
+Current Stage: Stage 8 ✅ COMPLETE (+ extra)
+Status: Stage 5 ✅ COMPLETE | Stage 6 ✅ COMPLETE | Stage 7 ✅ COMPLETE | Stage 8 ✅ COMPLETE | Bonus: Cross-job applications page ✅
 
 ---
 
@@ -330,6 +330,10 @@ Xây dựng website tuyển dụng full-stack (JobHub) với 3 nhóm người d�
 ### Sau UI/UX Sprint mới đến E10
 - [x] **E10 — Salary Benchmark** ✅ (`cfb59dd`) — Backend `GET /employer/salary-benchmark?title=&industry=` aggregate AVG/MIN/MAX/P25/P50/P75 từ Job.salaryMin+salaryMax mids, OR-token match title (>=4 char), filter status=ACTIVE, return `enough:false` khi count<3. Frontend SalaryBenchmarkWidget debounce title 500ms + TanStack staleTime 60s + 3-col P25/P50/P75 + AVG/Min/Max line, mounted ở JobForm step 2. QA production PASS 5/5.
 - [x] **Stage 8 COMPLETE** ✅ — UI/UX Sprint (IMP-1..5) + Sprint 3 (E6/E9/E10) tất cả done.
+
+### Bonus session 32 (2026-06-05)
+- [x] **Cross-job applications page** ✅ (`a2b229e`) — `/employer/applications` tổng hợp đơn từ MỌI job của employer. Backend `GET /employer/applications?jobId=&status=&tag=&keyword=&page=&limit=` với summary count (PENDING/REVIEWING/ACCEPTED/REJECTED). Frontend stat row 5 ô + filter bar 4 select + accordion list (quick action đổi status/tag). Sidebar nav thêm "Quản lý ứng viên". QA production PASS 5/5.
+- [x] **Seed enrichment** ✅ (Supabase MCP) — +30 candidate VN (IT/Marketing/Sales/Finance/Design/HR), +15 ACTIVE jobs (5 industry) chia đều 5 employer, +60 application mix status (23/18/12/7). ID prefix `seed32-*` để dễ rollback.
 
 **Lưu ý kỹ thuật Sprint 3:**
 - `InterviewSchedule` + `InterviewStatus` + `INTERVIEW_SCHEDULED` NotificationType đã có trong DB (Supabase migration applied session 22).
