@@ -67,9 +67,17 @@ router.get('/billing/orders', async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-router.get('/billing/stats', async (_req, res, next) => {
+const statsQuerySchema = z.object({
+  granularity: z.enum(['day', 'week', 'month', 'year']).optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+});
+router.get('/billing/stats', async (req, res, next) => {
   try {
-    res.json(await billingService.revenueStats());
+    const q = statsQuerySchema.parse(req.query);
+    const from = q.from ? new Date(q.from) : undefined;
+    const to = q.to ? new Date(q.to) : undefined;
+    res.json(await billingService.revenueStats({ granularity: q.granularity, from, to }));
   } catch (err) { next(err); }
 });
 
@@ -97,7 +105,12 @@ router.patch('/billing/credits', async (req: AuthRequest, res: Response, next: N
 // === Coupons ===
 router.get('/coupons', async (_req, res, next) => {
   try {
-    res.json(await prisma.coupon.findMany({ orderBy: { createdAt: 'desc' } }));
+    res.json(
+      await prisma.coupon.findMany({
+        orderBy: { createdAt: 'desc' },
+        include: { _count: { select: { redemptions: true } } },
+      }),
+    );
   } catch (err) { next(err); }
 });
 

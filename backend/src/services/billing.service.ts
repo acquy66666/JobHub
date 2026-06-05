@@ -89,26 +89,63 @@ export const billingService = {
     return { orders, total, totalPages: Math.ceil(total / limit) };
   },
 
-  async revenueStats() {
-    const rows = await prisma.$queryRawUnsafe<Array<{ month: string; revenue: bigint; orders: bigint }>>(
-      `SELECT to_char(date_trunc('month', "paidAt"), 'YYYY-MM') AS month,
+  async revenueStats(opts: { granularity?: 'day' | 'week' | 'month' | 'year'; from?: Date; to?: Date } = {}) {
+    const granularity = opts.granularity ?? 'month';
+    const truncFmt: Record<string, string> = {
+      day: 'YYYY-MM-DD',
+      week: 'IYYY-"W"IW',
+      month: 'YYYY-MM',
+      year: 'YYYY',
+    };
+    const fmt = truncFmt[granularity];
+    const from = opts.from ?? new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+    const to = opts.to ?? new Date();
+    const rows = await prisma.$queryRawUnsafe<Array<{ bucket: string; revenue: bigint; orders: bigint }>>(
+      `SELECT to_char(date_trunc($1, "paidAt"), $2) AS bucket,
               SUM("amountNet")::bigint AS revenue,
               COUNT(*)::bigint AS orders
        FROM "PaymentOrder"
        WHERE status = 'SUCCESS' AND "paidAt" IS NOT NULL
-       GROUP BY 1 ORDER BY 1 DESC LIMIT 12`,
+         AND "paidAt" >= $3 AND "paidAt" <= $4
+       GROUP BY 1 ORDER BY 1 ASC`,
+      granularity,
+      fmt,
+      from,
+      to,
     );
     const byProvider = await prisma.$queryRawUnsafe<Array<{ provider: string; revenue: bigint; orders: bigint }>>(
       `SELECT provider::text AS provider,
               SUM("amountNet")::bigint AS revenue,
               COUNT(*)::bigint AS orders
        FROM "PaymentOrder"
-       WHERE status = 'SUCCESS'
+       WHERE status = 'SUCCESS' AND "paidAt" >= $1 AND "paidAt" <= $2
        GROUP BY 1`,
+      from,
+      to,
     );
+    const totals = await prisma.$queryRawUnsafe<Array<{ revenue: bigint; orders: bigint; avg: number | null }>>(
+      `SELECT COALESCE(SUM("amountNet"),0)::bigint AS revenue,
+              COUNT(*)::bigint AS orders,
+              CASE WHEN COUNT(*) > 0 THEN AVG("amountNet")::float ELSE 0 END AS avg
+       FROM "PaymentOrder"
+       WHERE status = 'SUCCESS' AND "paidAt" >= $1 AND "paidAt" <= $2`,
+      from,
+      to,
+    );
+    const pendingCount = await prisma.paymentOrder.count({ where: { status: 'PENDING' } });
+    const t = totals[0] ?? { revenue: BigInt(0), orders: BigInt(0), avg: 0 };
     return {
-      monthly: rows.map((r) => ({ month: r.month, revenue: Number(r.revenue), orders: Number(r.orders) })),
+      granularity,
+      from: from.toISOString(),
+      to: to.toISOString(),
+      series: rows.map((r) => ({ bucket: r.bucket, revenue: Number(r.revenue), orders: Number(r.orders) })),
       byProvider: byProvider.map((r) => ({ provider: r.provider, revenue: Number(r.revenue), orders: Number(r.orders) })),
+      summary: {
+        totalRevenue: Number(t.revenue),
+        successOrders: Number(t.orders),
+        pendingOrders: pendingCount,
+        avgOrderValue: Math.round(Number(t.avg) || 0),
+      },
     };
   },
 
