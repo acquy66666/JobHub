@@ -4,6 +4,30 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 28 — 2026-06-05
+
+**Commits:** `5238f4a` fix(imp-3) `min-w-0` cho `<main>` ở 3 layout
+
+**Done:**
+- QA IMP-3 production — Playwright `qa-scripts/imp3/qa_imp3.js` login admin + employer, viewport 375 × 800, assert `scrollWidth > clientWidth` trên 3 chart wrappers. Lần đầu FAIL — phát hiện bug layout. Fix xong re-run PASS.
+- Hotfix layout — thêm `min-w-0` vào `<main className="flex-1 md:ml-[240px] ...">` ở [(admin)/layout.tsx](frontend/src/app/(admin)/layout.tsx) + [(employer)/layout.tsx](frontend/src/app/(employer)/layout.tsx) + [(candidate)/layout.tsx](frontend/src/app/(candidate)/layout.tsx).
+
+**Why / Rationale:**
+- **Root cause bug session 27**: IMP-3 (`23b4bc4`) thêm wrapper `overflow-x-auto + minWidth N` nhưng KHÔNG hoạt động trên production. Lý do: `<main>` là flex child với `flex-1`, default `min-width: auto` trong flexbox cho phép flex item expand theo intrinsic content. Inner `<div style={{minWidth: 480/560/640}}>` ép parent chain (card-dark → ScrollReveal → container → main) cùng expand → `overflow-x-auto` wrapper kết thúc bằng `scrollWidth === clientWidth` → không scroll. Page tổng cũng vượt viewport (body scrollWidth=754 ở viewport 375).
+- **Fix `min-w-0`**: cho phép flex child shrink dưới content size → wrapper trong cùng nhận constraint từ parent → `overflow-x-auto` mới kích hoạt. Đây là Tailwind/CSS idiom phổ biến cho mọi flex layout có overflow scroll bên trong.
+- **Tại sao tsc + visual review session 27 không bắt được**: tsc không kiểm tra runtime layout. Visual review chỉ test desktop. Local dev login broken (cookie sameSite) → không QA mobile được lúc dev. **Bài học**: QA production mobile 375px là MANDATORY cho mọi task responsive — không deferred được.
+- **Áp dụng cả 3 layout (không chỉ admin/employer)**: candidate layout cùng pattern, không có chart hiện tại nhưng có table/list có thể bị tương tự bug nếu content wider than viewport. Fix preventive.
+
+**Verified:** QA production PASS — Playwright `node qa-scripts/imp3/qa_imp3.js` trên `job-hub-two.vercel.app`. Admin /admin/dashboard @ 375px: 2/2 chart wrappers scrollable (scroll=496/656 client=309). Employer /employer/stats @ 375px: 1/1 scrollable (scroll=576 client=309). Desktop 1440: chart fit không scroll. Screenshots: `screenshots/qa_imp3_{admin_mobile,employer_mobile,employer_desktop}.png`.
+
+**Bugs phát hiện mới:** Bản IMP-3 gốc `23b4bc4` không hoạt động trên production cho đến khi `5238f4a` fix `min-w-0`. Đã fix hoàn toàn.
+
+**Next Action:** **IMP-4** — Keyboard accessibility pass cho `frontend/src/components/jobs/` + `frontend/src/components/employer/` + `frontend/src/components/layout/` (~8-10 component). Audit: focus-visible rings (global ring đã có từ QW-4 — IMP-4 chỉ thêm chỗ cần custom hoặc element không nhận default ring), tabindex (`tabindex="0"` cho clickable div, `-1` cho element không trong tab order), ESC handler cho dropdown/modal. Task chính → cần plan chi tiết trước (per `feedback_plan_before_main_task`), đợi "ok" mới code.
+
+**Blocker:** Không có. Vercel auto-deploy hoạt động bình thường session này.
+
+---
+
 ## Session 27 — 2026-06-05
 
 **Commits:** `23b4bc4` IMP-3 Recharts responsive mobile wrapper
