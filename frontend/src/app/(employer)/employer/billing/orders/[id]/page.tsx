@@ -70,9 +70,10 @@ export default function OrderDetailPage() {
 
   const status = STATUS_META[order.status] ?? STATUS_META.PENDING;
   const isPending = order.status === "PENDING";
+  // Sandbox VNPay/MoMo chưa đăng ký → cho phép mock từ UI để smoke test. Tắt bằng env NEXT_PUBLIC_HIDE_DEV_PAY=true
+  // khi đã wire sandbox thật.
   const isDev =
-    typeof window !== "undefined" &&
-    !(process.env.NEXT_PUBLIC_API_URL ?? "").includes("onrender.com");
+    typeof window !== "undefined" && process.env.NEXT_PUBLIC_HIDE_DEV_PAY !== "true";
 
   async function handleDevMarkPaid() {
     setDevLoading(true);

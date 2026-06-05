@@ -116,7 +116,7 @@ export default function EmployerBillingPage() {
         <div className="rounded-2xl border border-border-dark bg-bg-1 overflow-hidden">
           {!txData ? (
             <p className="p-6 text-center text-t2 text-[13px]">Đang tải…</p>
-          ) : txData.items.length === 0 ? (
+          ) : txData.transactions.length === 0 ? (
             <p className="p-6 text-center text-t2 text-[13px]">Chưa có giao dịch nào.</p>
           ) : (
             <>
@@ -133,7 +133,7 @@ export default function EmployerBillingPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {txData.items.map((tx: CreditTransaction) => (
+                    {txData.transactions.map((tx: CreditTransaction) => (
                       <tr key={tx.id} className="border-t border-border-dark">
                         <td className="px-4 py-3 text-t0">{TX_TYPE_LABEL[tx.type] ?? tx.type}</td>
                         <td className="px-4 py-3 text-t1">{tx.tier ?? "—"}</td>
@@ -155,9 +155,9 @@ export default function EmployerBillingPage() {
                 </table>
               </div>
               <Pagination
-                page={txData.page}
+                page={txPage}
                 total={txData.total}
-                limit={txData.limit}
+                limit={10}
                 onChange={setTxPage}
               />
             </>
@@ -170,12 +170,12 @@ export default function EmployerBillingPage() {
         <div className="rounded-2xl border border-border-dark bg-bg-1 overflow-hidden">
           {!orderData ? (
             <p className="p-6 text-center text-t2 text-[13px]">Đang tải…</p>
-          ) : orderData.items.length === 0 ? (
+          ) : orderData.orders.length === 0 ? (
             <p className="p-6 text-center text-t2 text-[13px]">Chưa có đơn hàng nào.</p>
           ) : (
             <>
               <div className="divide-y divide-border-dark">
-                {orderData.items.map((o: PaymentOrder) => {
+                {orderData.orders.map((o: PaymentOrder) => {
                   const status = ORDER_STATUS_LABEL[o.status] ?? { label: o.status, color: "text-t1" };
                   return (
                     <Link
@@ -202,9 +202,9 @@ export default function EmployerBillingPage() {
                 })}
               </div>
               <Pagination
-                page={orderData.page}
+                page={orderPage}
                 total={orderData.total}
-                limit={orderData.limit}
+                limit={10}
                 onChange={setOrderPage}
               />
             </>

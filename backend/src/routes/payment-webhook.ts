@@ -64,8 +64,9 @@ router.post('/momo/ipn', async (req: Request, res: Response) => {
   }
 });
 
-// DEV-only manual ack — only available when NODE_ENV !== 'production'. Useful for sandbox-less smoke test.
-if (env.NODE_ENV !== 'production') {
+// Manual ack route — for sandbox-less smoke test. Enabled by default; set ENABLE_DEV_MARK_PAID=false to disable
+// once real VNPay/MoMo sandbox keys are wired.
+if (process.env.ENABLE_DEV_MARK_PAID !== 'false') {
   router.post('/dev/mark-paid', async (req: Request, res: Response) => {
     try {
       const { orderId } = req.body as { orderId: string };

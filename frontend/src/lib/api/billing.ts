@@ -74,13 +74,13 @@ export const billingApi = {
     api.get<PaymentOrder>(`/employer/billing/orders/${id}`).then((r) => r.data),
   listOrders: (page = 1, limit = 10) =>
     api
-      .get<{ items: PaymentOrder[]; total: number; page: number; limit: number }>(
+      .get<{ orders: PaymentOrder[]; total: number; totalPages: number }>(
         `/employer/billing/orders?page=${page}&limit=${limit}`,
       )
       .then((r) => r.data),
   listTransactions: (page = 1, limit = 10) =>
     api
-      .get<{ items: CreditTransaction[]; total: number; page: number; limit: number }>(
+      .get<{ transactions: CreditTransaction[]; total: number; totalPages: number }>(
         `/employer/billing/transactions?page=${page}&limit=${limit}`,
       )
       .then((r) => r.data),
