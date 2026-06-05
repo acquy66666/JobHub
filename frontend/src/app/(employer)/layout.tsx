@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { Navbar } from "@/components/layout/Navbar";
+import { CreditBadge } from "@/components/billing/CreditBadge";
 
 const NAV_ITEMS = [
   { href: "/employer", label: "Tổng quan", icon: "⊞" },
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/employer/applications", label: "Quản lý ứng viên", icon: "👥" },
   { href: "/employer/stats", label: "Thống kê", icon: "📊" },
   { href: "/employer/candidates", label: "Tìm ứng viên", icon: "🔍" },
+  { href: "/employer/billing", label: "Mua credits", icon: "💳" },
 ];
 
 export default function EmployerLayout({ children }: { children: React.ReactNode }) {
@@ -63,6 +65,7 @@ export default function EmployerLayout({ children }: { children: React.ReactNode
           );
         })}
       </nav>
+      <CreditBadge />
     </>
   );
 

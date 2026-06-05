@@ -29,6 +29,16 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const original = error.config as typeof error.config & { _retry?: boolean };
+    if (error.response?.status === 402) {
+      const data = error.response.data as { code?: string; requiredTier?: string } | undefined;
+      if (data?.code === "INSUFFICIENT_CREDITS" && typeof window !== "undefined") {
+        const tier = data.requiredTier ?? "";
+        if (!window.location.pathname.startsWith("/employer/billing/shop")) {
+          window.location.href = `/employer/billing/shop${tier ? `?required=${tier}` : ""}`;
+        }
+      }
+      return Promise.reject(error);
+    }
     if (error.response?.status !== 401 || original?._retry) {
       return Promise.reject(error);
     }
