@@ -4,6 +4,42 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 33 — 2026-06-05
+
+**Commits:** `4f66258` feat(billing-A) prisma schema + supabase migration + seed packages/coupons + backfill credits
+
+**Done:**
+- Plan tổng feature "Paid Job Posting + Promotions + VNPay/MoMo" — 5 sprint A→E lưu tại `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md`. User chọn (qua AskUserQuestion): tier đa cấp Basic/Premium/VIP, sandbox đầy đủ VNPay+MoMo, tặng 5 credits cho employer hiện có.
+- Sprint A — Prisma schema thêm 6 enum (`JobTier`, `PaymentProvider`, `PaymentStatus`, `TransactionType`, `CouponDiscountType`, `CouponStatus`) + 6 model (CreditPackage, EmployerCreditBalance, PaymentOrder, CreditTransaction, Coupon, CouponRedemption) + `Job.tier` (default BASIC) + `Job.boostedUntil` + index `(tier, boostedUntil)` + Employer 4 reverse relations. Bổ sung enum hiện có: NotificationType (CREDIT_PURCHASED/CREDIT_LOW/PAYMENT_FAILED), AuditAction (COUPON_CREATED/COUPON_UPDATED/PACKAGE_CREATED/PACKAGE_UPDATED/CREDITS_GRANTED), AuditTargetType (COUPON/PACKAGE/EMPLOYER_CREDITS).
+- Supabase migration `billing_foundation_sprint_a` apply qua MCP `apply_migration` — 6 CREATE TYPE + 11 ALTER TYPE ADD VALUE IF NOT EXISTS + 6 CREATE TABLE + 9 FK + 2 ALTER TABLE Job (tier/boostedUntil) + index.
+- Backfill: 5 employer hiện có → 5 EmployerCreditBalance row (basicCredits=5, premiumCredits=0, vipCredits=0). ID format `bal-{employerId}` để idempotent.
+- Seed 9 CreditPackage: BASIC (1/5/10 = 50k/230k/420k+2bonus), PREMIUM (1/5/10 = 150k/700k/1.3M+1bonus), VIP (1/3/5 = 300k/850k/1.35M+1bonus). 3 Coupon: WELCOME (PERCENT 20, perEmployerLimit=1, +365 ngày), XUAN2026 (FIXED 50k, minAmount 200k, hết hạn 2026-02-28, perEmployerLimit=3), BONUS3 (BONUS_CREDITS 3, appliesTo BASIC, perEmployerLimit=2). ID prefix `pkg-*` / `cpn-*`.
+- Verify qua MCP execute_sql: 5 employers / 5 balances / 9 packages / 3 coupons / 0 orders/txns/redemptions / 74 jobs default tier=BASIC.
+- `npx prisma generate` ok (Prisma v7.8.0). `npx tsc --noEmit` backend clean (default tier + reverse relations optional nên không vỡ chỗ nào dùng `prisma.job.create`).
+
+**Why / Rationale:**
+- **Tier model đa cấp Basic/Premium/VIP thay vì 1-credit-1-tin đơn giản**: Demo phong phú hơn cho đồ án (3 mức monetization), dễ kết hợp với khuyến mãi appliesTo theo tier, gần sản phẩm thật (Vietnamworks/TopCV cũng có VIP).
+- **3 cột credit riêng (basicCredits/premiumCredits/vipCredits) thay vì 1 cột chung + multiplier**: Tránh nhầm lẫn khi quy đổi (1 VIP = 6 BASIC?). User hiểu rõ "tôi còn 3 VIP credits" hơn là "tôi còn 1500 credit value". Trade-off: phải lock 1 trong 3 cột khi consume nhưng đỡ phức tạp business logic.
+- **Backfill 5 BASIC credits cho employer cũ**: Không vỡ luồng demo hiện có — employer test (`employer@jobhub.vn`) vẫn đăng được vài tin tiếp ngay sau triển khai. Chọn 5 vừa đủ test mà không quá nhiều khiến demo paywall thành moot.
+- **CouponRedemption table riêng thay vì counter trong Coupon**: Cần track per-employer-limit (Coupon.perEmployerLimit) → cần count `WHERE couponId AND employerId`. Counter chung không làm được. Unique constraint `(couponId, employerId, paymentOrderId)` tránh double-redeem khi IPN bắn lại.
+- **Migration qua Supabase MCP `apply_migration`, KHÔNG `prisma migrate dev`**: Rule `feedback_render_shell_paid` — không có Render shell, dev local cũng không kết nối được production DB. MCP là canonical path. Schema.prisma sync thủ công nhưng giữ làm source of truth cho client gen.
+- **ALTER TYPE ADD VALUE IF NOT EXISTS trong cùng migration với CREATE TYPE**: Postgres cho phép khi enum target đã commit từ migration trước (NotificationType/AuditAction đã tồn tại). Mới (`JobTier`) thì CREATE TYPE thẳng. Nếu trộn add value với usage cùng migration → lỗi "unsafe use of new value", may là không dính.
+- **ID prefix idempotent `pkg-*` / `cpn-*` / `bal-{employerId}`**: Học từ session 32 `seed32-*`. ON CONFLICT (id) DO NOTHING cho phép re-run migration data mà không vỡ.
+- **`Job.tier` default BASIC**: 74 job hiện có auto-categorize BASIC mà không cần data migration script. Khi Sprint D thêm `TierSelector` UI, tin mới sẽ chọn tier explicit; tin cũ giữ BASIC là semantic đúng.
+
+**Verified:**
+- Supabase counts đúng (5/5/9/3 + 74 BASIC).
+- `prisma generate` + `tsc --noEmit` backend clean.
+- Chưa runtime verify — Sprint B sẽ chạy CRUD orders/txns đầu tiên.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **Sprint B — Backend payment + integration.** Scope: tạo `backend/src/integrations/vnpay.ts` + `momo.ts` (build payment URL/createPayment + verifyIpn HMAC), `backend/src/services/payment.service.ts` (createOrder + markPaid atomic transaction với SELECT FOR UPDATE để chống race), `backend/src/services/coupon.service.ts` (validate 5 rules + apply 3 loại discount), `backend/src/services/billing.service.ts` (getBalance + listOrders + listTransactions), routes `/employer/billing/*` + `/payments/*` webhook (public no-auth, verify signature trước khi tin payload) + `/admin/billing/*` + `/admin/coupons/*`. Env vars sandbox đăng ký song song trên VNPay/MoMo developer portal. Trước khi code phải xuất plan chi tiết Sprint B (rule `feedback_plan_before_main_task`), đặc biệt detail idempotency IPN + race condition consume credits.
+
+**Blocker:** Không có blocker. Render auto-deploy vẫn unreliable (background note từ session 32) — nhớ Manual Deploy mỗi sprint.
+
+---
+
 ## Session 32 — 2026-06-05
 
 **Commits:** `a2b229e` feat(employer) cross-job applications page + seed enrichment
