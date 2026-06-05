@@ -43,7 +43,7 @@ export function CompareBar() {
                       <button
                         onClick={() => removeJob(job.id)}
                         className="shrink-0 text-t2 hover:text-[#EF4444] transition-colors"
-                        title="Bỏ khỏi so sánh"
+                        aria-label={`Bỏ ${job.title} khỏi so sánh`}
                       >
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -69,6 +69,7 @@ export function CompareBar() {
                     <button
                       key={j.id}
                       onClick={() => removeJob(j.id)}
+                      aria-label={`Bỏ ${j.title} khỏi so sánh`}
                       className="flex items-center gap-1 text-[10px] text-t2 hover:text-[#EF4444] transition-colors"
                     >
                       <span className="max-w-[72px] truncate">{j.title}</span>

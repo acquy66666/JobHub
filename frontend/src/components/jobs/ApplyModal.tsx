@@ -1,6 +1,6 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import { queryKeys } from "@/lib/queryKeys";
@@ -37,6 +37,15 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose, screeningQuestion
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const toast = useToast();
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [isOpen, onClose]);
 
   const { data: cvs = [] } = useQuery<CandidateCV[]>({
     queryKey: queryKeys.candidateCvs(),
@@ -122,6 +131,9 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose, screeningQuestion
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="apply-modal-title"
             initial={{ opacity: 0, scale: 0.93, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.93, y: 20 }}
@@ -143,8 +155,8 @@ export function ApplyModal({ jobId, jobTitle, isOpen, onClose, screeningQuestion
             ) : (
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[18px] font-bold text-t0">Ứng tuyển</h3>
-                  <button type="button" onClick={onClose} className="text-t2 hover:text-t0 transition-colors">
+                  <h3 id="apply-modal-title" className="text-[18px] font-bold text-t0">Ứng tuyển</h3>
+                  <button type="button" onClick={onClose} aria-label="Đóng" className="text-t2 hover:text-t0 transition-colors">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>

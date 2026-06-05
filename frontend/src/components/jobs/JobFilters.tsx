@@ -72,7 +72,10 @@ export function JobFilters({ initial }: Props) {
   const inputClass = "w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] focus:shadow-[0_0_0_3px_rgba(124,58,237,.1)] transition-all";
 
   return (
-    <div className="bg-bg-2 border border-border-dark rounded-2xl p-5 space-y-5 sticky top-20">
+    <form
+      onSubmit={(e) => { e.preventDefault(); apply(); }}
+      className="bg-bg-2 border border-border-dark rounded-2xl p-5 space-y-5 sticky top-20"
+    >
       <h3 className="text-[15px] font-bold text-t0">Bộ lọc</h3>
 
       {/* Keyword */}
@@ -84,7 +87,6 @@ export function JobFilters({ initial }: Props) {
           value={filters.keyword}
           onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))}
           className={inputClass}
-          onKeyDown={(e) => e.key === "Enter" && apply()}
         />
       </div>
 
@@ -97,7 +99,6 @@ export function JobFilters({ initial }: Props) {
           value={filters.location}
           onChange={(e) => setFilters((f) => ({ ...f, location: e.target.value }))}
           className={inputClass}
-          onKeyDown={(e) => e.key === "Enter" && apply()}
         />
       </div>
 
@@ -175,13 +176,13 @@ export function JobFilters({ initial }: Props) {
 
       {/* Buttons */}
       <div className="flex flex-col gap-2 pt-2">
-        <button onClick={apply} className="btn-primary w-full py-2.5 rounded-xl text-[14px] font-semibold">
+        <button type="submit" className="btn-primary w-full py-2.5 rounded-xl text-[14px] font-semibold">
           Áp dụng bộ lọc
         </button>
-        <button onClick={reset} className="w-full py-2.5 rounded-xl text-[13px] text-t1 border border-border-dark hover:bg-white/[.04] hover:text-t0 transition-colors">
+        <button type="button" onClick={reset} className="w-full py-2.5 rounded-xl text-[13px] text-t1 border border-border-dark hover:bg-white/[.04] hover:text-t0 transition-colors">
           Xóa bộ lọc
         </button>
       </div>
-    </div>
+    </form>
   );
 }

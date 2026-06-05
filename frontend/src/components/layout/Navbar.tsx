@@ -30,6 +30,18 @@ export function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    if (!dropdownOpen && !mobileOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDropdownOpen(false);
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [dropdownOpen, mobileOpen]);
+
   async function handleLogout() {
     try {
       await api.post("/auth/logout");
@@ -87,6 +99,9 @@ export function Navbar() {
               <button
                 onClick={() => setDropdownOpen((o) => !o)}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border-dark hover:bg-white/[.05] transition-colors"
+                aria-label="Tài khoản"
+                aria-expanded={dropdownOpen}
+                aria-haspopup="menu"
               >
                 {user.profile?.avatarUrl || user.profile?.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -107,7 +122,7 @@ export function Navbar() {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-bg-2 border border-border-dark rounded-xl shadow-[0_8px_40px_rgba(0,0,0,.5)] overflow-hidden">
+                <div role="menu" className="absolute right-0 mt-2 w-52 bg-bg-2 border border-border-dark rounded-xl shadow-[0_8px_40px_rgba(0,0,0,.5)] overflow-hidden">
                   <Link
                     href={dashboardHref}
                     onClick={() => setDropdownOpen(false)}
@@ -152,6 +167,8 @@ export function Navbar() {
           <button
             className="md:hidden p-2 text-t1 hover:text-t0 transition-colors"
             onClick={() => setMobileOpen((o) => !o)}
+            aria-label="Menu"
+            aria-expanded={mobileOpen}
           >
             {mobileOpen ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
