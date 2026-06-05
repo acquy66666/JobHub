@@ -1,6 +1,6 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-05 (session 28 — IMP-3 QA production PASS sau khi fix min-w-0 trên main layout 3 role)
+Last Updated: 2026-06-05 (session 29 — IMP-4 keyboard a11y DONE + QA production PASS 5/5)
 Current Stage: Stage 8
 Status: Stage 5 ✅ COMPLETE | Stage 6 ✅ COMPLETE | Stage 7 ✅ COMPLETE | Stage 8 Sprint 1 ✅ Sprint 2 ✅ Sprint 3 partial (E6✅ E9✅ E10 pending) | **UI/UX Sprint planned (priority #1)**
 
@@ -321,7 +321,7 @@ Xây dựng website tuyển dụng full-stack (JobHub) với 3 nhóm người d�
 - [x] **IMP-1 — Employer Applications collapsed/expanded mode** ✅ Commit `8f321e5`. Refactor list view: compact button row (avatar + tên + status badge + tag badge + meta + CV + chevron) → click expand AnimatePresence panel (email + cover letter + screening + status/note form + tag + NotesAccordion + InterviewAccordion). Single-expand `expandedId`, auto-reset khi đổi filter/page. CV button `stopPropagation`. tsc clean. Production QA Playwright PASS (collapsed ✅, expanded ✅, filter reset ✅, mobile 375 ✅).
 - [x] **IMP-2 — Employer Dashboard redesign ngang Candidate** ✅ Commit `087dcf4`. Backend: GET /employer/recent-applications?status=&limit= endpoint (route+controller+service). Frontend: HERO (logo + companyName gradient + completeness 6-field + 3 quick actions) + 4 stat gradient cards (purple/green/blue/orange dùng /employer/job-stats summary) + 2-col grid (Đơn mới gần đây 5 PENDING + Hoàn thiện hồ sơ checklist 6 field) + Tin tuyển dụng gần đây giữ. `max-w-6xl` + `space-y-8`. tsc clean cả backend + frontend. Production QA Playwright PASS desktop 1440 (TechCorp Vietnam 100% + 4 stats 13/12/13/1168 + 3 PENDING apps) + mobile 375.
 - [x] **IMP-3 — Recharts responsive mobile** ✅ Commit `23b4bc4` + fix `5238f4a`. Wrapper `overflow-x-auto -mx-2 px-2` + inner `minWidth`: 560/480/640. Admin dashboard container `p-8 → p-4 sm:p-8`. **Hotfix session 28**: thêm `min-w-0` cho `<main className="flex-1 ...">` ở cả 3 layout (admin/employer/candidate) — không có nó flex child expand theo intrinsic content khiến `overflow-x-auto` không kích hoạt. **QA production PASS** (admin 2/2 + employer 1/1 chart scrollable @ 375px, desktop 1440 fit không scroll).
-- [ ] **IMP-4 — Keyboard accessibility full pass** — Audit toàn `components/jobs/`, `components/employer/`, `components/layout/` thêm focus-visible ring. ~8-10 file.
+- [x] **IMP-4 — Keyboard accessibility full pass** — Commit `5d54525`. 5 file: NotificationBell + Navbar (avatar dropdown + mobile menu) + ApplyModal (dialog + aria-labelledby) thêm ESC handler + aria-expanded/haspopup/role=menu. CompareBar buttons thêm aria-label. JobFilters wrap `<form onSubmit>` thay onKeyDown trên 2 input → Enter ở mọi field submit. QA Playwright `qa-scripts/imp4/qa_imp4.js` production PASS 5/5 (ApplyModal ESC, NotificationBell ESC, Navbar dropdown ESC, JobFilters Enter, Mobile menu ESC @ 375px).
 - [ ] **IMP-5 — `/candidate/notifications` filter theo loại** — Tab filter (Tất cả / Cập nhật đơn / Công ty theo dõi / Việc phù hợp / Phỏng vấn). TYPE_LABEL map đã có. File: [(candidate)/candidate/notifications/page.tsx](frontend/src/app/(candidate)/candidate/notifications/page.tsx).
 
 **Khác (bonus):**

@@ -4,6 +4,33 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 29 — 2026-06-05
+
+**Commits:** `5d54525` feat(imp-4) keyboard a11y — ESC close dialogs/menus + aria roles + JobFilters form submit
+
+**Done:**
+- IMP-4 ✅ — 5 component a11y pass: NotificationBell, Navbar (avatar dropdown + mobile hamburger), ApplyModal, CompareBar, JobFilters. ESC handler `useEffect` đăng ký khi open/isOpen → đóng. ARIA: `aria-expanded` + `aria-haspopup="menu"` + `role="menu"`/`role="menuitem"` cho dropdowns; `role="dialog"` + `aria-modal="true"` + `aria-labelledby="apply-modal-title"` cho ApplyModal; `aria-label` cho icon-only buttons (close X, mobile hamburger, remove from compare). JobFilters wrap toàn body trong `<form onSubmit>` thay 2 `onKeyDown=Enter` lẻ → Enter submit từ mọi field.
+- QA Playwright production `qa-scripts/imp4/qa_imp4.js` PASS 5/5.
+
+**Why / Rationale:**
+- **ESC handler đăng ký khi `open === true` (không global)** — tránh listener mãi mãi cho mỗi component dropdown. Cleanup khi `open=false` → 0 listener khi đóng. An toàn nhiều dropdown cùng tồn tại: `e.key==='Escape'` không stopPropagation → tất cả đang mở đều close cùng lúc (mong muốn).
+- **`<form onSubmit>` thay `onKeyDown=Enter` trên 2 input** — cũ chỉ submit Enter từ keyword + location, không từ salaryMin/salaryMax. Form submit là semantic chuẩn, Enter ở mọi input đều trigger; còn fix luôn screen reader announce "form" wrap. Bỏ 2 button `onClick={apply}` → `type="submit"`. Reset button cần `type="button"` để không trigger submit.
+- **`aria-label` thay `title` cho remove buttons CompareBar** — `title` chỉ hiện tooltip hover desktop, screen reader không đọc nhất quán. `aria-label` được mọi assistive tech announce.
+- **Không thêm focus trap trong modal** — đồ án thesis, ESC đủ; focus trap đòi useFocusTrap hoặc useId từ React 18 + dynamic refs phức tạp, ROI thấp.
+- **Bỏ qua JobCard / Pagination / JobCardSkeleton / InterviewAccordion / JobForm** — dùng semantic `<button>`/`<Link>`/`<input>` đã có rồi, nhận global focus-visible ring từ QW-4. Audit là "không cần đụng" chứ không phải "lười".
+- **TC2 (NotificationBell) lần đầu fail** — Playwright timeout finding `button[aria-label="Thông báo"]` sau khi back từ /jobs/[id]. Root cause không rõ (có thể hydration hoặc overlay residual). Fix QA bằng `goto('/candidate')` trước TC2 — đảm bảo full hydration + bell visible. Không phải bug code; chỉ là QA robustness.
+- **TC5 (mobile menu) lần đầu fail** — tương tự, navigate `/jobs` ngay sau resize không thấy hamburger. Fix QA bằng `goto('/')` + wait 2.5s. Lesson: sau viewport resize phải reload page và chờ hydrate.
+
+**Verified:** Production QA PASS 5/5 — `node qa-scripts/imp4/qa_imp4.js` trên `job-hub-two.vercel.app`. TC1 ApplyModal ESC, TC2 NotificationBell ESC, TC3 Navbar avatar dropdown ESC, TC4 JobFilters Enter submit URL có `?keyword=developer&page=1`, TC5 mobile menu ESC @ 375px.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **IMP-5** — Notification filter tabs ở [(candidate)/candidate/notifications/page.tsx](frontend/src/app/(candidate)/candidate/notifications/page.tsx). Tabs: "Tất cả" / "Cập nhật đơn" (APPLICATION_STATUS_CHANGED) / "Công ty theo dõi" (NEW_JOB_FROM_FOLLOWED_COMPANY) / "Việc phù hợp" (NEW_MATCHED_JOB) / "Phỏng vấn" (INTERVIEW_SCHEDULED). Filter client-side trên list đã fetch. Task chính → cần plan chi tiết trước (per `feedback_plan_before_main_task`), đợi "ok" mới code.
+
+**Blocker:** Không có.
+
+---
+
 ## Session 28 — 2026-06-05
 
 **Commits:** `5238f4a` fix(imp-3) `min-w-0` cho `<main>` ở 3 layout
