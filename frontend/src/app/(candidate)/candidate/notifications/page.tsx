@@ -30,12 +30,22 @@ const TYPE_LABEL: Record<string, string> = {
   APPLICATION_STATUS_CHANGED: "Cập nhật đơn",
   NEW_JOB_FROM_FOLLOWED_COMPANY: "Công ty theo dõi",
   NEW_MATCHED_JOB: "Việc phù hợp",
+  INTERVIEW_SCHEDULED: "Phỏng vấn",
   JOB_EXPIRING_SOON: "Sắp hết hạn",
   SYSTEM: "Hệ thống",
 };
 
+const FILTER_TABS: { value: string; label: string }[] = [
+  { value: "all", label: "Tất cả" },
+  { value: "APPLICATION_STATUS_CHANGED", label: "Cập nhật đơn" },
+  { value: "NEW_JOB_FROM_FOLLOWED_COMPANY", label: "Công ty theo dõi" },
+  { value: "NEW_MATCHED_JOB", label: "Việc phù hợp" },
+  { value: "INTERVIEW_SCHEDULED", label: "Phỏng vấn" },
+];
+
 export default function NotificationsPage() {
   const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const toast = useToast();
 
@@ -74,6 +84,11 @@ export default function NotificationsPage() {
   const notifications = data?.notifications ?? [];
   const totalPages = data?.totalPages ?? 1;
   const hasUnread = notifications.some((n) => !n.isRead);
+  const filtered = filter === "all" ? notifications : notifications.filter((n) => n.type === filter);
+  const tabCounts: Record<string, number> = FILTER_TABS.reduce((acc, t) => {
+    acc[t.value] = t.value === "all" ? notifications.length : notifications.filter((n) => n.type === t.value).length;
+    return acc;
+  }, {} as Record<string, number>);
 
   return (
     <div className="space-y-6">
@@ -92,6 +107,31 @@ export default function NotificationsPage() {
               {markAllMutation.isPending ? "Đang xử lý..." : "Đánh dấu tất cả đã đọc"}
             </button>
           )}
+        </div>
+      </ScrollReveal>
+
+      <ScrollReveal delay={50}>
+        <div role="tablist" aria-label="Lọc thông báo" className="flex gap-2 overflow-x-auto -mx-2 px-2 pb-1">
+          {FILTER_TABS.map((t) => {
+            const active = filter === t.value;
+            const count = tabCounts[t.value] ?? 0;
+            return (
+              <button
+                key={t.value}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setFilter(t.value)}
+                className={`shrink-0 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all whitespace-nowrap border ${
+                  active
+                    ? "bg-gradient-to-br from-[#7C3AED] to-[#3B82F6] text-white border-transparent shadow-[0_4px_18px_rgba(124,58,237,.32)]"
+                    : "bg-bg-2 text-t1 border-border-dark hover:text-t0 hover:bg-bg-3"
+                }`}
+              >
+                {t.label}
+                <span className={`ml-1.5 text-[11px] font-medium ${active ? "text-white/80" : "text-t2"}`}>({count})</span>
+              </button>
+            );
+          })}
         </div>
       </ScrollReveal>
 
@@ -118,9 +158,15 @@ export default function NotificationsPage() {
               <p className="text-[14px] font-medium text-t1">Chưa có thông báo nào</p>
               <p className="text-[12px] text-t2 mt-1">Các cập nhật về đơn ứng tuyển sẽ hiển thị ở đây</p>
             </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-16 text-center">
+              <div className="text-4xl mb-3">🗂️</div>
+              <p className="text-[14px] font-medium text-t1">Không có thông báo nào ở mục này</p>
+              <p className="text-[12px] text-t2 mt-1">Thử chọn tab khác hoặc xem tất cả</p>
+            </div>
           ) : (
             <div className="divide-y divide-border-dark">
-              {notifications.map((noti) => (
+              {filtered.map((noti) => (
                 <div
                   key={noti.id}
                   className={`px-6 py-4 flex items-start gap-3 group transition-colors ${
