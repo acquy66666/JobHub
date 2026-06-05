@@ -88,7 +88,7 @@ export default function EmployerLayout({ children }: { children: React.ReactNode
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 md:ml-[240px] bg-bg-0 min-h-[calc(100vh-64px)]">
+      <main className="flex-1 min-w-0 md:ml-[240px] bg-bg-0 min-h-[calc(100vh-64px)]">
         {/* Mobile hamburger */}
         <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border-dark">
           <button
