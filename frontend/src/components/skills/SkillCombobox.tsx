@@ -19,7 +19,7 @@ export default function SkillCombobox({ value, onChange, placeholder, proposeBas
   const { data: grouped, isLoading } = useQuery({
     queryKey: ["skills", "by-category"],
     queryFn: () => skillsApi.listByCategory(),
-    staleTime: 60 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const allSkills = useMemo(() => {

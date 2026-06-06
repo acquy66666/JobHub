@@ -4,6 +4,7 @@ import { sendApplicationStatusEmail, sendInterviewInviteEmail } from '../utils/e
 import { createNotification } from './notification.service';
 import { JobStatus, ApplicationStatus, ApplicationTag, NotificationType, InterviewStatus, JobTier } from '../generated/prisma/client';
 import { paymentService, boostedUntilForTier } from './payment.service';
+import { skillService } from './skill.service';
 
 export const employerService = {
   async getProfile(userId: string) {
@@ -80,7 +81,7 @@ export const employerService = {
       });
       await paymentService.consumeCredit(employer.id, tier, newJob.id, tx);
       return newJob;
-    });
+    }).then((job) => { skillService.triggerRecompute(); return job; });
   },
 
   async getMyJobs(userId: string, page: number, limit: number) {
@@ -116,7 +117,9 @@ export const employerService = {
     const updateData: Record<string, unknown> = { ...data };
     if (data.expiresAt) updateData.expiresAt = new Date(data.expiresAt as string);
     delete updateData.status;
-    return prisma.job.update({ where: { id: jobId }, data: updateData as Parameters<typeof prisma.job.update>[0]['data'] });
+    const updated = await prisma.job.update({ where: { id: jobId }, data: updateData as Parameters<typeof prisma.job.update>[0]['data'] });
+    skillService.triggerRecompute();
+    return updated;
   },
 
   async deleteJob(userId: string, jobId: string) {
@@ -124,6 +127,7 @@ export const employerService = {
     if (!job) throw Object.assign(new Error('Không tìm thấy tin tuyển dụng'), { status: 404 });
     if (job.employer.userId !== userId) throw Object.assign(new Error('Không có quyền truy cập'), { status: 403 });
     await prisma.job.delete({ where: { id: jobId } });
+    skillService.triggerRecompute();
   },
 
   async toggleJobStatus(userId: string, jobId: string, action: 'pause' | 'resume') {
@@ -135,7 +139,9 @@ export const employerService = {
     if (action === 'resume' && job.status !== JobStatus.PAUSED)
       throw Object.assign(new Error('Chỉ có thể khôi phục tin đang tạm dừng'), { status: 400 });
     const newStatus = action === 'pause' ? JobStatus.PAUSED : JobStatus.ACTIVE;
-    return prisma.job.update({ where: { id: jobId }, data: { status: newStatus } });
+    const updated = await prisma.job.update({ where: { id: jobId }, data: { status: newStatus } });
+    skillService.triggerRecompute();
+    return updated;
   },
 
   async getJobApplications(userId: string, jobId: string, page: number, limit: number, status?: string, tag?: string) {

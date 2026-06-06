@@ -39,4 +39,55 @@ export const skillService = {
       invalid: slugs.filter((s) => !validSet.has(s)),
     };
   },
+
+  async listTrending(limit = 10, category?: SkillCategory) {
+    return prisma.skill.findMany({
+      where: { jobCount: { gt: 0 }, ...(category && { category }) },
+      orderBy: [{ jobCount: 'desc' }, { nameVi: 'asc' }],
+      take: Math.min(Math.max(limit, 1), 50),
+    });
+  },
+
+  async recomputeJobCounts(): Promise<{ skillsTouched: number; jobsScanned: number }> {
+    const [skills, jobs] = await Promise.all([
+      prisma.skill.findMany({ select: { id: true, nameVi: true, nameEn: true, aliases: true } }),
+      prisma.job.findMany({
+        where: { status: 'ACTIVE', expiresAt: { gte: new Date() } },
+        select: { title: true, requirements: true, description: true },
+      }),
+    ]);
+
+    const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const skillPatterns = skills.map((s) => {
+      const terms = [s.nameVi, s.nameEn, ...s.aliases].filter((t): t is string => Boolean(t && t.trim()));
+      const uniq = Array.from(new Set(terms.map((t) => t.trim())));
+      const pattern = new RegExp(`(?<!\\p{L})(${uniq.map(escapeRegex).join('|')})(?!\\p{L})`, 'iu');
+      return { id: s.id, pattern };
+    });
+
+    const counts = new Map<string, number>();
+    for (const job of jobs) {
+      const text = `${job.title}\n${job.requirements}\n${job.description ?? ''}`;
+      for (const { id, pattern } of skillPatterns) {
+        if (pattern.test(text)) counts.set(id, (counts.get(id) ?? 0) + 1);
+      }
+    }
+
+    await prisma.$transaction([
+      prisma.skill.updateMany({ data: { jobCount: 0 } }),
+      ...Array.from(counts.entries()).map(([id, count]) =>
+        prisma.skill.update({ where: { id }, data: { jobCount: count } }),
+      ),
+    ]);
+
+    return { skillsTouched: counts.size, jobsScanned: jobs.length };
+  },
+
+  triggerRecompute(): void {
+    setImmediate(() => {
+      void skillService.recomputeJobCounts().catch((err) => {
+        console.error('[skill.recomputeJobCounts] failed:', err);
+      });
+    });
+  },
 };

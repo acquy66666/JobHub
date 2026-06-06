@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { JobStatus, Role, ReportStatus, AuditAction, NotificationType, Prisma } from '../generated/prisma/client';
 import { createNotification } from './notification.service';
+import { skillService } from './skill.service';
 
 export const adminService = {
   async getDashboardStats() {
@@ -103,6 +104,7 @@ export const adminService = {
       await Promise.allSettled(notifications);
     }
 
+    skillService.triggerRecompute();
     return updated;
   },
 

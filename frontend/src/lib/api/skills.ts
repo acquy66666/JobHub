@@ -58,4 +58,8 @@ export const skillsApi = {
     const { data } = await api.get<Skill[]>("/skills/search", { params: { q, category, limit } });
     return data;
   },
+  async listTrending(limit = 10, category?: SkillCategory) {
+    const { data } = await api.get<Skill[]>("/skills/trending", { params: { limit, category } });
+    return data;
+  },
 };
