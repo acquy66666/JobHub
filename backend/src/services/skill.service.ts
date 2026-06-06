@@ -73,12 +73,14 @@ export const skillService = {
       }
     }
 
-    await prisma.$transaction([
-      prisma.skill.updateMany({ data: { jobCount: 0 } }),
-      ...Array.from(counts.entries()).map(([id, count]) =>
-        prisma.skill.update({ where: { id }, data: { jobCount: count } }),
-      ),
-    ]);
+    await prisma.skill.updateMany({ data: { jobCount: 0 } });
+    if (counts.size > 0) {
+      const ids = Array.from(counts.keys());
+      const cases = ids.map((id) => `WHEN '${id.replace(/'/g, "''")}' THEN ${counts.get(id) ?? 0}`).join(' ');
+      await prisma.$executeRawUnsafe(
+        `UPDATE "Skill" SET "jobCount" = CASE "id" ${cases} ELSE "jobCount" END WHERE "id" IN (${ids.map((id) => `'${id.replace(/'/g, "''")}'`).join(',')})`,
+      );
+    }
 
     return { skillsTouched: counts.size, jobsScanned: jobs.length };
   },
