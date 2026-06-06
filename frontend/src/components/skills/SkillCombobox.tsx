@@ -8,13 +8,14 @@ type Props = {
   value: string[];
   onChange: (slugs: string[]) => void;
   placeholder?: string;
+  proposeBasePath?: string;
 };
 
 function normalize(s: string) {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
 
-export default function SkillCombobox({ value, onChange, placeholder }: Props) {
+export default function SkillCombobox({ value, onChange, placeholder, proposeBasePath = "/candidate/skills/propose" }: Props) {
   const { data: grouped, isLoading } = useQuery({
     queryKey: ["skills", "by-category"],
     queryFn: () => skillsApi.listByCategory(),
@@ -94,8 +95,13 @@ export default function SkillCombobox({ value, onChange, placeholder }: Props) {
           {isLoading && <div className="p-4 text-[13px] text-[#9494B0]">Đang tải kỹ năng...</div>}
           {!isLoading && totalFiltered === 0 && (
             <div className="p-4 text-[13px] text-[#9494B0]">
-              Không tìm thấy kỹ năng phù hợp.
-              <div className="mt-1 text-[12px] text-[#55556A]">Nếu kỹ năng của bạn chưa có trong hệ thống, tính năng đề xuất sẽ sớm có mặt (Phase 5).</div>
+              Không tìm thấy kỹ năng phù hợp{query.trim() ? <> với &quot;<span className="text-t0">{query.trim()}</span>&quot;</> : null}.
+              <a
+                href={`${proposeBasePath}${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`}
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(124,58,237,.12)] border border-[rgba(124,58,237,.3)] text-[#B09BF8] text-[12px] font-semibold hover:bg-[rgba(124,58,237,.18)]"
+              >
+                💡 Đề xuất kỹ năng mới →
+              </a>
             </div>
           )}
           {!isLoading && CATEGORY_ORDER.map((cat) => {

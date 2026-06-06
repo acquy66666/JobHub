@@ -109,7 +109,15 @@ enum NotificationType {
   CREDIT_PURCHASED
   CREDIT_LOW
   PAYMENT_FAILED
+  SKILL_PROPOSAL_APPROVED
+  SKILL_PROPOSAL_REJECTED
   SYSTEM
+}
+
+enum SkillProposalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum QuestionType {
@@ -642,6 +650,28 @@ model Skill {
   trending30d Int           @default(0)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  proposals   SkillProposal[]
 
   @@index([category, jobCount])
+}
+
+model SkillProposal {
+  id              String              @id @default(cuid())
+  proposedById    String
+  proposedByRole  Role
+  name            String
+  nameEn          String?
+  category        SkillCategory
+  reason          String?
+  status          SkillProposalStatus @default(PENDING)
+  adminNote       String?
+  resolvedById    String?
+  resolvedAt      DateTime?
+  createdSkillId  String?
+  createdSkill    Skill?              @relation(fields: [createdSkillId], references: [id])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([status, createdAt])
+  @@index([proposedById])
 }

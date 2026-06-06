@@ -36,6 +36,7 @@ const NAV_GROUPS = [
     label: "CÀI ĐẶT",
     items: [
       { href: "/candidate/job-alerts", label: "Thông báo việc làm", icon: "🔔" },
+      { href: "/candidate/skills/propose", label: "Đề xuất kỹ năng", icon: "💡" },
     ],
   },
 ];

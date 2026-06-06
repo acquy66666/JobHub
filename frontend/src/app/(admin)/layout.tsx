@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/admin/billing", label: "Doanh thu", icon: "💳" },
   { href: "/admin/packages", label: "Gói credit", icon: "📦" },
   { href: "/admin/coupons", label: "Mã giảm giá", icon: "🎟️" },
+  { href: "/admin/skills/proposals", label: "Đề xuất kỹ năng", icon: "💡" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

@@ -16,6 +16,7 @@ import employerBillingRouter from './routes/employer-billing';
 import paymentWebhookRouter from './routes/payment-webhook';
 import adminBillingRouter from './routes/admin-billing';
 import skillRouter from './routes/skills';
+import skillProposalRouter from './routes/skill-proposal';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -38,6 +39,7 @@ app.use('/api/employer/billing', employerBillingRouter);
 app.use('/api/payments', paymentWebhookRouter);
 app.use('/api/admin', adminBillingRouter);
 app.use('/api/skills', skillRouter);
+app.use('/api/skill-proposals', skillProposalRouter);
 
 app.use(errorHandler);
 

@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: "/employer/stats", label: "Thống kê", icon: "📊" },
   { href: "/employer/candidates", label: "Tìm ứng viên", icon: "🔍" },
   { href: "/employer/billing", label: "Mua credits", icon: "💳" },
+  { href: "/employer/skills/propose", label: "Đề xuất kỹ năng", icon: "💡" },
 ];
 
 export default function EmployerLayout({ children }: { children: React.ReactNode }) {
