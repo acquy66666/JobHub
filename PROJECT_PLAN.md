@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 37 — Stage 9 Sprint E Admin Billing DONE + QA 9/9 + Sprint D TC2 re-verified PASS → Stage 9 COMPLETE)
-Current Stage: Stage 9 — Paid Job Posting ✅ COMPLETE (A+B+C+D+E)
-Status: Stage 5–9 ✅ COMPLETE | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 38 — Stage 10 Skill Bank P1 DONE + seed PaymentOrder 40 đơn cho /admin/billing demo)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ / P2-P7 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -419,3 +419,57 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
 - Candidate → `candidate@jobhub.vn`
 - Employer  → `employer@jobhub.vn`
 - Admin     → `admin@jobhub.vn`
+
+---
+
+### Stage 10: Skill Bank — IN PROGRESS
+
+**Concept:** Ngân hàng kỹ năng chuẩn hoá, candidate chỉ được chọn slug có sẵn (strict), employer cũng dùng cùng bank để chuẩn hoá 2 chiều. Skill thiếu → đề xuất → admin duyệt.
+
+**Roadmap:**
+
+- **P1 — Foundation (✅ session 38, 2026-06-06, `c0ec2f6`)**
+  - [x] Prisma `Skill` model + `SkillCategory` enum 10 nhóm (IT/KY_THUAT/KINH_TE/MARKETING/Y_TE/SU_PHAM/THIET_KE/NGON_NGU/KY_NANG_MEM/KHAC)
+  - [x] Supabase migration `skill_bank_p1` — bảng Skill + extension `pg_trgm` + index `(category, jobCount)` + GIN trên nameVi + aliases
+  - [x] Seed 166 skill từ researcher subagent (IT 41 / KY_THUAT 19 / KINH_TE 17 / MARKETING 17 / Y_TE 12 / SU_PHAM 12 / THIET_KE 12 / NGON_NGU 12 / KY_NANG_MEM 12 / KHAC 12). File `backend/prisma/data/skills-seed.json`
+  - [x] Backend `skillService` + `GET /api/skills/search?q=&category=&limit=` + `GET /api/skills/by-category` (public, no auth)
+  - [x] Strict server-side validate `PUT /candidate/profile`: slug không có trong bank → 422 `INVALID_SKILLS` + list `invalidSkills`
+  - [x] Frontend `lib/api/skills.ts` wrapper + types + 10 category label/order
+  - [x] Frontend `components/skills/SkillCombobox.tsx` Headless dropdown group-by-category + fuzzy match (nameVi/nameEn/aliases/slug + normalize VN dấu) + selected chips + jobCount badge
+  - [x] Tích hợp vào `frontend/src/app/(candidate)/candidate/profile/page.tsx` thay free-text input
+  - [x] QA Playwright production 7/7 PASS (`qa-scripts/skill-p1/qa.js`): TC0 search public + TC1 by-category 10 groups 166 total + TC2 combobox render + TC3 fuzzy "rea" → React selectable + TC4 save+reload 3 slug persist + TC5 fake slug 422 + TC6 mobile 375
+
+- **P2 — Demand & Trending (pending)**
+  - [ ] Cron/trigger recompute `jobCount` (Job ACTIVE chứa skill trong requirements text via aliases match) + `trending30d`
+  - [ ] `GET /skills/trending?days=30&limit=10`
+  - [ ] Badge "X tin tuyển" trong combobox dùng số thật (hiện jobCount=0)
+
+- **P3 — Onboarding & Dashboard (pending)**
+  - [ ] Sau register candidate, hỏi ngành → suggest top 10 skill ngành
+  - [ ] "Top kỹ năng hot 30 ngày" section trên `/candidate/dashboard`
+
+- **P4 — Employer & Match (pending)**
+  - [ ] SkillCombobox vào `JobForm` employer (chuẩn hoá 2 chiều, strict)
+  - [ ] Job Match Score normalize bằng `skill.slug` thay text raw
+
+- **P5 — Skill Proposal System ⭐ (pending)**
+  - [ ] Prisma `SkillProposal` model (proposedBy/name/category/reason/status PENDING|APPROVED|REJECTED/adminNote)
+  - [ ] Form đề xuất `/candidate/skills/propose` + `/employer/skills/propose`
+  - [ ] Admin page `/admin/skills/proposals` duyệt PENDING → click Approve → auto-create Skill record + notify user
+  - [ ] NotificationType `SKILL_PROPOSAL_APPROVED` / `SKILL_PROPOSAL_REJECTED`
+
+- **P6 — Similar Suggestion (pending)**
+  - [ ] `GET /skills/similar?q=X` dùng `pg_trgm` similarity, return top 3
+  - [ ] Combobox empty state: "Không thấy 'X'? Gợi ý: [Y, Z] — hoặc đề xuất skill mới →"
+
+- **P7 — Legacy Migration (pending)**
+  - [ ] Script fuzzy-match `Candidate.skills String[]` free-text cũ → slug; unmatched flag để user re-pick lần login sau
+
+- **P8 — Polish (defer)**
+  - [ ] Admin merge duplicate skill (update all references)
+  - [ ] Skill request voting (nhiều user propose cùng tên → priority queue)
+
+---
+
+### Bonus session 38 (2026-06-06) — Seed PaymentOrder cho /admin/billing demo
+- [x] 40 PaymentOrder (35 SUCCESS / 3 PENDING / 2 FAILED) prefix `seed-po-*` rải đều 12 tháng (06/2025 → 06/2026), 9 package đều có đơn, VNPAY 19 / MOMO 16, total revenue ~20.19M VND. Insert qua Supabase MCP. Rollback dễ: `DELETE FROM "PaymentOrder" WHERE id LIKE 'seed-po-%'`.

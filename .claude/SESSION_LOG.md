@@ -4,6 +4,35 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 38 — 2026-06-06
+
+**Commits:** `c0ec2f6` feat(skill-P1) skill bank foundation — 166 skills + strict combobox.
+
+**Done:**
+- Stage 10 P1 Skill Bank ✅ — Prisma `Skill` + `SkillCategory` enum 10 nhóm. Supabase migration `skill_bank_p1` (Skill table + extension `pg_trgm` + index `(category, jobCount)` + GIN nameVi trgm + GIN aliases). Researcher subagent thu thập 166 skill (IT 41 / KY_THUAT 19 / KINH_TE 17 / MARKETING 17 / Y_TE 12 / SU_PHAM 12 / THIET_KE 12 / NGON_NGU 12 / KY_NANG_MEM 12 / KHAC 12), seed qua MCP execute_sql với id deterministic `skill-<slug>`. Backend skillService + 2 endpoint public (search + by-category). Strict validate `PUT /candidate/profile` → 422 `INVALID_SKILLS` khi có slug fake. Frontend SkillCombobox group-by-category + fuzzy match + chip + jobCount badge. Tích hợp vào candidate profile page thay free-text. QA Playwright production 7/7 PASS.
+- Bonus: 40 PaymentOrder seed (35 SUCCESS / 3 PENDING / 2 FAILED) prefix `seed-po-*` rải 12 tháng cho `/admin/billing` chart đẹp lúc demo. Total revenue ~20.19M VND, 9 package đều có đơn, VNPAY 19 vs MOMO 16. Rollback: `DELETE FROM "PaymentOrder" WHERE id LIKE 'seed-po-%'`.
+
+**Why / Rationale:**
+- **Strict slug bank ngay từ P1**: user yêu cầu candidate chỉ chọn skill có sẵn (không gõ tự do). Server-side validate là rào duy nhất chắc chắn (FE có thể bypass) — phải nằm trong `candidate.service.updateProfile`, không phải Zod schema (Zod static không biết DB). Throw có `code: 'INVALID_SKILLS'` + `invalidSkills[]` để FE biết slug nào fail.
+- **Id deterministic `skill-<slug>` thay cuid**: bảng Skill có `@default(cuid())` trong Prisma nhưng INSERT trực tiếp qua MCP không có cuid extension → ép id = `skill-<slug>` để idempotent (ON CONFLICT DO NOTHING re-run an toàn) + dễ debug.
+- **pg_trgm cài sẵn ở P1** dù chưa dùng: P6 (similar suggestion) cần. Cài kèm migration tránh phải làm thêm bước sau.
+- **Researcher subagent không có Write tool** → trả JSON 172 item trong final message dưới dạng markdown code block, parent agent ghi file. Researcher còn HTML-escape `&` → `&amp;` → mình clean tay khi ghi `skills-seed.json`. Cuối cùng 166 sau khi prune.
+- **Fuzzy match client-side thay server cho main UI**: 166 row × 4 field manageable trên client, không cần round-trip per keystroke. Fetch 1 lần staleTime 1h. Endpoint `/skills/search` để dành cho admin tools sau (P5 propose review) hoặc 3rd-party.
+- **Normalize VN dấu** dùng NFD + remove combining marks: "Tiếng Anh" gõ "tieng anh" cũng match.
+- **jobCount=0 hiển thị badge "X tin" trong UI**: hiện tất cả =0 vì chưa có cron recompute (P2). Combobox đã có UI badge sẵn — chỉ cần đổ số thật ở P2 là live.
+- **Tách 10 category cho VN market** thay vì copy LinkedIn taxonomy: SU_PHAM, NGON_NGU (HSK/JLPT/TOPIK), KHAC (F&B/du lịch/lái xe) là nhóm phổ biến VN.
+- **Roadmap P5-P7 (Proposal System + Similar Suggestion + Legacy Migration)** user duyệt ngay từ session này để tránh strict-mode tạo dead-end UX. Session này chỉ làm P1; P5-P7 deferred.
+
+**Verified:** Production QA Playwright 7/7 PASS — `qa-scripts/skill-p1/qa.js` trên `job-hub-two.vercel.app`. TC0 search public 200, TC1 by-category 10 groups 166 total, TC2 combobox render, TC3 fuzzy "rea" → React chip, TC4 save+reload 3 slug persist, TC5 fake slug → 422 INVALID_SKILLS, TC6 mobile 375 bodyW=375.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P5 — Skill Proposal System** (ưu tiên #1, không phải P2-P4). Lý do ưu tiên P5: strict-mode P1 đã ship → candidate không tìm thấy skill là pain point CẦN giải ngay; P2-P4 là polish, có thể đợi. Scope: (a) Prisma `SkillProposal` model + 2 NotificationType + Supabase migration; (b) Form đề xuất `/candidate/skills/propose` + `/employer/skills/propose` (name + category + lý do, prefill `?q=X` từ combobox); (c) Admin page `/admin/skills/proposals` table PENDING/APPROVED/REJECTED + click Approve → auto INSERT Skill + notify proposer; (d) Empty state SkillCombobox: "Không thấy 'X'? → Đề xuất skill mới →" link `/candidate/skills/propose?prefill=X`. Effort ~2h. File chính: `backend/prisma/schema.prisma`, `backend/src/services/skill-proposal.service.ts` (NEW), `backend/src/routes/skill-proposal.ts` (NEW), 3 page mới FE, update `SkillCombobox.tsx` empty state CTA.
+
+**Blocker:** Không có. Render Manual Deploy ổn.
+
+---
+
 ## Session 37 — 2026-06-06
 
 **Commits:** `908ed9e` feat(billing-E) admin billing dashboard + packages CRUD + coupons CRUD, `7db7292` fix(billing-E) include employer.id in admin/users response.
