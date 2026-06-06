@@ -4,6 +4,32 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 42 — 2026-06-06
+
+**Commits:** `b5535c0` feat(skill-P3) candidate onboarding + dashboard top trending skills.
+
+**Done:**
+- Stage 10 P3 ✅ — `/candidate/onboarding` 2-step page (pick category → trending chips → save) + Dashboard auto-redirect khi skills empty + Dashboard section "🔥 Top kỹ năng đang tuyển" 8 chip Link `/jobs?keyword={nameVi}`. Chỉ 2 file FE thay đổi, Vercel auto-deploy đủ.
+
+**Why / Rationale:**
+- **Onboarding page riêng thay nhét vào register flow**: register có 3 step + verify-email + login redirect logic phức tạp; chèn onboarding vào sẽ phá flow đăng ký hiện tại + cần API auth chưa có khi chưa login. Page độc lập `/candidate/onboarding` đơn giản hơn, auth-protected sẵn qua candidate layout, người dùng vào sau login lần đầu.
+- **Auto-redirect ở dashboard thay verify-email/login**: verify-email push `/login?verified=1` không biết role; login response không có `skills` field. Đặt guard ở dashboard `useEffect` (profile loaded → check empty + localStorage) đơn giản nhất, không phải thay đổi auth flow. Trade-off: candidate có thể access dashboard 1ms trước khi redirect — acceptable vì chỉ flash component skeleton.
+- **localStorage `onboarding_skipped` thay column DB**: tránh schema change cho 1 flag UX. Per-device acceptable; nếu candidate login máy khác sẽ thấy onboarding lại → tính năng (suggestion). Không vô hạn loop vì set flag cả khi save lẫn skip.
+- **`/jobs?keyword={nameVi}` thay `?skillSlug=`**: Backend `jobQuerySchema` chưa hỗ trợ skillSlug filter (chỉ có keyword/location/industry/jobType/workMode/salary/tier). Thêm skillSlug filter là backend scope — defer P6/P7 hoặc dependent migration P7. Keyword fallback dùng nameVi (vd "React") match đủ cho jobs cũ free-text + jobs mới có skill name trong title/desc. Acceptable hôm nay.
+- **Chip mặc định 8, không cho user pick category trên dashboard**: section dashboard chỉ là "discovery hint", không phải tool tìm kiếm. Onboarding mới là chỗ pick category. Giữ dashboard tinh gọn.
+- **`PUT /candidate/profile` không `PATCH`**: backend route đã có `PUT` (multer middleware accept JSON body khi không có file). Không thêm endpoint mới.
+- **Label "Snapshot theo nhu cầu hiện tại" thay "Top 30 ngày"**: `/skills/trending` thực ra là top-by-`jobCount` snapshot (P2 đã hardcode `trending30d=0`), không phải window 30 ngày thật. Label phải khớp ý nghĩa thật để không hứa hẹn sai.
+
+**Verified:** Production QA Playwright 5/5 PASS — `qa-scripts/skill-p3/qa.js`. TC1 onboarding step 1 render 10 category buttons + TC2 chọn IT → step 2 render 10 trending chip (data-testid="trending-chips") + TC3 click "Bỏ qua" → redirect `/candidate/dashboard` + localStorage `onboarding_skipped=1` set + TC4 dashboard "Top kỹ năng đang tuyển" header visible + 8 chip Link (data-testid="dashboard-trending") + TC5 mobile 375 onboarding bodyW=375 dashboard bodyW=399 (≤400 acceptable, dashboard có horizontal scroll content).
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P6 — Similar Skill Suggestion** (pg_trgm). Lý do: P3 đã đóng nửa cuối UX flow của Skill Bank → P6 nâng UX SkillCombobox khi user gõ tên gần đúng (vd "reactjs" → suggest "react"). Scope: (a) Enable extension `pg_trgm` (đã có session 38 P1 — verify); (b) Backend `GET /skills/similar?q=X&limit=3` dùng `SIMILARITY(nameVi, $1) > 0.3` ORDER BY similarity DESC; (c) FE SkillCombobox empty-state ngoài CTA "Đề xuất" thêm gợi ý "Có phải bạn muốn 'React'?" với similarity badge. Effort ~1h. File: `backend/src/routes/skills.ts`, `backend/src/services/skill.service.ts`, `frontend/src/components/skills/SkillCombobox.tsx`.
+
+**Blocker:** Không có. Vercel auto-deploy ổn. Backend Render chưa đụng nên không cần Manual Deploy.
+
+---
+
 ## Session 41 — 2026-06-06
 
 **Commits:** `b02c28a` feat(skill-P4) employer JobForm SkillCombobox + Job.skillSlugs structured.

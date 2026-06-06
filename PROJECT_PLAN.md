@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 41 — Stage 10 Skill Bank P4 Employer JobForm + Match Score DONE, QA 6/6 PASS)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P4 ✅ + P5 ✅ / P3 + P6-P9 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P2 + P4 + P5 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 42 — Stage 10 Skill Bank P3 Onboarding + Dashboard Trending DONE, QA 5/5 PASS)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P3 ✅ + P4 ✅ + P5 ✅ / P6-P9 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P2 + P3 + P4 + P5 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -449,9 +449,12 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [x] Backfill production: 59/166 skill có jobCount > 0, 69 ACTIVE jobs scanned. Top: Xây dựng 20, Python/React 11, Tiếng Anh 10, JavaScript 8
   - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p2/qa.js`): TC1 by-category sum>0 + TC2 trending sorted desc all>0 + TC3 filter category=IT + TC4 combobox badge "N tin" thật + TC5 recompute stats + TC6 mobile 375
 
-- **P3 — Onboarding & Dashboard (pending)**
-  - [ ] Sau register candidate, hỏi ngành → suggest top 10 skill ngành
-  - [ ] "Top kỹ năng hot 30 ngày" section trên `/candidate/dashboard`
+- **P3 — Onboarding & Dashboard ⭐ (✅ session 42, 2026-06-06, `b5535c0`)**
+  - [x] `/candidate/onboarding` 2-step page: pick 1/10 category → trending chips (`GET /skills/trending?category=X&limit=10`) toggle select → `PUT /candidate/profile { skills }` lưu + redirect dashboard. Bỏ qua được mọi step.
+  - [x] Dashboard auto-redirect → onboarding khi `profile.skills` empty + `localStorage.onboarding_skipped !== '1'` (one-shot, không vô hạn loop)
+  - [x] Dashboard section mới "🔥 Top kỹ năng đang tuyển" — `/skills/trending?limit=8` → 8 chip Link `/jobs?keyword={nameVi}` (chưa có `?skillSlug` filter — defer P6/P7); empty hide
+  - [x] Subtitle "Snapshot theo nhu cầu hiện tại" — label trung lập do `/skills/trending` là top-by-jobCount snapshot, không phải window 30d thật
+  - [x] QA Playwright production 5/5 PASS (`qa-scripts/skill-p3/qa.js`): TC1 10 categories + TC2 IT → 10 chips + TC3 skip → dashboard + flag set + TC4 dashboard trending header + 8 chips + TC5 mobile 375 onboard=375 dash=399
 
 - **P4 — Employer & Match ⭐ (✅ session 41, 2026-06-06, `b02c28a`)**
   - [x] Prisma `Job.skillSlugs String[] @default([])` + Supabase migration `job_skill_slugs_p4` (GIN index)
