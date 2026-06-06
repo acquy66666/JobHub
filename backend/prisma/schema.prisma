@@ -617,3 +617,31 @@ model CouponRedemption {
   @@unique([couponId, employerId, paymentOrderId])
   @@index([couponId])
 }
+
+enum SkillCategory {
+  IT
+  SU_PHAM
+  KINH_TE
+  Y_TE
+  MARKETING
+  KY_THUAT
+  THIET_KE
+  NGON_NGU
+  KY_NANG_MEM
+  KHAC
+}
+
+model Skill {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  nameVi      String
+  nameEn      String?
+  category    SkillCategory
+  aliases     String[]
+  jobCount    Int           @default(0)
+  trending30d Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([category, jobCount])
+}

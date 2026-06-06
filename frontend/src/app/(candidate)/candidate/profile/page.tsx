@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import SkillCombobox from "@/components/skills/SkillCombobox";
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Tên ít nhất 2 ký tự"),
@@ -61,7 +62,6 @@ export default function CandidateProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
   const [showExpModal, setShowExpModal] = useState(false);
   const [showEduModal, setShowEduModal] = useState(false);
   const [editExp, setEditExp] = useState<(ExpForm & { id: string }) | null>(null);
@@ -119,19 +119,6 @@ export default function CandidateProfilePage() {
     updateMutation.mutate(fd);
   }
 
-  function addSkill(value: string) {
-    const trimmed = value.trim();
-    if (trimmed && !skills.includes(trimmed)) setSkills((s) => [...s, trimmed]);
-  }
-
-  function onSkillKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" || e.key === ",") {
-      e.preventDefault();
-      addSkill(skillInput);
-      setSkillInput("");
-    }
-  }
-
   if (isLoading) return <div className="p-8 animate-pulse"><div className="h-8 bg-bg-2 rounded w-1/3 mb-4" /><div className="h-64 bg-bg-2 rounded-2xl" /></div>;
 
   return (
@@ -176,22 +163,8 @@ export default function CandidateProfilePage() {
           {/* Skills */}
           <div>
             <label className={labelClass}>Kỹ năng</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {skills.map((s) => (
-                <span key={s} className="inline-flex items-center gap-1 bg-[rgba(124,58,237,.12)] text-[#B09BF8] border border-[rgba(124,58,237,.2)] px-3 py-1 rounded-full text-[12px] font-medium">
-                  {s}
-                  <button type="button" onClick={() => setSkills((sk) => sk.filter((x) => x !== s))} className="ml-1 text-[#B09BF8]/60 hover:text-red-400">×</button>
-                </span>
-              ))}
-            </div>
-            <input
-              value={skillInput}
-              onChange={(e) => setSkillInput(e.target.value)}
-              onKeyDown={onSkillKey}
-              onBlur={() => { if (skillInput) { addSkill(skillInput); setSkillInput(""); } }}
-              placeholder="Nhập kỹ năng rồi nhấn Enter hoặc dấu phẩy..."
-              className={inputClass}
-            />
+            <SkillCombobox value={skills} onChange={setSkills} />
+            <p className="mt-1.5 text-[11px] text-[#55556A]">Chọn từ ngân hàng kỹ năng. Tìm theo tên tiếng Việt / Anh / viết tắt.</p>
           </div>
 
           <div className="flex items-center gap-3 pt-2">

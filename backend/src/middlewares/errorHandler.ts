@@ -11,13 +11,14 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
   }
 
   if (err instanceof Error) {
-    const e = err as Error & { status?: number; code?: string; requiredTier?: string };
+    const e = err as Error & { status?: number; code?: string; requiredTier?: string; invalidSkills?: string[] };
     const status = e.status ?? 500;
     if (status >= 500) console.error(err.stack);
     res.status(status).json({
       message: err.message,
       ...(e.code && { code: e.code }),
       ...(e.requiredTier && { requiredTier: e.requiredTier }),
+      ...(e.invalidSkills && { invalidSkills: e.invalidSkills }),
     });
     return;
   }

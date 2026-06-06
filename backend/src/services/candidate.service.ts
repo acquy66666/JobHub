@@ -47,6 +47,20 @@ export const candidateService = {
   async updateProfile(userId: string, data: Record<string, unknown>, avatarBuffer?: Buffer) {
     const candidate = await prisma.candidate.findUnique({ where: { userId } });
     if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    if (Array.isArray(data.skills)) {
+      const slugs = (data.skills as string[]).filter((s) => typeof s === 'string' && s.length > 0);
+      if (slugs.length > 0) {
+        const found = await prisma.skill.findMany({ where: { slug: { in: slugs } }, select: { slug: true } });
+        const validSet = new Set(found.map((s) => s.slug));
+        const invalid = slugs.filter((s) => !validSet.has(s));
+        if (invalid.length > 0) {
+          throw Object.assign(new Error(`Kỹ năng không hợp lệ: ${invalid.join(', ')}`), { status: 422, code: 'INVALID_SKILLS', invalidSkills: invalid });
+        }
+      }
+      data.skills = slugs;
+    }
+
     let avatarUrl = candidate.avatarUrl;
     if (avatarBuffer) {
       avatarUrl = await uploadToCloudinary(avatarBuffer, 'candidate-avatars', 'image');
