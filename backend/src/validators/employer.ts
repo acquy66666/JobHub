@@ -26,6 +26,7 @@ export const createJobSchema = z.object({
   industry: z.string().min(2, 'Ngành nghề ít nhất 2 ký tự'),
   expiresAt: z.string().datetime('Ngày hết hạn không hợp lệ'),
   tier: z.enum(['BASIC', 'PREMIUM', 'VIP']).optional().default('BASIC'),
+  skillSlugs: z.array(z.string()).max(20, 'Tối đa 20 kỹ năng').optional(),
 });
 
 export const updateJobSchema = createJobSchema.partial();

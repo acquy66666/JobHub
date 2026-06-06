@@ -50,12 +50,14 @@ export const skillService = {
 
   async recomputeJobCounts(): Promise<{ skillsTouched: number; jobsScanned: number }> {
     const [skills, jobs] = await Promise.all([
-      prisma.skill.findMany({ select: { id: true, nameVi: true, nameEn: true, aliases: true } }),
+      prisma.skill.findMany({ select: { id: true, slug: true, nameVi: true, nameEn: true, aliases: true } }),
       prisma.job.findMany({
         where: { status: 'ACTIVE', expiresAt: { gte: new Date() } },
-        select: { title: true, requirements: true, description: true },
+        select: { title: true, requirements: true, description: true, skillSlugs: true },
       }),
     ]);
+
+    const slugToId = new Map(skills.map((s) => [s.slug, s.id]));
 
     const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const skillPatterns = skills.map((s) => {
@@ -67,9 +69,22 @@ export const skillService = {
 
     const counts = new Map<string, number>();
     for (const job of jobs) {
-      const text = `${job.title}\n${job.requirements}\n${job.description ?? ''}`;
-      for (const { id, pattern } of skillPatterns) {
-        if (pattern.test(text)) counts.set(id, (counts.get(id) ?? 0) + 1);
+      if (Array.isArray(job.skillSlugs) && job.skillSlugs.length > 0) {
+        // Exact-match path: structured skillSlugs from JobForm
+        const seen = new Set<string>();
+        for (const slug of job.skillSlugs) {
+          const id = slugToId.get(slug);
+          if (id && !seen.has(id)) {
+            seen.add(id);
+            counts.set(id, (counts.get(id) ?? 0) + 1);
+          }
+        }
+      } else {
+        // Legacy regex fallback for jobs without skillSlugs
+        const text = `${job.title}\n${job.requirements}\n${job.description ?? ''}`;
+        for (const { id, pattern } of skillPatterns) {
+          if (pattern.test(text)) counts.set(id, (counts.get(id) ?? 0) + 1);
+        }
       }
     }
 

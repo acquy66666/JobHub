@@ -321,6 +321,7 @@ model Job {
   flagReason     String?
   tier           JobTier       @default(BASIC)
   boostedUntil   DateTime?
+  skillSlugs     String[]      @default([])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   applications        Application[]

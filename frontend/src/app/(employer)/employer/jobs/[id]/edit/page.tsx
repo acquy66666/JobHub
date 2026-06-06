@@ -41,6 +41,7 @@ export default function EditJobPage() {
             salaryMax: job.salaryMax ?? undefined,
             salaryCurrency: job.salaryCurrency ?? "VND",
             expiresAt: job.expiresAt?.split("T")[0] ?? "",
+            skillSlugs: job.skillSlugs ?? [],
           }}
         />
       )}

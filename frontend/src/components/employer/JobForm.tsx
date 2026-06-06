@@ -12,6 +12,7 @@ import api from "@/lib/api";
 import { SalaryBenchmarkWidget } from "./SalaryBenchmarkWidget";
 import { billingApi, TIER_META, type JobTier, type CreditBalance } from "@/lib/api/billing";
 import Link from "next/link";
+import SkillCombobox from "@/components/skills/SkillCombobox";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Tiêu đề ít nhất 3 ký tự"),
@@ -28,6 +29,7 @@ const jobSchema = z.object({
   salaryCurrency: z.string().optional(),
   expiresAt: z.string().min(1, "Chọn ngày hết hạn"),
   tier: z.enum(["BASIC", "PREMIUM", "VIP"]),
+  skillSlugs: z.array(z.string()).max(20, "Tối đa 20 kỹ năng").optional(),
 });
 type JobForm = z.infer<typeof jobSchema>;
 
@@ -88,13 +90,14 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
   const qc = useQueryClient();
   const toast = useToast();
 
-  const { register, handleSubmit, watch, trigger, reset, formState: { errors } } = useForm<JobForm>({
+  const { register, handleSubmit, watch, trigger, reset, setValue, formState: { errors } } = useForm<JobForm>({
     resolver: zodResolver(jobSchema),
     defaultValues: {
       jobType: "FULL_TIME",
       workMode: "ON_SITE",
       salaryCurrency: "VND",
       tier: "BASIC",
+      skillSlugs: [],
       ...defaultValues,
     },
   });
@@ -331,6 +334,16 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
             <label className={labelClass}>Yêu cầu ứng viên *</label>
             <textarea {...register("requirements")} rows={4} placeholder="Kỹ năng, kinh nghiệm, bằng cấp cần thiết..." className={`${inputClass} resize-none`} />
             {errors.requirements && <p className="text-[12px] text-red-400 mt-1">{errors.requirements.message}</p>}
+          </div>
+          <div>
+            <label className={labelClass}>Kỹ năng yêu cầu</label>
+            <SkillCombobox
+              value={watched.skillSlugs ?? []}
+              onChange={(slugs) => setValue("skillSlugs", slugs, { shouldDirty: true })}
+              placeholder="Chọn kỹ năng cho vị trí (React, Python, Tiếng Anh…)"
+              proposeBasePath="/employer/skills/propose"
+            />
+            <p className="text-[11px] text-t2 mt-1">Chọn từ ngân hàng kỹ năng — giúp ứng viên phù hợp tìm thấy tin nhanh hơn.</p>
           </div>
           <div>
             <label className={labelClass}>Quyền lợi</label>

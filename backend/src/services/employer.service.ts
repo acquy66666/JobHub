@@ -62,10 +62,23 @@ export const employerService = {
     const tier = ((data.tier as JobTier | undefined) ?? 'BASIC') as JobTier;
     const boostedUntil = boostedUntilForTier(tier);
 
+    const rawSlugs = Array.isArray(data.skillSlugs) ? (data.skillSlugs as string[]) : [];
+    if (rawSlugs.length > 0) {
+      const { invalid } = await skillService.validateSlugs(rawSlugs);
+      if (invalid.length > 0) {
+        throw Object.assign(new Error('Có kỹ năng không hợp lệ'), {
+          status: 422,
+          code: 'INVALID_SKILLS',
+          invalidSkills: invalid,
+        });
+      }
+    }
+    const skillSlugs = Array.from(new Set(rawSlugs));
+
     // Atomic: insert Job first, then consume credit (so CreditTransaction.jobId FK valid).
     // If credit insufficient → throw → tx rollback → Job not committed.
-    const { tier: _tier, ...rest } = data as Record<string, unknown> & { tier?: JobTier };
-    void _tier;
+    const { tier: _tier, skillSlugs: _slugs, ...rest } = data as Record<string, unknown> & { tier?: JobTier; skillSlugs?: string[] };
+    void _tier; void _slugs;
     return prisma.$transaction(async (tx) => {
       const newJob = await tx.job.create({
         data: {
@@ -75,6 +88,7 @@ export const employerService = {
           status: JobStatus.PENDING,
           tier,
           boostedUntil,
+          skillSlugs,
           isFlagged,
           ...(flagReason && { flagReason }),
         } as Parameters<typeof tx.job.create>[0]['data'],
@@ -117,6 +131,20 @@ export const employerService = {
     const updateData: Record<string, unknown> = { ...data };
     if (data.expiresAt) updateData.expiresAt = new Date(data.expiresAt as string);
     delete updateData.status;
+    if (Array.isArray(data.skillSlugs)) {
+      const rawSlugs = data.skillSlugs as string[];
+      if (rawSlugs.length > 0) {
+        const { invalid } = await skillService.validateSlugs(rawSlugs);
+        if (invalid.length > 0) {
+          throw Object.assign(new Error('Có kỹ năng không hợp lệ'), {
+            status: 422,
+            code: 'INVALID_SKILLS',
+            invalidSkills: invalid,
+          });
+        }
+      }
+      updateData.skillSlugs = Array.from(new Set(rawSlugs));
+    }
     const updated = await prisma.job.update({ where: { id: jobId }, data: updateData as Parameters<typeof prisma.job.update>[0]['data'] });
     skillService.triggerRecompute();
     return updated;

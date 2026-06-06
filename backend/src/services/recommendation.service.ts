@@ -31,15 +31,25 @@ export async function getRecommendedJobs(userId: string, limit: number = 10) {
     take: 100,
   });
 
+  const candidateSkillSlugs = new Set(candidate.skills);
   const candidateSkills = candidate.skills.map(s => s.toLowerCase());
   const candidateLocation = candidate.location?.toLowerCase() ?? '';
   const now = Date.now();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
   const scored = jobs.map(job => {
-    const jobText = (job.requirements + ' ' + job.description).toLowerCase();
-    const matchedSkills = candidateSkills.filter(s => jobText.includes(s));
-    const skillScore = candidateSkills.length > 0 ? matchedSkills.length / candidateSkills.length : 0;
+    let matchedSkills: string[];
+    let skillScore: number;
+    if (Array.isArray(job.skillSlugs) && job.skillSlugs.length > 0) {
+      // Exact intersection: |candidate ∩ job| / |job|
+      matchedSkills = job.skillSlugs.filter((s) => candidateSkillSlugs.has(s));
+      skillScore = matchedSkills.length / job.skillSlugs.length;
+    } else {
+      // Legacy text-substring fallback
+      const jobText = (job.requirements + ' ' + job.description).toLowerCase();
+      matchedSkills = candidateSkills.filter(s => jobText.includes(s));
+      skillScore = candidateSkills.length > 0 ? matchedSkills.length / candidateSkills.length : 0;
+    }
 
     const locationScore = candidateLocation && job.location.toLowerCase().includes(candidateLocation) ? 1 : 0;
 
