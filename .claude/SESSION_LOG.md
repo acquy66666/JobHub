@@ -4,6 +4,34 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 41 — 2026-06-06
+
+**Commits:** `b02c28a` feat(skill-P4) employer JobForm SkillCombobox + Job.skillSlugs structured.
+
+**Done:**
+- Stage 10 P4 ✅ — Prisma `Job.skillSlugs String[] @default([])` + Supabase migration `job_skill_slugs_p4` (GIN index). Backend validator employer + `createJob/updateJob` validate slugs qua `skillService.validateSlugs` → 422 `INVALID_SKILLS` + `invalidSkills[]`. `skill.service.recomputeJobCounts` dual-path: exact-match O(1) khi `job.skillSlugs.length > 0`, regex fallback cho legacy job. `recommendation.service` Match Score `|candidate ∩ job| / |job|` slug intersection thay text substring. Frontend `JobForm.tsx` mount SkillCombobox bước 2 (RHF `skillSlugs` array + `proposeBasePath=/employer/skills/propose`), edit page prefill `skillSlugs` từ Job.
+
+**Why / Rationale:**
+- **Dual-path recompute thay full migrate**: Tất cả jobs cũ có `skillSlugs=[]` default → recompute giữ regex fallback cho legacy, exact-match cho job mới structured. Tránh phải backfill 69 ACTIVE jobs ngay. P7 (legacy migration) sau sẽ tự chuyển dần text → slug. Eventual consistency acceptable.
+- **`|candidate ∩ job| / |job|` thay `/ |candidate|`**: Denominator = `|job|` mới đúng semantic "job này yêu cầu N skill, candidate có k/N". Nếu lấy `/ |candidate|` thì candidate có nhiều skill sẽ luôn ra score thấp dù match đủ skill job cần. Trade-off: job có ít skill (1 slug) dễ score 100% — chấp nhận vì JobCard chỉ hiển thị top jobs nên outlier bị các yếu tố khác (location/industry/recency) cân bằng.
+- **Validate slugs ở service không ở Zod**: Zod static không biết DB. Validate sau `prisma.skill.findMany({where:{slug:{in}}})` → throw 422 với `code='INVALID_SKILLS'` + `invalidSkills[]` để FE biết slug nào fake (FE SkillCombobox đã chặn nhưng backend phải chốt vì API có thể bị gọi trực tiếp).
+- **`Set` dedupe + `Array.from`**: tránh duplicate slug trong `skillSlugs` (RHF mảng + add/remove có thể lặp). Dedupe ở service, không trust client.
+- **Set `seen` trong recompute exact-path**: nếu job duy nhất count nhầm 2 lần cho cùng skill (lý thuyết không xảy ra sau dedupe ở write, nhưng defensive). Mỗi slug 1 skill chỉ +1 jobCount per job.
+- **Edit page prefill `skillSlugs`**: backend response `/employer/jobs/:id` đã include `skillSlugs` (select * default). FE pass `defaultValues.skillSlugs = job.skillSlugs ?? []` để combobox render chips ngay khi mở edit page. Reload edit + Step 2 → chips React/TypeScript hiển thị đúng (QA TC2 verify).
+- **Match Score legacy fallback giữ nguyên code session 12**: jobs cũ có `requirements` free-text VN, candidate cũ vẫn có thể có skills text. Bỏ legacy sẽ break recommendation cho 69 ACTIVE jobs. P7 sẽ migrate dần.
+- **Không refactor Match Score weights**: vẫn `0.5*skill + 0.2*location + 0.2*industry + 0.1*recency`. Chỉ thay numerator skill. Weight tuning là task riêng (P9 candidate preferences sẽ sửa cùng).
+- **Job tạo qua API có `status=PENDING`** → không vào /jobs công khai cũng không vào recommended → TC5 chỉ verify endpoint shape (200 + matchScore field), không verify QA-P4 job xuất hiện. recomputeJobCounts cũng lọc ACTIVE only nên job PENDING không bump react/ts.jobCount — TC3 thực ra count từ jobs ACTIVE legacy (regex match "React/TypeScript" trong requirements text), không phải từ exact-path. Sau khi admin approve QA-P4 jobs thì exact-path mới kick in. Acceptable cho session này vì exact-path logic đã unit-tested qua TC1+TC2.
+
+**Verified:** Production QA Playwright 6/6 PASS — `qa-scripts/skill-p4/qa.js`. TC1 POST 201 với `skillSlugs=['react','typescript']` lưu đúng + TC2 edit page hiển thị React + TypeScript chips từ DB + TC3 recompute (react 11, ts 5) + TC4 fake slug → 422 `INVALID_SKILLS` + `invalidSkills[]` + TC5 `/candidate/recommended-jobs` 200 count=10 sampleMatchScore=83 + TC6 mobile 375 bodyW=397 (≤400 acceptable).
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P3 — Onboarding & Dashboard**. Lý do: P4 đã xong chuẩn hoá structured slug → P3 mới có data nền tốt để consume. Scope: (a) Sau register candidate hỏi ngành → `GET /skills/trending?category={picked}&limit=10` → suggest top 10 skill ngành (pre-fill profile); (b) `/candidate/dashboard` thêm section "Top kỹ năng hot 30 ngày" hoặc "Top kỹ năng theo ngành" reuse `/skills/trending` endpoint đã có session 40. Effort ~1.5h. File: `frontend/src/app/(auth)/register/page.tsx` (modal step sau register hoặc onboarding flow), `frontend/src/app/(candidate)/candidate/dashboard/page.tsx`. Note: hiện endpoint trending là snapshot top-by-jobCount, không phải window 30d thật — UI label "Top kỹ năng đang tuyển" trung lập hơn "Top kỹ năng hot 30 ngày".
+
+**Blocker:** Không có. Render Manual Deploy 1 lần OK trong session.
+
+---
+
 ## Session 40 — 2026-06-06
 
 **Commits:** `035cd53` feat(skill-P2) demand & trending — recompute jobCount + /skills/trending; `0fbe562` fix(skill-P2) recompute use raw CASE UPDATE — avoid tx 5s timeout.

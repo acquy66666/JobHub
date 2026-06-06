@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 40 — Stage 10 Skill Bank P2 Demand & Trending DONE, QA 6/6 PASS)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P5 ✅ / P3-P4 + P6-P9 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P2 + P5 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 41 — Stage 10 Skill Bank P4 Employer JobForm + Match Score DONE, QA 6/6 PASS)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P4 ✅ + P5 ✅ / P3 + P6-P9 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P2 + P4 + P5 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -453,9 +453,13 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [ ] Sau register candidate, hỏi ngành → suggest top 10 skill ngành
   - [ ] "Top kỹ năng hot 30 ngày" section trên `/candidate/dashboard`
 
-- **P4 — Employer & Match (pending)**
-  - [ ] SkillCombobox vào `JobForm` employer (chuẩn hoá 2 chiều, strict)
-  - [ ] Job Match Score normalize bằng `skill.slug` thay text raw
+- **P4 — Employer & Match ⭐ (✅ session 41, 2026-06-06, `b02c28a`)**
+  - [x] Prisma `Job.skillSlugs String[] @default([])` + Supabase migration `job_skill_slugs_p4` (GIN index)
+  - [x] Backend: validator + `employer.service.createJob/updateJob` validate slugs via `skillService.validateSlugs` → 422 `INVALID_SKILLS` + `invalidSkills[]` nếu có slug ngoài bank
+  - [x] `skill.service.recomputeJobCounts` dual-path: exact-match O(1) khi `job.skillSlugs.length > 0`, regex fallback cho legacy job
+  - [x] `recommendation.service` Match Score: `|candidate ∩ job| / |job|` slug intersection thay text substring (legacy fallback giữ)
+  - [x] Frontend: `JobForm.tsx` mount SkillCombobox bước 2 + RHF `skillSlugs` array + `proposeBasePath=/employer/skills/propose`; edit page prefill `skillSlugs` từ Job
+  - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p4/qa.js`): TC1 create job slugs=['react','typescript'] 201 + TC2 edit chips render + TC3 recompute react.jobCount=11/ts=5 + TC4 fake slug → 422 INVALID_SKILLS + TC5 recommended-jobs 200 matchScore field + TC6 mobile 375
 
 - **P5 — Skill Proposal System ⭐ (✅ session 39, 2026-06-06, `9e47d2e`)**
   - [x] Prisma `SkillProposal` model + `SkillProposalStatus` enum (PENDING/APPROVED/REJECTED) + 2 NotificationType `SKILL_PROPOSAL_APPROVED/REJECTED` + Supabase migration `skill_proposal_p5`
