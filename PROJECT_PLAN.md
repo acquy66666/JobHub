@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 42 — Stage 10 Skill Bank P3 Onboarding + Dashboard Trending DONE, QA 5/5 PASS)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P3 ✅ + P4 ✅ + P5 ✅ / P6-P9 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P2 + P3 + P4 + P5 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 43 — Stage 10 Skill Bank P6 Similar Suggestion DONE, QA 6/6 PASS)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P3 ✅ + P4 ✅ + P5 ✅ + P6 ✅ / P7-P9 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1-P6 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -473,9 +473,11 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [x] Sidebar nav "💡 Đề xuất kỹ năng" cả 3 role layout
   - [x] QA Playwright production 8/8 PASS (`qa-scripts/skill-p5/qa.js`): TC1 POST 201 + TC2 dup PENDING 409 + TC3 SKILL_EXISTS 409 + TC4 /mine + TC5 page render + prefill + TC6 admin list + TC7 approve → Skill in bank + TC8 mobile 375
 
-- **P6 — Similar Suggestion (pending)**
-  - [ ] `GET /skills/similar?q=X` dùng `pg_trgm` similarity, return top 3
-  - [ ] Combobox empty state: "Không thấy 'X'? Gợi ý: [Y, Z] — hoặc đề xuất skill mới →"
+- **P6 — Similar Suggestion** ✅ DONE (session 43, commit `8cd7e4a`)
+  - [x] `GET /skills/similar?q=X&limit=3` dùng `pg_trgm` `GREATEST(similarity(nameVi,$1), similarity(nameEn,$1)) > 0.3` ORDER BY DESC
+  - [x] Combobox empty-state "Có phải bạn muốn 'X'?" 1-3 button + N% similarity badge; click → toggle slug + clear query; CTA "Đề xuất" giữ
+  - [x] Debounce query 300ms, useQuery enabled khi `debouncedQuery.length>=2 && totalFiltered===0`
+  - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p6/qa.js`): TC0 reactt→react sim=0.625 + TC4 javascrip→javascript sim=0.75 + TC1 UI suggestion box render + TC2 click → chip add + query clear + TC3 nonsense → CTA only + TC5 mobile 375 bodyW=375
 
 - **P7 — Legacy Migration (pending)**
   - [ ] Script fuzzy-match `Candidate.skills String[]` free-text cũ → slug; unmatched flag để user re-pick lần login sau

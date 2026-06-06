@@ -4,6 +4,31 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 43 — 2026-06-06
+
+**Commits:** `8cd7e4a` feat(skill-P6) similar skill suggestion via pg_trgm.
+
+**Done:**
+- Stage 10 P6 ✅ — Backend `GET /skills/similar?q=&limit=` (pg_trgm GREATEST similarity nameVi/nameEn > 0.3) + FE SkillCombobox empty-state hiện 1-3 gợi ý "💡 {nameVi}" + N% badge bên cạnh CTA "Đề xuất" cũ. Debounce 300ms.
+
+**Why / Rationale:**
+- **`GREATEST(similarity(nameVi), similarity(nameEn))` thay vì chỉ nameVi**: typo tiếng Anh ("Reactt", "Javascrip") match qua nameEn (sim=0.625, 0.75) tốt hơn nhiều so với nameVi tiếng Việt có dấu. Threshold 0.3 verify thực tế trên data: "reactt" → react 0.625 + react-native 0.33, đủ thoáng để gợi ý hữu ích, đủ chặt để không noise.
+- **`$queryRawUnsafe` thay Prisma client**: pg_trgm `similarity()` function không có Prisma operator. Raw SQL ngắn, parameterized 2 placeholder ($1 term, $2 limit) — không SQL injection.
+- **Debounce 300ms client thay throttle server**: fetch chỉ trigger khi user dừng gõ; staleTime 5min cache key theo `debouncedQuery` để re-show không refetch khi user xoá-gõ lại cùng chuỗi.
+- **`enabled: open && totalFiltered===0 && debouncedQuery.length>=2`**: gating chặt — không gọi API khi (a) dropdown đóng, (b) đã có kết quả exact-match, (c) query quá ngắn (1 ký tự). Tránh waste request.
+- **Suggestion list trong cùng empty-state div, không thay CTA "Đề xuất"**: 2 path bổ trợ nhau — gợi ý cho typo, CTA cho skill thật sự thiếu. User chọn path phù hợp ngữ cảnh.
+- **Click suggestion → `toggle(slug) + setQuery('')`**: clear query để dropdown sau đó render lại danh sách đầy đủ category cho chọn skill kế tiếp; nếu giữ query, empty-state sẽ vẫn render mà chip đã add → UX khó hiểu.
+
+**Verified:** Production QA Playwright 6/6 PASS — `qa-scripts/skill-p6/qa.js`. TC0 API reactt → react sim=0.625 + TC4 API javascrip → javascript sim=0.75 + TC1 UI typo "reactt" → suggestion box render 2 items với React match + TC2 click "React" suggestion → chip xuất hiện trong selected, query input clear + TC3 nonsense "xyzabc123" → similar=[], chỉ CTA "Đề xuất kỹ năng mới" hiển thị + TC5 mobile 375 bodyW=375.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P7 — Legacy Migration** (free-text → slug). Script chạy 1 lần để fuzzy-match `Candidate.skills String[]` legacy text (vd "Reactjs", "javascript dev") → skill slug trong bank. Scope: (a) Script `backend/scripts/migrate-candidate-skills.ts` quét tất cả Candidate có `skills.length > 0`, với mỗi item gọi `pg_trgm similarity` để map text → slug (threshold cao hơn `0.5` cho exact ý định), unmatched flag vào `Candidate.legacySkills String[]` (cần Prisma migration thêm column) để user re-pick lần login sau. (b) Tương tự cho `Job.requirements` legacy text → có thể skip vì P4 đã có `Job.skillSlugs`. Effort ~1.5h (cần migration + script + dry-run + apply). File: `backend/prisma/schema.prisma`, `backend/scripts/migrate-candidate-skills.ts` mới.
+
+**Blocker:** Không có. P6 đóng sạch.
+
+---
+
 ## Session 42 — 2026-06-06
 
 **Commits:** `b5535c0` feat(skill-P3) candidate onboarding + dashboard top trending skills.
