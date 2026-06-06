@@ -30,8 +30,14 @@ export default function SkillCombobox({ value, onChange, placeholder, proposeBas
   const bySlug = useMemo(() => new Map(allSkills.map((s) => [s.slug, s])), [allSkills]);
 
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -60,6 +66,14 @@ export default function SkillCombobox({ value, onChange, placeholder, proposeBas
   }, [grouped, query]);
 
   const totalFiltered = Object.values(filtered).reduce((n, list) => n + list.length, 0);
+
+  const shouldSuggest = open && !isLoading && totalFiltered === 0 && debouncedQuery.length >= 2;
+  const { data: similar = [] } = useQuery({
+    queryKey: ["skills", "similar", debouncedQuery],
+    queryFn: () => skillsApi.listSimilar(debouncedQuery, 3),
+    enabled: shouldSuggest,
+    staleTime: 5 * 60 * 1000,
+  });
 
   function toggle(slug: string) {
     if (value.includes(slug)) onChange(value.filter((s) => s !== slug));
@@ -95,10 +109,37 @@ export default function SkillCombobox({ value, onChange, placeholder, proposeBas
           {isLoading && <div className="p-4 text-[13px] text-[#9494B0]">Đang tải kỹ năng...</div>}
           {!isLoading && totalFiltered === 0 && (
             <div className="p-4 text-[13px] text-[#9494B0]">
-              Không tìm thấy kỹ năng phù hợp{query.trim() ? <> với &quot;<span className="text-t0">{query.trim()}</span>&quot;</> : null}.
+              <div>Không tìm thấy kỹ năng phù hợp{query.trim() ? <> với &quot;<span className="text-t0">{query.trim()}</span>&quot;</> : null}.</div>
+              {similar.length > 0 && (
+                <div className="mt-3" data-testid="similar-suggestions">
+                  <div className="text-[12px] text-[#9494B0] mb-1.5">Có phải bạn muốn:</div>
+                  <ul className="flex flex-col gap-1">
+                    {similar.map((s) => (
+                      <li key={s.slug}>
+                        <button
+                          type="button"
+                          onClick={() => { toggle(s.slug); setQuery(""); }}
+                          className="w-full text-left flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#13131E] border border-[#252538] hover:border-[rgba(124,58,237,.38)] hover:bg-[#1A1A28] transition"
+                        >
+                          <span className="flex items-center gap-2">
+                            <span className="text-[14px]">💡</span>
+                            <span className="text-[#F5F5FF] text-[13px] font-medium">{s.nameVi}</span>
+                            {s.nameEn && s.nameEn !== s.nameVi && (
+                              <span className="text-[#55556A] text-[11px]">· {s.nameEn}</span>
+                            )}
+                          </span>
+                          <span className="text-[10px] text-[#B09BF8] bg-[rgba(124,58,237,.12)] border border-[rgba(124,58,237,.2)] rounded px-1.5 py-0.5">
+                            {Math.round(s.similarity * 100)}%
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <a
                 href={`${proposeBasePath}${query.trim() ? `?q=${encodeURIComponent(query.trim())}` : ""}`}
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(124,58,237,.12)] border border-[rgba(124,58,237,.3)] text-[#B09BF8] text-[12px] font-semibold hover:bg-[rgba(124,58,237,.18)]"
+                className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(124,58,237,.12)] border border-[rgba(124,58,237,.3)] text-[#B09BF8] text-[12px] font-semibold hover:bg-[rgba(124,58,237,.18)]"
               >
                 💡 Đề xuất kỹ năng mới →
               </a>

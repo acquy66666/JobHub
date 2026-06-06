@@ -40,6 +40,24 @@ export const skillService = {
     };
   },
 
+  async findSimilar(q: string, limit = 3) {
+    if (!q || q.trim().length < 2) return [];
+    const term = q.trim();
+    const take = Math.min(Math.max(limit, 1), 10);
+    return prisma.$queryRawUnsafe<
+      Array<{ slug: string; nameVi: string; nameEn: string | null; category: string; jobCount: number; similarity: number }>
+    >(
+      `SELECT slug, "nameVi", "nameEn", category, "jobCount",
+              GREATEST(similarity("nameVi", $1), similarity(COALESCE("nameEn", ''), $1)) AS similarity
+       FROM "Skill"
+       WHERE similarity("nameVi", $1) > 0.3 OR similarity(COALESCE("nameEn", ''), $1) > 0.3
+       ORDER BY similarity DESC
+       LIMIT $2`,
+      term,
+      take,
+    );
+  },
+
   async listTrending(limit = 10, category?: SkillCategory) {
     return prisma.skill.findMany({
       where: { jobCount: { gt: 0 }, ...(category && { category }) },

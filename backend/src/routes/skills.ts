@@ -30,6 +30,18 @@ router.get('/trending', async (req: Request, res: Response, next: NextFunction) 
   } catch (err) { next(err); }
 });
 
+const similarSchema = z.object({
+  q: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(10).optional(),
+});
+
+router.get('/similar', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { q, limit } = similarSchema.parse(req.query);
+    res.json(await skillService.findSimilar(q ?? '', limit ?? 3));
+  } catch (err) { next(err); }
+});
+
 router.get('/by-category', async (_req: Request, res: Response, next: NextFunction) => {
   try {
     const all = await skillService.listAll();

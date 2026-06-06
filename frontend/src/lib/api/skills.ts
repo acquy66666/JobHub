@@ -62,4 +62,17 @@ export const skillsApi = {
     const { data } = await api.get<Skill[]>("/skills/trending", { params: { limit, category } });
     return data;
   },
+  async listSimilar(q: string, limit = 3) {
+    const { data } = await api.get<SkillSimilar[]>("/skills/similar", { params: { q, limit } });
+    return data;
+  },
 };
+
+export interface SkillSimilar {
+  slug: string;
+  nameVi: string;
+  nameEn: string | null;
+  category: SkillCategory;
+  jobCount: number;
+  similarity: number;
+}
