@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 38 — Stage 10 Skill Bank P1 DONE + seed PaymentOrder 40 đơn cho /admin/billing demo)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ / P2-P7 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 39 — Stage 10 Skill Bank P5 Proposal System DONE, QA 8/8 PASS)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ + P5 ✅ / P2-P4 + P6-P9 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P5 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -452,11 +452,14 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [ ] SkillCombobox vào `JobForm` employer (chuẩn hoá 2 chiều, strict)
   - [ ] Job Match Score normalize bằng `skill.slug` thay text raw
 
-- **P5 — Skill Proposal System ⭐ (pending)**
-  - [ ] Prisma `SkillProposal` model (proposedBy/name/category/reason/status PENDING|APPROVED|REJECTED/adminNote)
-  - [ ] Form đề xuất `/candidate/skills/propose` + `/employer/skills/propose`
-  - [ ] Admin page `/admin/skills/proposals` duyệt PENDING → click Approve → auto-create Skill record + notify user
-  - [ ] NotificationType `SKILL_PROPOSAL_APPROVED` / `SKILL_PROPOSAL_REJECTED`
+- **P5 — Skill Proposal System ⭐ (✅ session 39, 2026-06-06, `9e47d2e`)**
+  - [x] Prisma `SkillProposal` model + `SkillProposalStatus` enum (PENDING/APPROVED/REJECTED) + 2 NotificationType `SKILL_PROPOSAL_APPROVED/REJECTED` + Supabase migration `skill_proposal_p5`
+  - [x] Backend `skill-proposal.service.ts`: create (validate unique vs Skill + dup PENDING) / listMine / listForAdmin (with proposer join) / approve (atomic tx: create Skill + update proposal + notify) / reject (require adminNote)
+  - [x] Routes `/api/skill-proposals` (POST + /mine candidate/employer) + `/admin` (GET + PATCH approve/reject admin)
+  - [x] Frontend shared `SkillProposeForm.tsx` (prefill `?q=X` + status badges PENDING/APPROVED/REJECTED + admin note display) + 3 pages: `/candidate/skills/propose`, `/employer/skills/propose`, `/admin/skills/proposals`
+  - [x] SkillCombobox empty-state CTA "💡 Đề xuất kỹ năng mới →" link `proposeBasePath?q=`
+  - [x] Sidebar nav "💡 Đề xuất kỹ năng" cả 3 role layout
+  - [x] QA Playwright production 8/8 PASS (`qa-scripts/skill-p5/qa.js`): TC1 POST 201 + TC2 dup PENDING 409 + TC3 SKILL_EXISTS 409 + TC4 /mine + TC5 page render + prefill + TC6 admin list + TC7 approve → Skill in bank + TC8 mobile 375
 
 - **P6 — Similar Suggestion (pending)**
   - [ ] `GET /skills/similar?q=X` dùng `pg_trgm` similarity, return top 3
@@ -468,6 +471,15 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
 - **P8 — Polish (defer)**
   - [ ] Admin merge duplicate skill (update all references)
   - [ ] Skill request voting (nhiều user propose cùng tên → priority queue)
+
+- **P9 — Candidate Preferences (cuối, ý tưởng user session 39)**
+  **Concept:** Mục "Sở thích công việc" trên hồ sơ candidate → tăng độ chính xác Job Match Score + filter `/jobs` 1-click theo preference cá nhân.
+  - [ ] Prisma `Candidate`: thêm `preferredJobTypes JobType[]`, `preferredWorkModes WorkMode[]`, `preferredLocations String[]`, `preferredIndustries String[]`, `preferredSalaryMin Int?`, `preferredSalaryMax Int?`, `openToWork Boolean @default(true)` + Supabase migration
+  - [ ] Backend `PUT /candidate/profile` accept thêm các field preferences
+  - [ ] Frontend section "Sở thích công việc" trong `/candidate/profile` với multi-select chip (jobType / workMode / location / industry) + salary range slider + toggle "Đang tìm việc"
+  - [ ] Nâng cấp Recommended Jobs scoring: cộng `+0.15` khi jobType match, `+0.15` workMode match, `+0.1` location match; exclude job nếu `salaryMax < preferredSalaryMin`
+  - [ ] Nút "Lọc theo sở thích của tôi" trên `/jobs` (auto-apply filter từ profile khi candidate login)
+  - [ ] QA: profile save + reload + recommended list re-rank theo preference
 
 ---
 
