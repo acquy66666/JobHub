@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 39 — Stage 10 Skill Bank P5 Proposal System DONE, QA 8/8 PASS)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ + P5 ✅ / P2-P4 + P6-P9 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P5 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 40 — Stage 10 Skill Bank P2 Demand & Trending DONE, QA 6/6 PASS)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P5 ✅ / P3-P4 + P6-P9 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1 + P2 + P5 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -439,10 +439,15 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [x] Tích hợp vào `frontend/src/app/(candidate)/candidate/profile/page.tsx` thay free-text input
   - [x] QA Playwright production 7/7 PASS (`qa-scripts/skill-p1/qa.js`): TC0 search public + TC1 by-category 10 groups 166 total + TC2 combobox render + TC3 fuzzy "rea" → React selectable + TC4 save+reload 3 slug persist + TC5 fake slug 422 + TC6 mobile 375
 
-- **P2 — Demand & Trending (pending)**
-  - [ ] Cron/trigger recompute `jobCount` (Job ACTIVE chứa skill trong requirements text via aliases match) + `trending30d`
-  - [ ] `GET /skills/trending?days=30&limit=10`
-  - [ ] Badge "X tin tuyển" trong combobox dùng số thật (hiện jobCount=0)
+- **P2 — Demand & Trending (✅ session 40, 2026-06-06, `035cd53` + `0fbe562`)**
+  - [x] `skill.service.recomputeJobCounts`: Unicode-aware word-boundary regex (`(?<!\p{L})...(?!\p{L})/iu`) match `nameVi/nameEn/aliases` trong `Job.title + requirements + description`, scan ACTIVE jobs, batch CASE WHEN raw UPDATE
+  - [x] `skill.service.triggerRecompute`: fire-and-forget `setImmediate`, fail-soft (catch + console.error)
+  - [x] Hook recompute sau `createJob/updateJob/deleteJob/toggleJobStatus` (employer.service) + `updateJobStatus` (admin.service approve/reject)
+  - [x] `GET /api/skills/trending?limit=&category=` public — top skill theo jobCount desc, filter > 0
+  - [x] `POST /api/skills/recompute` manual trigger (backfill + QA)
+  - [x] Frontend `SkillCombobox` staleTime 60min → 5min (jobCount cập nhật gần real-time)
+  - [x] Backfill production: 59/166 skill có jobCount > 0, 69 ACTIVE jobs scanned. Top: Xây dựng 20, Python/React 11, Tiếng Anh 10, JavaScript 8
+  - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p2/qa.js`): TC1 by-category sum>0 + TC2 trending sorted desc all>0 + TC3 filter category=IT + TC4 combobox badge "N tin" thật + TC5 recompute stats + TC6 mobile 375
 
 - **P3 — Onboarding & Dashboard (pending)**
   - [ ] Sau register candidate, hỏi ngành → suggest top 10 skill ngành

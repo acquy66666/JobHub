@@ -4,6 +4,34 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 40 — 2026-06-06
+
+**Commits:** `035cd53` feat(skill-P2) demand & trending — recompute jobCount + /skills/trending; `0fbe562` fix(skill-P2) recompute use raw CASE UPDATE — avoid tx 5s timeout.
+
+**Done:**
+- Stage 10 P2 Demand & Trending ✅ — `skill.service.recomputeJobCounts` (Unicode-aware word-boundary regex match `nameVi/nameEn/aliases` trong Job.title+requirements+description ACTIVE only, batch CASE WHEN raw UPDATE), `triggerRecompute` fire-and-forget setImmediate fail-soft, hook 5 chỗ (employer.create/update/delete/toggleStatus + admin.updateJobStatus), public endpoint `GET /skills/trending?limit&category`, manual `POST /skills/recompute` cho backfill/QA, FE SkillCombobox staleTime 60min→5min.
+- Backfill production: 59/166 skill có jobCount > 0, 69 ACTIVE jobs scanned. Top: Xây dựng 20, Python/React 11, Tiếng Anh 10, JavaScript 8, DevOps/Docker/Kubernetes/Ngân hàng/PostgreSQL 7.
+
+**Why / Rationale:**
+- **Regex match trong JS thay PG full-text search**: skill name có VN dấu (`Tiếng Anh`) + multi-term aliases khó express trong PG `~*`. JS dùng `(?<!\p{L})(term)(?!\p{L})/iu` Unicode property classes + `escapeRegex` per term. Pre-build 1 pattern alternation per skill (`nameVi|nameEn|alias1|alias2`) → 166 patterns × 69 jobs ≈ 11k regex tests < 500ms. Acceptable cho scale hiện tại.
+- **Tránh `\b` boundary**: JS `\b` ASCII-only (`\w` = `[A-Za-z0-9_]`). Vietnamese letters `ếàộ` không phải `\w` → `\b` sai chỗ trong text VN. Unicode lookaround `(?<!\p{L})(?!\p{L})` chuẩn hơn.
+- **Full recompute thay incremental delta**: scale hiện tại 166 skills × 69 jobs < 500ms → đơn giản, đảm bảo eventual consistency. Khi scale > 1k job mới refactor incremental (parse text once → update affected skills).
+- **`setImmediate` fire-and-forget thay await sync**: recompute ~500ms sẽ delay response client. Fire async + fail-soft `catch console.error` → user không thấy lỗi nếu recompute fail. State eventually consistent — next CRUD trigger lại.
+- **Hotfix `0fbe562` — raw CASE WHEN thay 166 prisma.update trong $transaction**: Initial code dùng `prisma.$transaction([updateMany(reset), ...166 update(id, jobCount)])`. Trên Render free tier, latency mỗi UPDATE ≈ 30ms × 166 ≈ 5+ giây, vượt default `interactive timeout = 5000ms` → P2028 error. Fix bằng `prisma.skill.updateMany({jobCount:0})` reset + 1 `$executeRawUnsafe('UPDATE Skill SET jobCount = CASE id WHEN ... ELSE jobCount END WHERE id IN (...)')` — 1 round-trip thay 166. Bài học: Prisma $transaction default 5s, bulk update với N row phải dùng raw CASE hoặc tăng timeout option (max ~30s).
+- **POST /skills/recompute public endpoint không có auth**: nguy cơ DoS thấp vì compute 500ms + return stats. Sau session sẽ cân nhắc thêm rate-limit hoặc admin-only. Hiện tại để public phục vụ backfill + QA convenience.
+- **Endpoint tên `trending` nhưng thực chất top-by-current-jobCount**, không có window 30 ngày: P3 sẽ là consumer, cần snapshot thực tế hiện tại đủ; window 30d cần AuditLog hoặc snapshot table → defer. Tên giữ "trending" để consumer hint semantic + sau migrate dễ.
+- **staleTime 5min thay 60min**: jobCount đổi mỗi lần employer/admin tạo/sửa/duyệt job. 60min quá lâu, user thấy badge cũ. 5min cân bằng giữa refetch vs server load.
+
+**Verified:** Production QA Playwright 6/6 PASS — `qa-scripts/skill-p2/qa.js`. TC1 sum=242 nonZero=59 + TC2 top5 sorted desc all>0 (Xây dựng 20 → React 11) + TC3 filter IT 10 rows + TC4 combobox badge "N tin" thật count=2 với keyword "react" + TC5 recompute stats (59/69) + TC6 mobile 375.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P4 — Employer JobForm SkillCombobox** (ưu tiên trên P3): hiện employer gõ free-text vào `Job.requirements`, P2 recompute phải match fuzzy text. P4 thêm `Job.skillSlugs String[]` structured, recompute thành exact-match O(1), Job Match Score normalize so slug thay text raw. P3 onboarding cần endpoint `/skills/trending?category=` đã có — phụ thuộc P4 chuẩn hoá xong mới làm. Scope P4: Prisma `Job.skillSlugs` + Supabase migration; `JobForm.tsx` thay free-text bằng SkillCombobox `proposeBasePath=/employer/skills/propose`; `recomputeJobCounts` dual-path (exact match nếu có skillSlugs, fallback regex cho legacy); Match Score so slug. Effort ~2h. File: `backend/prisma/schema.prisma`, `backend/src/services/skill.service.ts`, `frontend/src/components/employer/JobForm.tsx`, `backend/src/services/job.service.ts`.
+
+**Blocker:** Không có. Render Manual Deploy 2 lần OK trong session.
+
+---
+
 ## Session 39 — 2026-06-06
 
 **Commits:** `9e47d2e` feat(skill-P5) proposal system — candidate/employer propose → admin review; `a5fc0dd` docs(plan) mark P5 done + add P9 Candidate Preferences.
