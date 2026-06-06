@@ -4,6 +4,36 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 39 — 2026-06-06
+
+**Commits:** `9e47d2e` feat(skill-P5) proposal system — candidate/employer propose → admin review; `a5fc0dd` docs(plan) mark P5 done + add P9 Candidate Preferences.
+
+**Done:**
+- Stage 10 P5 ✅ — Prisma `SkillProposal` + `SkillProposalStatus` enum + 2 NotificationType (`SKILL_PROPOSAL_APPROVED/REJECTED`) + Supabase migration `skill_proposal_p5`. Backend [skill-proposal.service.ts](backend/src/services/skill-proposal.service.ts) — create (validate vs existing Skill nameVi case-insensitive + dup PENDING per-user), listMine, listForAdmin (manual user join, không relation FK), approve (atomic `$transaction`: create Skill với `slug = slugify(name)` + update proposal + insert Notification), reject (require adminNote). Routes [skill-proposal.ts](backend/src/routes/skill-proposal.ts): POST + GET /mine [candidate|employer], GET /admin + PATCH approve/reject [admin]. Frontend shared [SkillProposeForm.tsx](frontend/src/components/skills/SkillProposeForm.tsx) (prefill `?q=X` từ useSearchParams + status badges + admin note + own proposals list). 3 page wrap: candidate/employer/admin (`Suspense` bọc vì useSearchParams). [SkillCombobox.tsx](frontend/src/components/skills/SkillCombobox.tsx) empty-state CTA "💡 Đề xuất kỹ năng mới →" link `proposeBasePath?q={query}` (default `/candidate/skills/propose`, employer JobForm sau pass `/employer/skills/propose`). Sidebar nav "💡 Đề xuất kỹ năng" cả 3 role layout. QA cleanup: xoá 1 dummy Skill + Notification sau TC7 → bank về 166 sạch.
+- P9 Candidate Preferences thêm vào roadmap PROJECT_PLAN — concept user đưa cuối session: preferredJobTypes/WorkModes/Locations/Industries + salary range + openToWork → nâng cấp Recommended Jobs scoring.
+
+**Why / Rationale:**
+- **Slugify VN dấu trong backend** thay vì để DB trigger: `slug = name.toLowerCase().normalize('NFD').replace(combiningMarks).replace(đ→d).replace(non-alphanumeric→space).trim().replace(spaces→hyphen)`. Service-layer dễ test + nhất quán giữa Skill seed (`skill-<slug>`) và proposal approve (`<slug>`).
+- **Approve trong `$transaction` 1 lượt** (create Skill + update proposal + insert Notification): nếu Notification insert fail thì rollback cả Skill → tránh state lệch (Skill có nhưng user không biết). Slug collision check **bên ngoài** transaction (findUnique) vì tx isolation default không strict enough cho race condition — chấp nhận risk nhỏ vì admin approve thủ công, không concurrent.
+- **listForAdmin manual user join thay relation Prisma**: model `SkillProposal` không có FK `User` (chỉ store `proposedById` text), tránh phụ thuộc cascade. Tradeoff: thêm 1 query nhưng giữ model đơn giản, dễ migrate sau.
+- **Shared component `SkillProposeForm` với prop `roleLabel`** thay 2 form trùng lặp: cùng UI/UX, chỉ khác heading. Admin có riêng table page (workflow khác hẳn) nên không reuse component.
+- **Empty-state CTA dùng `<a href>` thay `<Link>`**: combobox đặt trong nhiều page khác nhau, Next router state có thể conflict; native anchor đảm bảo navigation luôn work + browser back button hợp lý. `?q={query}` prefill qua useSearchParams.
+- **Suspense bọc 3 page**: Next 14 yêu cầu `useSearchParams` phải trong Suspense boundary, nếu không build sẽ fail Vercel deploy.
+- **`Notification.metadata` lưu `{proposalId, skillId, skillSlug}`** thay vì chỉ message: sau này UI notification có thể deep-link tới `/candidate/profile?addSkill=<slug>` để 1-click thêm skill mới được duyệt vào CV.
+- **Validation 2 vòng (Zod schema + service)**: Zod chặn shape malformed (length, enum), service chặn business rule (skill exists, dup PENDING). Không gộp được vì service cần DB query.
+- **Reject bắt buộc `adminNote` ≥1 char** (Zod `.min(1)`): trừng phạt accident click + ép admin giải thích lý do trong Notification → user hiểu tại sao bị từ chối.
+- **P9 đặt cuối roadmap** (không chen ngang): user đưa ý tưởng cuối session, nhưng Skill Bank đang dở P2-P8 — phải đóng vòng skill trước rồi mới sang preferences. Skill và preference cùng vào Recommended Job Score nên hợp nhất natural ở P9 sau khi skill ổn định.
+
+**Verified:** Production QA Playwright 8/8 PASS — `qa-scripts/skill-p5/qa.js` trên `job-hub-two.vercel.app`. TC1 POST 201 + TC2 dup PENDING → 409 `PROPOSAL_PENDING` + TC3 propose "React" → 409 `SKILL_EXISTS` + TC4 GET /mine includes new + TC5 page render + prefill `?q=Test` + TC6 admin GET PENDING sees new + TC7 admin approve → Skill xuất hiện trong /skills/search bank + TC8 mobile 375 bodyW=375.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P2 — Demand & Trending** hoặc **P4 — Employer + Match Score** (tuỳ ưu tiên user). Lý do gợi ý P2/P4 thay P6/P7: P2 cho ra số thật trong jobCount badge (hiện đang =0) — visible win ngay. P4 đưa SkillCombobox vào employer JobForm chuẩn hoá 2 chiều — giải pain point thật khi seed/Job Match Score hiện so text raw. P6 (pg_trgm similar) hay nhưng cần dữ liệu nhiều mới có giá trị; P7 (legacy migration) hiện không có user thật chỉ seed nên defer. Effort P2 ~1.5h (cron-like recompute trigger trên job create/delete + endpoint trending), P4 ~1.5h. File P2: `backend/src/services/skill.service.ts` thêm `recomputeJobCounts`, `cron/skill-trending.ts` hoặc gọi trong job.service.create/delete. File P4: `frontend/src/components/employer/JobForm.tsx` thay free-text skills bằng SkillCombobox proposeBasePath=/employer.
+
+**Blocker:** Không có. Render Manual Deploy ổn.
+
+---
+
 ## Session 38 — 2026-06-06
 
 **Commits:** `c0ec2f6` feat(skill-P1) skill bank foundation — 166 skills + strict combobox.
