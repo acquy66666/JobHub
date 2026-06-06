@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { formatApplicationStatus, formatJobType, formatWorkMode, formatSalary, timeAgo } from "@/lib/formatters";
 import { scoreColor } from "@/lib/matchScore";
 import { getRecentlyViewed, RecentlyViewedJob } from "@/lib/recentlyViewed";
+import { skillsApi } from "@/lib/api/skills";
 import api from "@/lib/api";
 import Link from "next/link";
 
@@ -18,6 +20,7 @@ const NOTIF_TYPE_ICON: Record<string, string> = {
 };
 
 export default function CandidateDashboard() {
+  const router = useRouter();
   const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedJob[]>([]);
 
   useEffect(() => {
@@ -27,6 +30,20 @@ export default function CandidateDashboard() {
   const { data: profile } = useQuery({
     queryKey: queryKeys.candidateProfile(),
     queryFn: () => api.get("/candidate/profile").then((r) => r.data),
+  });
+
+  useEffect(() => {
+    if (!profile) return;
+    const skipped = typeof window !== "undefined" && window.localStorage.getItem("onboarding_skipped") === "1";
+    if (!skipped && (profile.skills?.length ?? 0) === 0) {
+      router.replace("/candidate/onboarding");
+    }
+  }, [profile, router]);
+
+  const { data: trendingSkills = [] } = useQuery({
+    queryKey: ["skills", "trending", "dashboard", 8],
+    queryFn: () => skillsApi.listTrending(8),
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: appsData } = useQuery({
@@ -242,6 +259,34 @@ export default function CandidateDashboard() {
                   </Link>
                 );
               })}
+            </div>
+          </div>
+        </ScrollReveal>
+      )}
+
+      {/* TOP KỸ NĂNG ĐANG TUYỂN */}
+      {trendingSkills.length > 0 && (
+        <ScrollReveal direction="up" delay={0.09}>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-[14px] font-bold text-t0">🔥 Top kỹ năng đang tuyển</h3>
+                <p className="text-[11px] text-t2 mt-0.5">Snapshot theo nhu cầu hiện tại — click để xem tin liên quan</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2" data-testid="dashboard-trending">
+              {trendingSkills.map((skill) => (
+                <Link
+                  key={skill.slug}
+                  href={`/jobs?keyword=${encodeURIComponent(skill.nameVi)}`}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-bg-2 border border-border-dark text-[13px] font-medium text-t1 hover:border-[rgba(124,58,237,.38)] hover:text-t0 transition-all"
+                >
+                  {skill.nameVi}
+                  <span className="text-[10px] text-[#4ADE80] bg-[rgba(34,197,94,.08)] border border-[rgba(34,197,94,.2)] rounded px-1.5 py-0.5">
+                    {skill.jobCount} tin
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
         </ScrollReveal>
