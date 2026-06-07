@@ -204,6 +204,7 @@ model Candidate {
   summary         String?
   location        String?
   skills          String[]
+  legacySkills    String[]      @default([])
   cvUrl           String?
   cvFileName      String?
   publicSlug      String?       @unique

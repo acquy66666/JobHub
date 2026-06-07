@@ -61,6 +61,10 @@ export const candidateService = {
       data.skills = slugs;
     }
 
+    if (Array.isArray(data.legacySkills)) {
+      data.legacySkills = (data.legacySkills as string[]).filter((s) => typeof s === 'string' && s.length > 0);
+    }
+
     let avatarUrl = candidate.avatarUrl;
     if (avatarBuffer) {
       avatarUrl = await uploadToCloudinary(avatarBuffer, 'candidate-avatars', 'image');

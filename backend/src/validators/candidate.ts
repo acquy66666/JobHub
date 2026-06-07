@@ -7,6 +7,7 @@ export const updateProfileSchema = z.object({
   summary: z.string().optional(),
   location: z.string().optional(),
   skills: z.array(z.string()).optional(),
+  legacySkills: z.array(z.string()).optional(),
 });
 
 export const addExperienceSchema = z.object({

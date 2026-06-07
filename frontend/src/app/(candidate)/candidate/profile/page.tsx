@@ -47,6 +47,7 @@ interface CandidateProfile {
   summary?: string;
   location?: string;
   skills?: string[];
+  legacySkills?: string[];
   cvUrl?: string;
   cvFileName?: string;
   avatarUrl?: string;
@@ -163,6 +164,30 @@ export default function CandidateProfilePage() {
           {/* Skills */}
           <div>
             <label className={labelClass}>Kỹ năng</label>
+            {profile?.legacySkills && profile.legacySkills.length > 0 && (
+              <div data-testid="legacy-skills-banner" className="mb-3 p-3 rounded-xl border border-[rgba(245,158,11,.3)] bg-[rgba(245,158,11,.06)]">
+                <p className="text-[12px] text-[#FCD34D] font-semibold mb-2">
+                  ⚠️ Có {profile.legacySkills.length} kỹ năng cũ chưa khớp với hệ thống mới
+                </p>
+                <p className="text-[11px] text-t1 mb-2">Hãy chọn lại từ danh sách bên dưới rồi xoá các mục cũ này.</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {profile.legacySkills.map((txt) => (
+                    <span key={txt} className="inline-flex items-center gap-1 bg-bg-3 border border-[rgba(245,158,11,.25)] text-[#FCD34D] px-2.5 py-1 rounded-full text-[11px]">
+                      {txt}
+                      <button
+                        type="button"
+                        aria-label={`Xoá ${txt}`}
+                        onClick={() => {
+                          const next = (profile.legacySkills ?? []).filter((s) => s !== txt);
+                          api.put("/candidate/profile", { legacySkills: next }).then(() => qc.invalidateQueries({ queryKey: queryKeys.candidateProfile() }));
+                        }}
+                        className="ml-0.5 text-[#FCD34D]/60 hover:text-red-400"
+                      >×</button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
             <SkillCombobox value={skills} onChange={setSkills} />
             <p className="mt-1.5 text-[11px] text-[#55556A]">Chọn từ ngân hàng kỹ năng. Tìm theo tên tiếng Việt / Anh / viết tắt.</p>
           </div>
