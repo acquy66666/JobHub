@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 43 — Stage 10 Skill Bank P6 Similar Suggestion DONE, QA 6/6 PASS)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P3 ✅ + P4 ✅ + P5 ✅ + P6 ✅ / P7-P9 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1-P6 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 44 — Stage 10 Skill Bank P7 Legacy Migration DONE, QA 6/6 PASS)
+Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P3 ✅ + P4 ✅ + P5 ✅ + P6 ✅ + P7 ✅ / P8-P9 pending)
+Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1-P7 ✅ | Toàn dự án production-ready
 
 ---
 
@@ -479,8 +479,13 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [x] Debounce query 300ms, useQuery enabled khi `debouncedQuery.length>=2 && totalFiltered===0`
   - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p6/qa.js`): TC0 reactt→react sim=0.625 + TC4 javascrip→javascript sim=0.75 + TC1 UI suggestion box render + TC2 click → chip add + query clear + TC3 nonsense → CTA only + TC5 mobile 375 bodyW=375
 
-- **P7 — Legacy Migration (pending)**
-  - [ ] Script fuzzy-match `Candidate.skills String[]` free-text cũ → slug; unmatched flag để user re-pick lần login sau
+- **P7 — Legacy Migration** ✅ DONE (session 44, commit `0a3814b`)
+  - [x] Prisma `Candidate.legacySkills String[] @default([])` + Supabase migration `candidate_legacy_skills_p7`
+  - [x] Backend service + validator accept `legacySkills` array (no slug validation; text tự do)
+  - [x] Script `backend/scripts/migrate-candidate-skills.ts` (dry-run default, `--apply` to commit) — exact-match nameVi/nameEn/aliases/slug case-insensitive → pg_trgm GREATEST similarity > 0.5 → push unmatched to legacySkills
+  - [x] Frontend amber banner trên `/candidate/profile` khi `legacySkills.length > 0` với chip × để xoá sau khi user re-pick từ bank
+  - [x] Applied production: 33 candidates, 66 exact + 2 trigram matches, 95 unmapped (tools không có trong bank — banner prompts re-pick/propose)
+  - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p7/qa.js`): TC0 PUT accept + TC1 banner render + TC2 click × remove + TC3 GET profile field + TC4 regression /skills/similar + TC5 mobile 375
 
 - **P8 — Polish (defer)**
   - [ ] Admin merge duplicate skill (update all references)

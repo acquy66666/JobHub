@@ -4,6 +4,32 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 44 — 2026-06-06
+
+**Commits:** `0a3814b` feat(skill-P7) legacy candidate.skills migration via pg_trgm.
+
+**Done:**
+- Stage 10 P7 ✅ — Prisma `Candidate.legacySkills` + Supabase migration + service/validator accept + migration script (exact → trigram 0.5 → legacy bucket) + applied production (66 exact + 2 trigram + 95 legacy) + FE amber banner `/candidate/profile` cho chip × clear sau re-pick.
+
+**Why / Rationale:**
+- **Tách `legacySkills` thành column riêng thay vì trộn vào `skills`**: `skills` đã invariant chứa toàn slug hợp lệ (P1 validateSlugs throw 422 nếu fake) — trộn legacy text vào sẽ phá recommended-jobs scoring (intersect by slug) + match score + skill chip render. Banner riêng signal rõ "đây là dữ liệu chưa convert".
+- **Threshold 0.5 cho migration (vs 0.3 cho UI P6)**: migration là one-way write, sai → user phải sửa thủ công; UI suggestion thì user chọn → reversible. 0.5 đủ chặt: "Reactjs" → react chắc chắn, nhưng "Tailwind" (không có nameVi/nameEn nào gần) sẽ rớt → legacy bucket thay vì map sai vào "Tailing" giả định.
+- **Exact-match index `nameVi/nameEn/aliases/slug` (lower)**: bắt 66/163 trước khi gọi DB pg_trgm — nhanh hơn nhiều (1 in-memory Map lookup vs query SQL). Aliases là field đã sẵn cho synonym ("ML" → "Machine Learning") không cần trigram.
+- **Script standalone trong `backend/scripts/` chứ không qua admin endpoint**: chạy 1 lần, không cần expose route permanent. Dùng `PrismaPg adapter + dotenv` y như `src/lib/prisma.ts` (Prisma 7 require explicit adapter). User chạy local `npx tsx`, không tốn Render Shell.
+- **Dry-run mặc định, `--apply` opt-in**: tránh tai nạn write production. In summary + 12 samples trước commit để user verify.
+- **95/163 unmapped là acceptable**: bank 166 skill focus IT/marketing/finance core; tools cụ thể như "Tailwind", "Zustand", "Prisma", "Jest", "Terraform", "Dart", "Sketch", "Adobe XD" thiếu — đúng kỳ vọng. Banner sẽ prompt candidate re-pick từ skill có sẵn (vd "React" → đã có) hoặc đề xuất (P5 flow). Không cố mở rộng bank trong P7 scope.
+- **UI banner amber thay đỏ**: warning chứ không phải error; candidate vẫn xài hồ sơ bình thường, banner chỉ nudge re-pick.
+
+**Verified:** Production QA Playwright 6/6 PASS — `qa-scripts/skill-p7/qa.js`. TC0 PUT /candidate/profile body `{legacySkills}` 200 (validator accept) + TC1 banner render `[data-testid="legacy-skills-banner"]` + 2 chip "LegacyTestSkill1/2" + TC2 click button[aria-label="Xoá ..."] → reload → 1 chip remaining + TC3 GET /candidate/profile returns `legacySkills:["LegacyTestSkill2"]` + TC4 regression /skills/similar?q=reactt → top=react (P6 không vỡ) + TC5 mobile 375 bodyW=375 + cleanup PUT legacySkills=[].
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** Stage 10 **P9 — Candidate Preferences** (skip P8 polish vì merge duplicates + voting là admin-tooling, không critical cho demo đồ án). Lý do ưu tiên P9: nâng UX recommended-jobs scoring + filter `/jobs` 1-click, value cho candidate thấy ngay; P8 chỉ phục vụ admin maintenance. Scope: (a) Prisma `Candidate` thêm `preferredJobTypes JobType[]`, `preferredWorkModes WorkMode[]`, `preferredLocations String[]`, `preferredIndustries String[]`, `preferredSalaryMin Int?`, `preferredSalaryMax Int?`, `openToWork Boolean @default(true)` + Supabase migration. (b) Backend `updateProfile` accept preference fields + validators. (c) Frontend section "Sở thích công việc" trên `/candidate/profile` với multi-select chip (jobType/workMode/location/industry) + salary range slider + toggle "Đang tìm việc". (d) [recommendation.service.ts](backend/src/services/recommendation.service.ts) cộng `+0.15` jobType match, `+0.15` workMode match, `+0.1` location match; exclude job nếu `salaryMax < preferredSalaryMin`. (e) Nút "Lọc theo sở thích" trên `/jobs` auto-apply filter. Effort ~2h.
+
+**Blocker:** Không có. P7 đóng sạch.
+
+---
+
 ## Session 43 — 2026-06-06
 
 **Commits:** `8cd7e4a` feat(skill-P6) similar skill suggestion via pg_trgm.
