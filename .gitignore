@@ -29,3 +29,13 @@ backend/src/generated/
 # Notes chứa credentials
 note.txt
 backend/.env.production
+
+# QA artifacts (production scripts + screenshots — local-only)
+qa-scripts/
+screenshots/qa_*.png
+screenshots/qa_*.jpg
+.claude/scheduled_tasks.lock
+
+# Root package.json (chỉ dùng cho Playwright local, không deploy)
+/package.json
+/package-lock.json
