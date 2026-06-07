@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Session 46 (2026-06-07) — Stage 11 P1 Certificate Bank DONE + QA 6/6 PASS:** Commits `fa16dbc` feat + `6e3dca1` fix authGuard req.user.userId + `08f7fcb` fix Vercel ESLint. Prisma `Certificate` + `CandidateCertificate` + 3 enums (CertificateCategory 10/Level BASIC-EXPERT/Status PENDING-APPROVED-REJECTED) + Supabase migration `certificate_bank_p1` + 2 NotificationType + 2 AuditAction + AuditTargetType CANDIDATE_CERTIFICATE. Subagent seed **103 cert** (LANG 20/CLOUD 14/NET 8/SEC 9/DEV 12/PM 10/FIN 11/MKT 9/DESIGN 5/OTHER 5). Backend [certificate.service.ts](backend/src/services/certificate.service.ts) + 3 routes ([/certificates](backend/src/routes/certificates.ts) public, [/candidate/certificates](backend/src/routes/candidate-certificates.ts) multer 5MB PDF/PNG/JPG/WebP, [/admin/certificates](backend/src/routes/admin-certificates.ts) queue approve/reject). Approve+reject `$transaction` Notification + AuditLog. [public.getPublicProfile](backend/src/services/candidate.service.ts) include certificates filter APPROVED. Frontend [lib/api/certificates.ts](frontend/src/lib/api/certificates.ts) + 3 component [CertificateCombobox](frontend/src/components/certificates/CertificateCombobox.tsx) + [UploadModal](frontend/src/components/certificates/CertificateUploadModal.tsx) + [Section](frontend/src/components/certificates/CertificatesSection.tsx) mount sau prefs trong [(candidate)/profile/page.tsx](frontend/src/app/(candidate)/candidate/profile/page.tsx). [(admin)/admin/certificates/page.tsx](frontend/src/app/(admin)/admin/certificates/page.tsx) 4-tab queue + table + reject modal. [/u/[slug]](frontend/src/app/u/[slug]/page.tsx) section APPROVED only. **Manual Deploy Render** sau backend hotfix. **QA Playwright production 6/6 PASS** (`qa-scripts/cert-p1/qa.js`). Stage 11 P2-P4 pending.
+
+**Current stage:** Stage 11 — Match Optimization (P1 ✅, P2-P4 pending). Stage 1-10 ✅.
+
 ## Project
 
 **JobHub** — full-stack recruitment website (đồ án tốt nghiệp). 3 user roles: Candidate, Employer, Admin. Dark theme inspired by Status.app.

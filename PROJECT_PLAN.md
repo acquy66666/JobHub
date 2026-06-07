@@ -1,6 +1,14 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 45 — Stage 10 Skill Bank P9 Candidate Preferences DONE, QA 6/6 PASS → Stage 10 COMPLETE)
+Last Updated: 2026-06-07 (session 46 — Stage 11 P1 Certificate Bank DONE, QA 6/6 PASS)
+
+Stage 11 — Match Optimization (in progress):
+- [x] P1 Certificate Bank (2026-06-07, `fa16dbc`+`6e3dca1`+`08f7fcb`, QA 6/6 PASS) — 103 certs seeded, candidate upload+admin moderation, public profile show APPROVED only
+- [ ] P2 Experience Tier on Jobs
+- [ ] P3 Gap Analysis on Saved Jobs
+- [ ] P4 Match Score v2 consolidated
+
+Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
 Status: Toàn bộ Stage 1-10 ✅ COMPLETE | Dự án production-ready, không còn task pending
 

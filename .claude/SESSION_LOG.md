@@ -2,6 +2,31 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 46 — 2026-06-07
+
+**Commits:** `fa16dbc` feat(cert-P1), `6e3dca1` fix authGuard req.user.userId, `08f7fcb` fix Vercel ESLint quotes
+
+**Done:** Stage 11 P1 Certificate Bank — bank 103 certs (10 category) + candidate upload với moderation workflow + admin queue approve/reject + public profile show APPROVED only. Memory: lưu 2 rule mới `feedback_report_token_usage` + `feedback_token_budget_planning`.
+
+**Why / Rationale:**
+- **Bank chuẩn hoá thay free-text** — giống Skill Bank, cross-reference được cho recommendation (P4) + gap analysis (P3). "AWS" vs "Amazon Web Services" sẽ vỡ matching.
+- **Moderation PENDING→APPROVED/REJECTED** thay vì trust 100%: user yêu cầu admin verify file trước khi public. `/u/{slug}` filter status=APPROVED.
+- **CandidateCertificate model riêng** (junction with fileUrl/dates/score/status) thay vì array slug — không flatten được metadata per-cert.
+- **Multer riêng cho cert** không reuse uploadPdf của CV — cert thường là ảnh chụp giấy (PNG/JPG/WebP) hoặc PDF.
+- **103 cert (không tròn 100)**: subagent verify thực từng cert tồn tại, dư 3 trong tolerance ±5.
+- **Bug authGuard userId**: copy-paste pattern sai `(req as Request & { userId: string }).userId` → đáng lẽ là `req.user.userId` từ AuthRequest. Pattern này hay copy nhầm trong các route mới — đáng nhớ cho session sau.
+- **Vercel ESLint strict** chặn `"` literal trong JSX (đã gặp BUG-10 trước, tái phát). Phải `&ldquo;`/`&rdquo;` từ đầu.
+
+**Verified:** Production QA Playwright 6/6 PASS (`qa-scripts/cert-p1/qa.js` — TC1 search + TC2 by-category 103 + TC3 upload PENDING + TC4 approve+public render + TC5 reject+note + TC6 mobile 375).
+
+**Bugs phát hiện mới:** Không có. 2 bug session đều fix in-session.
+
+**Next Action:** Stage 11 P2 — Experience Tier on Jobs. Schema: `Job.experienceTier` enum (NO_EXP/JUNIOR/MIDDLE/SENIOR/LEAD) + `experienceYearsMin/Max Int?`. Recommendation bonus +0.10 khi tier match + soft penalty khi candidate dưới min. JobForm step 2 radio + JobCard badge + filter ?tier=.
+
+**Blocker:** Không có. Render auto-deploy webhook vẫn hay broken (Manual Deploy mỗi backend change).
+
+
+
 ---
 
 ## Session 45 — 2026-06-06
