@@ -33,8 +33,11 @@ export default function CertificatesSection() {
     >
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-[18px] font-bold text-t0">📜 Chứng chỉ</h2>
-          <p className="text-[12px] text-t2 mt-0.5">
+          <h2 className="text-[18px] font-bold text-t0 flex items-center gap-2">
+            <span aria-hidden>📜</span>
+            <span>Chứng chỉ</span>
+          </h2>
+          <p className="text-[12px] text-t2 mt-1.5">
             Chứng chỉ giúp hồ sơ tăng tính cạnh tranh. Cần admin duyệt trước khi hiển thị công khai.
           </p>
         </div>
@@ -74,8 +77,9 @@ export default function CertificatesSection() {
                 <div className="text-[11px] text-t2 mt-1 flex gap-3 flex-wrap">
                   {c.issuedDate && <span>Cấp: {new Date(c.issuedDate).toLocaleDateString("vi-VN")}</span>}
                   {c.expiryDate && <span>Hết hạn: {new Date(c.expiryDate).toLocaleDateString("vi-VN")}</span>}
-                  <a href={c.fileUrl} target="_blank" rel="noreferrer" className="text-purple-300 hover:text-purple-200 underline">
-                    📎 {c.fileName}
+                  <a href={c.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-purple-300 hover:text-purple-200 underline">
+                    <span aria-hidden>📎</span>
+                    <span>{c.fileName}</span>
                   </a>
                 </div>
                 {c.status === "REJECTED" && c.adminNote && (
