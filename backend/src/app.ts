@@ -17,6 +17,9 @@ import paymentWebhookRouter from './routes/payment-webhook';
 import adminBillingRouter from './routes/admin-billing';
 import skillRouter from './routes/skills';
 import skillProposalRouter from './routes/skill-proposal';
+import certificateRouter from './routes/certificates';
+import candidateCertificateRouter from './routes/candidate-certificates';
+import adminCertificateRouter from './routes/admin-certificates';
 import { errorHandler } from './middlewares/errorHandler';
 
 const app = express();
@@ -40,6 +43,9 @@ app.use('/api/payments', paymentWebhookRouter);
 app.use('/api/admin', adminBillingRouter);
 app.use('/api/skills', skillRouter);
 app.use('/api/skill-proposals', skillProposalRouter);
+app.use('/api/certificates', certificateRouter);
+app.use('/api/candidate/certificates', candidateCertificateRouter);
+app.use('/api/admin/certificates', adminCertificateRouter);
 
 app.use(errorHandler);
 

@@ -513,14 +513,18 @@ export const candidateService = {
       include: {
         experiences: { orderBy: { startDate: 'desc' } },
         educations: { orderBy: { startYear: 'desc' } },
+        certificates: {
+          where: { status: 'APPROVED' },
+          include: { certificate: { select: { slug: true, nameVi: true, nameEn: true, issuer: true, category: true, level: true } } },
+          orderBy: { issuedDate: 'desc' },
+        },
       },
     });
     if (!candidate || !candidate.isPublicProfile) {
       throw Object.assign(new Error('Hồ sơ không tồn tại hoặc chưa được công khai'), { status: 404 });
     }
-    // Chỉ trả về field public, không trả phone/email/cvUrl
-    const { id, fullName, avatarUrl, headline, summary, location, skills, experiences, educations } = candidate;
-    return { id, fullName, avatarUrl, headline, summary, location, skills, experiences, educations };
+    const { id, fullName, avatarUrl, headline, summary, location, skills, experiences, educations, certificates } = candidate;
+    return { id, fullName, avatarUrl, headline, summary, location, skills, experiences, educations, certificates };
   },
 
   async deleteCv(userId: string, cvId: string) {

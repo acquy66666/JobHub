@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/admin/packages", label: "Gói credit", icon: "📦" },
   { href: "/admin/coupons", label: "Mã giảm giá", icon: "🎟️" },
   { href: "/admin/skills/proposals", label: "Đề xuất kỹ năng", icon: "💡" },
+  { href: "/admin/certificates", label: "Duyệt chứng chỉ", icon: "📜" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

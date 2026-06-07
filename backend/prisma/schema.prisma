@@ -83,6 +83,8 @@ enum AuditAction {
   PACKAGE_CREATED
   PACKAGE_UPDATED
   CREDITS_GRANTED
+  CERTIFICATE_APPROVE
+  CERTIFICATE_REJECT
 }
 
 enum AuditTargetType {
@@ -92,6 +94,7 @@ enum AuditTargetType {
   COUPON
   PACKAGE
   EMPLOYER_CREDITS
+  CANDIDATE_CERTIFICATE
 }
 
 enum JobAlertFrequency {
@@ -111,6 +114,8 @@ enum NotificationType {
   PAYMENT_FAILED
   SKILL_PROPOSAL_APPROVED
   SKILL_PROPOSAL_REJECTED
+  CERTIFICATE_APPROVED
+  CERTIFICATE_REJECTED
   SYSTEM
 }
 
@@ -225,6 +230,71 @@ model Candidate {
   jobAlerts         JobAlert[]
   followedCompanies FollowedCompany[]
   cvFiles           CandidateCV[]
+  certificates      CandidateCertificate[]
+}
+
+enum CertificateCategory {
+  LANGUAGE
+  IT_CLOUD
+  IT_NETWORK
+  IT_SECURITY
+  IT_DEV
+  PROJECT_MGMT
+  FINANCE
+  MARKETING
+  DESIGN
+  OTHER
+}
+
+enum CertificateLevel {
+  BASIC
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+}
+
+enum CandidateCertificateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Certificate {
+  id              String                @id
+  slug            String                @unique
+  nameVi          String
+  nameEn          String?
+  issuer          String
+  category        CertificateCategory
+  level           CertificateLevel?
+  validityMonths  Int?
+  description     String?
+  createdAt       DateTime              @default(now())
+  candidateCerts  CandidateCertificate[]
+
+  @@index([category])
+}
+
+model CandidateCertificate {
+  id               String                      @id @default(cuid())
+  candidateId      String
+  candidate        Candidate                   @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  certificateSlug  String
+  certificate      Certificate                 @relation(fields: [certificateSlug], references: [slug])
+  fileUrl          String
+  fileName         String
+  fileMime         String
+  issuedDate       DateTime?
+  expiryDate       DateTime?
+  score            String?
+  status           CandidateCertificateStatus  @default(PENDING)
+  adminNote        String?
+  reviewedAt       DateTime?
+  reviewedBy       String?
+  uploadedAt       DateTime                    @default(now())
+
+  @@index([candidateId, status])
+  @@index([status])
 }
 
 model CandidateCV {

@@ -8,6 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import SkillCombobox from "@/components/skills/SkillCombobox";
+import CertificatesSection from "@/components/certificates/CertificatesSection";
 
 const profileSchema = z.object({
   fullName: z.string().min(2, "Tên ít nhất 2 ký tự"),
@@ -353,6 +354,11 @@ export default function CandidateProfilePage() {
             {saved && <span className="text-[13px] text-green-400">✓ Đã lưu</span>}
           </div>
         </div>
+      </ScrollReveal>
+
+      {/* Certificates */}
+      <ScrollReveal direction="up" delay={0.08}>
+        <CertificatesSection />
       </ScrollReveal>
 
       {/* Experiences */}

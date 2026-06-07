@@ -31,6 +31,13 @@ interface PublicProfile {
     startYear: number;
     endYear: number | null;
   }>;
+  certificates: Array<{
+    id: string;
+    score: string | null;
+    issuedDate: string | null;
+    expiryDate: string | null;
+    certificate: { slug: string; nameVi: string; nameEn: string | null; issuer: string; category: string; level: string | null };
+  }>;
 }
 
 function formatDateRange(start: string, end: string | null, isCurrent: boolean) {
@@ -196,6 +203,30 @@ export default function PublicProfilePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </ScrollReveal>
+          )}
+
+          {/* Certificates */}
+          {profile.certificates && profile.certificates.length > 0 && (
+            <ScrollReveal direction="up" delay={0.15}>
+              <div className="card-dark rounded-2xl p-6" data-testid="public-certificates">
+                <h2 className="text-[15px] font-bold text-t0 mb-4">📜 Chứng chỉ</h2>
+                <ul className="space-y-3">
+                  {profile.certificates.map((cc) => (
+                    <li key={cc.id} className="flex items-start gap-3 p-3 bg-bg-3 border border-border-dark rounded-xl">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-t0 text-[14px]">{cc.certificate.nameVi}</p>
+                        <p className="text-[12px] text-t2 mt-0.5">{cc.certificate.issuer}</p>
+                        {cc.score && <p className="text-[12px] text-t1 mt-1">Điểm: <span className="font-semibold">{cc.score}</span></p>}
+                        <div className="text-[11px] text-t2 mt-1 flex gap-3 flex-wrap">
+                          {cc.issuedDate && <span>Cấp: {new Date(cc.issuedDate).toLocaleDateString("vi-VN")}</span>}
+                          {cc.expiryDate && <span>Hết hạn: {new Date(cc.expiryDate).toLocaleDateString("vi-VN")}</span>}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </ScrollReveal>
           )}
