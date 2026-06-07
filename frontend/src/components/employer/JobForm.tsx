@@ -30,8 +30,20 @@ const jobSchema = z.object({
   expiresAt: z.string().min(1, "Chọn ngày hết hạn"),
   tier: z.enum(["BASIC", "PREMIUM", "VIP"]),
   skillSlugs: z.array(z.string()).max(20, "Tối đa 20 kỹ năng").optional(),
+  experienceTier: z.enum(["NO_EXP", "JUNIOR", "MIDDLE", "SENIOR", "LEAD"]),
+  experienceYearsMin: z.number().int().min(0).max(50).optional().nullable(),
+  experienceYearsMax: z.number().int().min(0).max(50).optional().nullable(),
 });
 type JobForm = z.infer<typeof jobSchema>;
+type ExpTier = JobForm["experienceTier"];
+
+const EXP_TIER_META: Record<ExpTier, { label: string; years: [number, number]; emoji: string }> = {
+  NO_EXP: { label: "Không yêu cầu", years: [0, 0], emoji: "🌱" },
+  JUNIOR: { label: "Junior", years: [1, 2], emoji: "🌿" },
+  MIDDLE: { label: "Middle", years: [3, 4], emoji: "🌳" },
+  SENIOR: { label: "Senior", years: [5, 7], emoji: "🏆" },
+  LEAD: { label: "Lead / Manager", years: [8, 99], emoji: "👑" },
+};
 
 const TIER_TAGLINE: Record<JobTier, string> = {
   BASIC: "Tin thường · hạn 30 ngày",
@@ -98,6 +110,7 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
       salaryCurrency: "VND",
       tier: "BASIC",
       skillSlugs: [],
+      experienceTier: "NO_EXP",
       ...defaultValues,
     },
   });
@@ -349,8 +362,45 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
             <label className={labelClass}>Quyền lợi</label>
             <textarea {...register("benefits")} rows={3} placeholder="Lương thưởng, bảo hiểm, các phúc lợi khác..." className={`${inputClass} resize-none`} />
           </div>
+          <div>
+            <label className={labelClass}>Cấp độ kinh nghiệm *</label>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2.5 mt-2" data-testid="exp-tier-grid">
+              {(Object.keys(EXP_TIER_META) as ExpTier[]).map((t) => {
+                const meta = EXP_TIER_META[t];
+                const checked = watched.experienceTier === t;
+                return (
+                  <label
+                    key={t}
+                    data-exp-tier={t}
+                    className={`flex flex-col items-center gap-1 p-3 rounded-xl border cursor-pointer transition-colors ${checked ? "border-primary bg-[rgba(124,58,237,.1)]" : "border-border-dark hover:border-[rgba(124,58,237,.3)]"}`}
+                  >
+                    <input
+                      type="radio"
+                      value={t}
+                      {...register("experienceTier")}
+                      onChange={(e) => {
+                        const tier = e.target.value as ExpTier;
+                        setValue("experienceTier", tier, { shouldDirty: true });
+                        const [yMin, yMax] = EXP_TIER_META[tier].years;
+                        setValue("experienceYearsMin", yMin, { shouldDirty: true });
+                        setValue("experienceYearsMax", yMax, { shouldDirty: true });
+                      }}
+                      className="hidden"
+                    />
+                    <span className="text-[18px]">{meta.emoji}</span>
+                    <span className={`text-[12px] font-semibold ${checked ? "text-t0" : "text-t1"}`}>{meta.label}</span>
+                    <span className="text-[10px] text-t2">{meta.years[0] === meta.years[1] ? `${meta.years[0]} năm` : `${meta.years[0]}-${meta.years[1] === 99 ? "+" : meta.years[1]} năm`}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className={labelClass}>Số năm KN tối thiểu</label><input type="number" {...register("experienceYearsMin", { valueAsNumber: true })} placeholder="0" className={inputClass} /></div>
+            <div><label className={labelClass}>Số năm KN tối đa</label><input type="number" {...register("experienceYearsMax", { valueAsNumber: true })} placeholder="2" className={inputClass} /></div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div><label className={labelClass}>Kinh nghiệm</label><input {...register("experience")} placeholder="VD: 2-3 năm" className={inputClass} /></div>
+            <div><label className={labelClass}>Mô tả KN (tuỳ chọn)</label><input {...register("experience")} placeholder="VD: 2-3 năm React" className={inputClass} /></div>
             <div><label className={labelClass}>Lương tối thiểu (VND)</label><input type="number" {...register("salaryMin", { valueAsNumber: true })} placeholder="15000000" className={inputClass} /></div>
             <div><label className={labelClass}>Lương tối đa (VND)</label><input type="number" {...register("salaryMax", { valueAsNumber: true })} placeholder="25000000" className={inputClass} /></div>
           </div>

@@ -27,9 +27,34 @@ export const createJobSchema = z.object({
   expiresAt: z.string().datetime('Ngày hết hạn không hợp lệ'),
   tier: z.enum(['BASIC', 'PREMIUM', 'VIP']).optional().default('BASIC'),
   skillSlugs: z.array(z.string()).max(20, 'Tối đa 20 kỹ năng').optional(),
-});
+  experienceTier: z.enum(['NO_EXP', 'JUNIOR', 'MIDDLE', 'SENIOR', 'LEAD']).optional().default('NO_EXP'),
+  experienceYearsMin: z.coerce.number().int().min(0).max(50).optional().nullable(),
+  experienceYearsMax: z.coerce.number().int().min(0).max(50).optional().nullable(),
+}).refine(
+  (d) => d.experienceYearsMin == null || d.experienceYearsMax == null || d.experienceYearsMax >= d.experienceYearsMin,
+  { message: 'experienceYearsMax phải >= experienceYearsMin', path: ['experienceYearsMax'] },
+);
 
-export const updateJobSchema = createJobSchema.partial();
+export const updateJobSchema = z.object({
+  title: z.string().min(3).optional(),
+  description: z.string().min(20).optional(),
+  requirements: z.string().min(10).optional(),
+  benefits: z.string().optional(),
+  location: z.string().min(2).optional(),
+  jobType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'FREELANCE']).optional(),
+  workMode: z.enum(['ON_SITE', 'REMOTE', 'HYBRID']).optional(),
+  salaryMin: z.number().int().positive().optional(),
+  salaryMax: z.number().int().positive().optional(),
+  salaryCurrency: z.string().optional(),
+  experience: z.string().optional(),
+  industry: z.string().min(2).optional(),
+  expiresAt: z.string().datetime().optional(),
+  tier: z.enum(['BASIC', 'PREMIUM', 'VIP']).optional(),
+  skillSlugs: z.array(z.string()).max(20).optional(),
+  experienceTier: z.enum(['NO_EXP', 'JUNIOR', 'MIDDLE', 'SENIOR', 'LEAD']).optional(),
+  experienceYearsMin: z.coerce.number().int().min(0).max(50).optional().nullable(),
+  experienceYearsMax: z.coerce.number().int().min(0).max(50).optional().nullable(),
+});
 
 export const updateApplicationStatusSchema = z.object({
   status: z.enum(['PENDING', 'REVIEWING', 'ACCEPTED', 'REJECTED']),

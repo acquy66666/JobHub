@@ -56,6 +56,7 @@ interface CandidateProfile {
   preferredSalaryMin?: number | null;
   preferredSalaryMax?: number | null;
   openToWork?: boolean;
+  totalYearsExperience?: number | null;
   cvUrl?: string;
   cvFileName?: string;
   avatarUrl?: string;
@@ -78,6 +79,7 @@ export default function CandidateProfilePage() {
   const [prefSalaryMin, setPrefSalaryMin] = useState<string>("");
   const [prefSalaryMax, setPrefSalaryMax] = useState<string>("");
   const [openToWork, setOpenToWork] = useState<boolean>(true);
+  const [totalYears, setTotalYears] = useState<string>("");
   const [locInput, setLocInput] = useState<string>("");
   const [showExpModal, setShowExpModal] = useState(false);
   const [showEduModal, setShowEduModal] = useState(false);
@@ -103,7 +105,8 @@ export default function CandidateProfilePage() {
     setPrefSalaryMin(profile.preferredSalaryMin ? String(profile.preferredSalaryMin) : "");
     setPrefSalaryMax(profile.preferredSalaryMax ? String(profile.preferredSalaryMax) : "");
     setOpenToWork(profile.openToWork ?? true);
-  }, [profile?.preferredJobTypes?.join(), profile?.preferredWorkModes?.join(), profile?.preferredLocations?.join(), profile?.preferredIndustries?.join(), profile?.preferredSalaryMin, profile?.preferredSalaryMax, profile?.openToWork]);
+    setTotalYears(profile.totalYearsExperience != null ? String(profile.totalYearsExperience) : "");
+  }, [profile?.preferredJobTypes?.join(), profile?.preferredWorkModes?.join(), profile?.preferredLocations?.join(), profile?.preferredIndustries?.join(), profile?.preferredSalaryMin, profile?.preferredSalaryMax, profile?.openToWork, profile?.totalYearsExperience]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -325,6 +328,20 @@ export default function CandidateProfilePage() {
               <label className={labelClass}>Lương kỳ vọng (VND)</label>
               <input type="number" min={0} value={prefSalaryMax} onChange={(e) => setPrefSalaryMax(e.target.value)} placeholder="VD: 30000000" className={inputClass} />
             </div>
+            <div>
+              <label className={labelClass}>Số năm kinh nghiệm tổng</label>
+              <input
+                type="number"
+                min={0}
+                max={50}
+                value={totalYears}
+                onChange={(e) => setTotalYears(e.target.value)}
+                placeholder="VD: 3"
+                data-testid="total-years-input"
+                className={inputClass}
+              />
+              <p className="text-[11px] text-t2 mt-1">Dùng để chấm điểm phù hợp với cấp độ tin tuyển dụng (Junior/Middle/Senior).</p>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 pt-1">
@@ -339,6 +356,7 @@ export default function CandidateProfilePage() {
                   preferredSalaryMin: prefSalaryMin === "" ? null : Number(prefSalaryMin),
                   preferredSalaryMax: prefSalaryMax === "" ? null : Number(prefSalaryMax),
                   openToWork,
+                  totalYearsExperience: totalYears === "" ? null : Number(totalYears),
                 };
                 api.put("/candidate/profile", payload).then(() => {
                   qc.invalidateQueries({ queryKey: queryKeys.candidateProfile() });

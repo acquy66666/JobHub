@@ -142,6 +142,14 @@ enum JobTier {
   VIP
 }
 
+enum ExperienceTier {
+  NO_EXP
+  JUNIOR
+  MIDDLE
+  SENIOR
+  LEAD
+}
+
 enum PaymentProvider {
   VNPAY
   MOMO
@@ -217,6 +225,7 @@ model Candidate {
   preferredSalaryMin   Int?
   preferredSalaryMax   Int?
   openToWork           Boolean    @default(true)
+  totalYearsExperience Int?
   cvUrl           String?
   cvFileName      String?
   publicSlug      String?       @unique
@@ -400,6 +409,9 @@ model Job {
   tier           JobTier       @default(BASIC)
   boostedUntil   DateTime?
   skillSlugs     String[]      @default([])
+  experienceTier      ExperienceTier @default(NO_EXP)
+  experienceYearsMin  Int?
+  experienceYearsMax  Int?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   applications        Application[]
@@ -410,6 +422,7 @@ model Job {
   @@index([status, expiresAt])
   @@index([isFlagged])
   @@index([tier, boostedUntil])
+  @@index([experienceTier])
 }
 
 model Application {

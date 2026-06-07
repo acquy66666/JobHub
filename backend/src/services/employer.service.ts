@@ -2,9 +2,25 @@ import { prisma } from '../lib/prisma';
 import { uploadToCloudinary } from '../lib/cloudinary';
 import { sendApplicationStatusEmail, sendInterviewInviteEmail } from '../utils/email';
 import { createNotification } from './notification.service';
-import { JobStatus, ApplicationStatus, ApplicationTag, NotificationType, InterviewStatus, JobTier } from '../generated/prisma/client';
+import { JobStatus, ApplicationStatus, ApplicationTag, NotificationType, InterviewStatus, JobTier, ExperienceTier } from '../generated/prisma/client';
 import { paymentService, boostedUntilForTier } from './payment.service';
 import { skillService } from './skill.service';
+
+const EXPERIENCE_TIER_YEARS: Record<ExperienceTier, [number, number]> = {
+  NO_EXP: [0, 0],
+  JUNIOR: [1, 2],
+  MIDDLE: [3, 4],
+  SENIOR: [5, 7],
+  LEAD: [8, 99],
+};
+
+function applyExperienceYearsPreset(data: Record<string, unknown>): void {
+  const tier = data.experienceTier as ExperienceTier | undefined;
+  if (!tier) return;
+  const [presetMin, presetMax] = EXPERIENCE_TIER_YEARS[tier];
+  if (data.experienceYearsMin == null) data.experienceYearsMin = presetMin;
+  if (data.experienceYearsMax == null) data.experienceYearsMax = presetMax;
+}
 
 export const employerService = {
   async getProfile(userId: string) {
@@ -79,6 +95,7 @@ export const employerService = {
     // If credit insufficient → throw → tx rollback → Job not committed.
     const { tier: _tier, skillSlugs: _slugs, ...rest } = data as Record<string, unknown> & { tier?: JobTier; skillSlugs?: string[] };
     void _tier; void _slugs;
+    applyExperienceYearsPreset(rest);
     return prisma.$transaction(async (tx) => {
       const newJob = await tx.job.create({
         data: {
@@ -131,6 +148,7 @@ export const employerService = {
     const updateData: Record<string, unknown> = { ...data };
     if (data.expiresAt) updateData.expiresAt = new Date(data.expiresAt as string);
     delete updateData.status;
+    applyExperienceYearsPreset(updateData);
     if (Array.isArray(data.skillSlugs)) {
       const rawSlugs = data.skillSlugs as string[];
       if (rawSlugs.length > 0) {

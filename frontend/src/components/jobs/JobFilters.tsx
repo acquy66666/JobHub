@@ -17,6 +17,15 @@ const WORK_MODES = [
   { value: "HYBRID", label: "Kết hợp" },
 ];
 
+const EXP_TIERS = [
+  { value: "", label: "Tất cả" },
+  { value: "NO_EXP", label: "Không yêu cầu" },
+  { value: "JUNIOR", label: "Junior (1-2 năm)" },
+  { value: "MIDDLE", label: "Middle (3-4 năm)" },
+  { value: "SENIOR", label: "Senior (5-7 năm)" },
+  { value: "LEAD", label: "Lead / Manager (8+ năm)" },
+];
+
 interface FilterState {
   keyword: string;
   location: string;
@@ -25,6 +34,7 @@ interface FilterState {
   workMode: string;
   salaryMin: string;
   salaryMax: string;
+  experienceTier: string;
 }
 
 interface Props {
@@ -42,6 +52,7 @@ export function JobFilters({ initial }: Props) {
     workMode: initial.workMode ?? "",
     salaryMin: initial.salaryMin ?? "",
     salaryMax: initial.salaryMax ?? "",
+    experienceTier: initial.experienceTier ?? "",
   });
 
   function toggleJobType(value: string) {
@@ -59,13 +70,14 @@ export function JobFilters({ initial }: Props) {
     if (filters.workMode) params.set("workMode", filters.workMode);
     if (filters.salaryMin) params.set("salaryMin", filters.salaryMin);
     if (filters.salaryMax) params.set("salaryMax", filters.salaryMax);
+    if (filters.experienceTier) params.set("experienceTier", filters.experienceTier);
     filters.jobTypes.forEach((t) => params.append("jobType", t));
     params.set("page", "1");
     router.push(`${pathname}?${params.toString()}`);
   }
 
   function reset() {
-    setFilters({ keyword: "", location: "", industry: "", jobTypes: [], workMode: "", salaryMin: "", salaryMax: "" });
+    setFilters({ keyword: "", location: "", industry: "", jobTypes: [], workMode: "", salaryMin: "", salaryMax: "", experienceTier: "" });
     router.push(pathname);
   }
 
@@ -151,6 +163,19 @@ export function JobFilters({ initial }: Props) {
             </label>
           ))}
         </div>
+      </div>
+
+      {/* Experience tier */}
+      <div className="space-y-2">
+        <label className="text-[12px] font-semibold text-t1 uppercase tracking-wide">Kinh nghiệm</label>
+        <select
+          value={filters.experienceTier}
+          onChange={(e) => setFilters((f) => ({ ...f, experienceTier: e.target.value }))}
+          className={inputClass}
+          data-testid="exp-tier-filter"
+        >
+          {EXP_TIERS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+        </select>
       </div>
 
       {/* Salary range */}

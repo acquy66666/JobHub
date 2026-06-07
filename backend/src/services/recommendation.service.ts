@@ -69,7 +69,22 @@ export async function getRecommendedJobs(userId: string, limit: number = 10) {
       const jobLoc = job.location.toLowerCase();
       if (candidate.preferredLocations.some((l) => jobLoc.includes(l.toLowerCase()))) totalScore += 0.10;
     }
-    totalScore = Math.min(totalScore, 1);
+
+    // Experience tier scoring — only when candidate khai báo totalYearsExperience
+    if (candidate.totalYearsExperience != null) {
+      const years = candidate.totalYearsExperience;
+      const min = job.experienceYearsMin;
+      const max = job.experienceYearsMax;
+      if (min != null && max != null) {
+        if (years >= min && years <= max) {
+          totalScore += 0.10;
+        } else if (years < min - 1) {
+          totalScore -= 0.20;
+        }
+      }
+    }
+
+    totalScore = Math.max(0, Math.min(totalScore, 1));
 
     return { ...job, matchScore: Math.round(totalScore * 100), matchedSkills };
   });

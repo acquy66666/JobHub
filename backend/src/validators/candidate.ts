@@ -15,6 +15,7 @@ export const updateProfileSchema = z.object({
   preferredSalaryMin: z.number().int().min(0).nullable().optional(),
   preferredSalaryMax: z.number().int().min(0).nullable().optional(),
   openToWork: z.boolean().optional(),
+  totalYearsExperience: z.coerce.number().int().min(0).max(50).nullable().optional(),
 });
 
 export const addExperienceSchema = z.object({

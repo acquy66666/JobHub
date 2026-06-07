@@ -28,6 +28,7 @@ export function JobsContent() {
     workMode: searchParams.get("workMode") ?? undefined,
     salaryMin: searchParams.get("salaryMin") ?? undefined,
     salaryMax: searchParams.get("salaryMax") ?? undefined,
+    experienceTier: searchParams.get("experienceTier") ?? undefined,
   };
 
   const { data, isLoading } = useQuery({
@@ -88,6 +89,7 @@ export function JobsContent() {
     workMode: searchParams.get("workMode") ?? "",
     salaryMin: searchParams.get("salaryMin") ?? "",
     salaryMax: searchParams.get("salaryMax") ?? "",
+    experienceTier: searchParams.get("experienceTier") ?? "",
   };
 
   return (

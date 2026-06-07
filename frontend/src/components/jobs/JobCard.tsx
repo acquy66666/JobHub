@@ -20,6 +20,9 @@ interface Job {
   industry: string;
   createdAt: string;
   tier?: "BASIC" | "PREMIUM" | "VIP";
+  experienceTier?: "NO_EXP" | "JUNIOR" | "MIDDLE" | "SENIOR" | "LEAD" | null;
+  experienceYearsMin?: number | null;
+  experienceYearsMax?: number | null;
   employer: {
     id: string;
     companyName: string;
@@ -144,6 +147,27 @@ export function JobCard({ job, delay = 0, isSaved = false, onUnsave, matchScore 
             <span className="badge-type">{formatJobType(job.jobType)}</span>
             <span className="badge-mode">{formatWorkMode(job.workMode)}</span>
             <span className="badge-salary">{formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}</span>
+            {job.experienceTier && job.experienceTier !== "NO_EXP" && (
+              <span
+                data-exp-tier={job.experienceTier}
+                className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
+                  job.experienceTier === "JUNIOR" ? "bg-blue-500/10 text-blue-300 border-blue-500/30" :
+                  job.experienceTier === "MIDDLE" ? "bg-purple-500/10 text-purple-300 border-purple-500/30" :
+                  job.experienceTier === "SENIOR" ? "bg-amber-500/10 text-amber-300 border-amber-500/30" :
+                  "bg-red-500/10 text-red-300 border-red-500/30"
+                }`}
+              >
+                {job.experienceTier === "JUNIOR" ? "Junior" : job.experienceTier === "MIDDLE" ? "Middle" : job.experienceTier === "SENIOR" ? "Senior" : "Lead"}
+                {job.experienceYearsMin != null && job.experienceYearsMax != null && job.experienceYearsMax > 0 && (
+                  <> · {job.experienceYearsMin}-{job.experienceYearsMax === 99 ? "+" : job.experienceYearsMax}n</>
+                )}
+              </span>
+            )}
+            {job.experienceTier === "NO_EXP" && (
+              <span data-exp-tier="NO_EXP" className="text-[11px] font-semibold px-2 py-0.5 rounded-md border bg-gray-500/10 text-gray-300 border-gray-500/30">
+                Không yêu cầu KN
+              </span>
+            )}
           </div>
         </div>
       </div>
