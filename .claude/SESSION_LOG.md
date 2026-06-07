@@ -4,6 +4,33 @@ Long-form per-session log focused on rationale (why), not just diff (what). Newe
 
 ---
 
+## Session 45 — 2026-06-06
+
+**Commits:** `062082b` feat(skill-P9) candidate preferences + recommendation scoring upgrade.
+
+**Done:**
+- Stage 10 P9 ✅ — Prisma Candidate +7 field preference + Supabase migration + validator accept + recommendation bonus (jobType/workMode/location +0.15/0.15/0.10 với gating + clamp ≤1) + hard filter salaryMin Prisma where + FE profile section chip multi-select + /jobs "Lọc theo sở thích" button. **Stage 10 COMPLETE.**
+
+**Why / Rationale:**
+- **Bonus có gating `length > 0` trước khi cộng**: candidate chưa khai báo pref → không penalty (mọi job có same baseline). Tránh tạo bias âm chống candidate mới đăng ký chưa setup pref.
+- **Hard filter `salaryMax < preferredMin` ở Prisma `where` chứ không ở scoring loop**: filter ở DB rẻ hơn (index scan, ít rows load) + đảm bảo `take: 100` không bị bias bởi jobs sắp bị filter. `OR: [{salaryMax: null}, {salaryMax: {gte: min}}]` để jobs không tiết lộ lương vẫn xuất hiện (negotiable) — UX tốt hơn hard-exclude null.
+- **Location match dùng `substring includes`**: "TP.HCM" vs "Hồ Chí Minh" vs "Thành phố HCM" — substring lower-case bắt phần lớn variant. Exact match sẽ miss. Trade-off: "Hà Nội" match cả "Đông Hà Nội" theory — chấp nhận noise nhẹ vì location free-text.
+- **Clamp totalScore ≤ 1.0**: max possible bonus 0.15+0.15+0.10=0.40 cộng vào base max 1.0 → có thể vượt 1.0 → matchScore hiển thị >100%. Clamp giữ UX semantically đúng.
+- **Section preferences riêng card thay nhét vào form RHF chính**: form chính dùng zodResolver(profileSchema) chỉ validate fullName/phone/headline/summary/location. Thêm 7 field preferences vào schema sẽ buộc resolver xử lý array enum + tăng phức tạp. PUT trực tiếp từ button "Lưu sở thích" đơn giản hơn — vẫn cùng endpoint `/candidate/profile`, backend validator của endpoint xử lý cả 2 group field.
+- **Free-text location chip Enter-to-add thay multi-select dropdown**: location list dài + dynamic (TP.HCM, Hà Nội, Đà Nẵng, Bình Dương... có thể quận/huyện cụ thể). Dropdown bound list sẽ giới hạn. Free-text linh hoạt, candidate gõ gì hợp ý họ.
+- **/jobs `applyPrefs` chỉ lấy `[0]` của mỗi array (trừ jobType append-all)**: `jobQuerySchema` chỉ accept single value cho workMode/location/industry; jobType là array. Lấy first acceptable trade-off, candidate vẫn refine thêm bằng filter sidebar nếu cần.
+- **Skip P8 admin polish**: merge-duplicates + voting là admin ops tooling, không show được giá trị UX trong demo đồ án. Stage 10 đóng với P1-P7 + P9 ✅ đã đủ skill-bank story end-to-end.
+
+**Verified:** Production QA Playwright 6/6 PASS — `qa-scripts/skill-p9/qa.js`. TC1 PUT /candidate/profile body 7 field 200 + TC2 GET trả về persisted (preferredJobTypes=["FULL_TIME","CONTRACT"], preferredSalaryMin=15000000, openToWork=true) + TC3 set preferredSalaryMin=999000000 → GET /candidate/recommended-jobs?limit=20 → total=0 (mọi 100 ACTIVE job dưới 999M bị exclude) + TC4 UI [data-testid="prefs-section"] render 5 jobType + 3 workMode + 10 industry chip + save button + TC5 /jobs visible prefs-apply-btn → click → URL có byPrefs=1&jobType=FULL_TIME&jobType=CONTRACT&workMode=REMOTE&location=TP.HCM&industry=...&salaryMin=10000000 + clear-btn xuất hiện + TC6 mobile 375 bodyW=375 + cleanup reset prefs.
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **Dự án đã hoàn thành tất cả task đã plan.** Toàn bộ Stage 1-10 ✅. Production-ready, không còn pending. Session sau user có thể: (a) chuẩn bị slide/demo script (lưu ý rule `feedback_no_demo_prep_rush` — chỉ làm khi user yêu cầu); (b) mở task mới user nghĩ ra; (c) bug-fix nếu phát hiện regression; (d) re-open P8 nếu muốn admin tooling polish. Không có Next Action mặc định.
+
+**Blocker:** Không có. P9 + Stage 10 đóng sạch.
+
+---
+
 ## Session 44 — 2026-06-06
 
 **Commits:** `0a3814b` feat(skill-P7) legacy candidate.skills migration via pg_trgm.

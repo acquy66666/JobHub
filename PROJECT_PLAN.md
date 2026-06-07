@@ -1,8 +1,8 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-06 (session 44 — Stage 10 Skill Bank P7 Legacy Migration DONE, QA 6/6 PASS)
-Current Stage: Stage 10 — Skill Bank (P1 ✅ + P2 ✅ + P3 ✅ + P4 ✅ + P5 ✅ + P6 ✅ + P7 ✅ / P8-P9 pending)
-Status: Stage 5–9 ✅ COMPLETE | Stage 10 P1-P7 ✅ | Toàn dự án production-ready
+Last Updated: 2026-06-06 (session 45 — Stage 10 Skill Bank P9 Candidate Preferences DONE, QA 6/6 PASS → Stage 10 COMPLETE)
+Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
+Status: Toàn bộ Stage 1-10 ✅ COMPLETE | Dự án production-ready, không còn task pending
 
 ---
 
@@ -487,18 +487,15 @@ Plan tổng: `C:\Users\Admin\.claude\plans\shiny-sauteeing-stream.md` (5 sprint 
   - [x] Applied production: 33 candidates, 66 exact + 2 trigram matches, 95 unmapped (tools không có trong bank — banner prompts re-pick/propose)
   - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p7/qa.js`): TC0 PUT accept + TC1 banner render + TC2 click × remove + TC3 GET profile field + TC4 regression /skills/similar + TC5 mobile 375
 
-- **P8 — Polish (defer)**
-  - [ ] Admin merge duplicate skill (update all references)
-  - [ ] Skill request voting (nhiều user propose cùng tên → priority queue)
+- **P8 — Polish** ⏭ SKIPPED (session 45): admin merge duplicates + voting là admin-tooling, low value cho demo đồ án. Có thể re-open nếu cần.
 
-- **P9 — Candidate Preferences (cuối, ý tưởng user session 39)**
-  **Concept:** Mục "Sở thích công việc" trên hồ sơ candidate → tăng độ chính xác Job Match Score + filter `/jobs` 1-click theo preference cá nhân.
-  - [ ] Prisma `Candidate`: thêm `preferredJobTypes JobType[]`, `preferredWorkModes WorkMode[]`, `preferredLocations String[]`, `preferredIndustries String[]`, `preferredSalaryMin Int?`, `preferredSalaryMax Int?`, `openToWork Boolean @default(true)` + Supabase migration
-  - [ ] Backend `PUT /candidate/profile` accept thêm các field preferences
-  - [ ] Frontend section "Sở thích công việc" trong `/candidate/profile` với multi-select chip (jobType / workMode / location / industry) + salary range slider + toggle "Đang tìm việc"
-  - [ ] Nâng cấp Recommended Jobs scoring: cộng `+0.15` khi jobType match, `+0.15` workMode match, `+0.1` location match; exclude job nếu `salaryMax < preferredSalaryMin`
-  - [ ] Nút "Lọc theo sở thích của tôi" trên `/jobs` (auto-apply filter từ profile khi candidate login)
-  - [ ] QA: profile save + reload + recommended list re-rank theo preference
+- **P9 — Candidate Preferences** ✅ DONE (session 45, commit `062082b`)
+  - [x] Prisma `Candidate` thêm 7 field preferences + Supabase migration `candidate_preferences_p9`
+  - [x] Backend validator `updateProfileSchema` accept preferences; `updateProfile` spread pass-through (không cần thay đổi service logic)
+  - [x] Frontend `/candidate/profile` section "🎯 Sở thích công việc" (toggle openToWork, chip multi-select jobType 5/workMode 3/industry 10, free-text location chips Enter to add, salary min/max inputs)
+  - [x] `recommendation.service.ts` bonus +0.15 jobType + +0.15 workMode + +0.10 location match (gated by candidate có pref); hard filter excludes job nếu `salaryMax < preferredSalaryMin` (null salaryMax giữ visible); clamp score ≤ 1.0
+  - [x] `/jobs` nút "🎯 Lọc theo sở thích của tôi" cho candidate đã login + có pref; click → URL params `byPrefs=1&jobType=&workMode=&location=&industry=&salaryMin=` + clear state button
+  - [x] QA Playwright production 6/6 PASS (`qa-scripts/skill-p9/qa.js`): TC1 PUT 200 + TC2 GET persist + TC3 salaryMin=999M excludes lower jobs + TC4 UI render full (5+3+10 chip groups + save btn) + TC5 /jobs apply prefs → URL params + clear btn + TC6 mobile 375 bodyW=375
 
 ---
 
