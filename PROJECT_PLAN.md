@@ -1,6 +1,6 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-07 (session 47 — Stage 11 P2 Experience Tier DONE QA 6/6 PASS + token optimization CLAUDE.md 30k→3k)
+Last Updated: 2026-06-08 (session 48 — UX-1 cert spacing + UX-2 notifications wrap DONE QA 4/4 PASS, BUG-14 investigated: Notification table 5 rows / 0.919ms — root cause Render cold start, no code fix)
 
 Stage 11 — Match Optimization (in progress):
 - [x] P1 Certificate Bank (2026-06-07, `fa16dbc`+`6e3dca1`+`08f7fcb`, QA 6/6 PASS) — 103 certs seeded, candidate upload+admin moderation, public profile show APPROVED only
@@ -8,10 +8,10 @@ Stage 11 — Match Optimization (in progress):
 - [ ] P3 Gap Analysis on Saved Jobs
 - [ ] P4 Match Score v2 consolidated
 
-UX/Bug backlog (do user phát hiện 2026-06-07, lên lịch session sau):
-- [ ] UX-1 Certificate section trong /candidate/profile — icon chứng chỉ sát chữ nhỏ, cần spacing/alignment lại trong [CertificatesSection.tsx](frontend/src/components/certificates/CertificatesSection.tsx)
-- [ ] UX-2 /candidate/notifications layout — heading + subtitle bị đẩy lên góc trái trên cùng, không khớp các page khác (cần wrap container `max-w-... p-4 sm:p-8` giống các candidate page khác)
-- [ ] BUG-14 /candidate/notifications load chậm — investigate (có thể N+1 query, hoặc thiếu index trên `Notification(userId, createdAt)`, hoặc polling 60s vô tình block initial fetch). Profile Render trace + Supabase EXPLAIN.
+UX/Bug backlog:
+- [x] UX-1 Certificate section icon spacing (2026-06-08, `d5b3a16`) — tách emoji ra span gap-2 + tăng mt-1.5 subtitle
+- [x] UX-2 /candidate/notifications layout (2026-06-08, `d5b3a16`) — wrap `p-4 sm:p-8 max-w-5xl` standard
+- [x] BUG-14 /candidate/notifications load chậm — investigated (2026-06-08): Notification table 5 rows toàn DB, EXPLAIN ANALYZE 0.919ms, index `(userId, isRead, createdAt)` hoạt động. Root cause = Render free tier cold start (15-min spin-down). KHÔNG cần code fix ở scale hiện tại. Revisit khi >10k rows/user.
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)

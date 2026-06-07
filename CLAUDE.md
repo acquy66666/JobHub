@@ -13,14 +13,11 @@ Guidance for Claude Code working in this repo. Keep this file under ~150 lines �
 **Stage 11 — Match Optimization** (P1 ✅, **P2 ✅** session 47, P3-P4 pending). Stage 1-10 ✅ COMPLETE.
 
 **Last 3 sessions** — chi tiết rationale ở [`.claude/SESSION_LOG.md`](.claude/SESSION_LOG.md):
+- **Session 48 (2026-06-08)** — UX-1 cert icon spacing + UX-2 notifications wrap DONE QA 4/4 (`d5b3a16`). BUG-14 investigated: Notification 5 rows / 0.919ms → root cause Render cold start, no code fix.
 - **Session 47 (2026-06-07)** — Stage 11 P2 Experience Tier DONE + QA 6/6 (`b4376c3`). Token optimization: CLAUDE.md 30k→3k + lightweight session-start + .gitignore qa-scripts (`6b810c1`). + 2 memory rules: `feedback_session_wrap_mandatory`, `feedback_compact_after_plan`.
 - **Session 46 (2026-06-07)** — Stage 11 P1 Certificate Bank DONE + QA 6/6. Commits `fa16dbc`/`6e3dca1`/`08f7fcb`. 103 certs, candidate upload + admin moderation.
-- **Session 45 (2026-06-06)** — Stage 10 P9 Candidate Preferences DONE + QA 6/6 → Stage 10 COMPLETE. Commit `062082b`.
 
-**Active UX/Bug backlog** (sẽ làm session sau, plan trước theo `feedback_plan_before_main_task`):
-- UX-1 [CertificatesSection.tsx](frontend/src/components/certificates/CertificatesSection.tsx) icon spacing
-- UX-2 /candidate/notifications layout heading lệch
-- BUG-14 /candidate/notifications load chậm (profile N+1 / index / polling)
+**Active backlog:** UX backlog đã clear. Tiếp: Stage 11 P3 Gap Analysis on Saved Jobs + P4 Match Score v2.
 
 ## Repo layout
 

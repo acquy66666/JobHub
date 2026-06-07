@@ -2,6 +2,36 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 48 — 2026-06-08
+
+**Commits:** `d5b3a16` fix(ux) cert section + notifications wrap
+
+**Done:**
+- UX-1 CertificatesSection icon spacing — tách 📜 emoji ra `<span>` với `gap-2` flex container (header) và `gap-1.5` cho file link 📎; subtitle `mt-0.5` → `mt-1.5`. File: [CertificatesSection.tsx](frontend/src/components/certificates/CertificatesSection.tsx).
+- UX-2 /candidate/notifications wrap — root `<div>` thêm `p-4 sm:p-8 max-w-5xl` khớp standard candidate pages (saved-jobs, applications).
+- BUG-14 /candidate/notifications load chậm — **investigated, no code fix.**
+
+**Why / Rationale:**
+- **BUG-14 KHÔNG phải DB issue dù user thấy "load chậm"**: Supabase EXPLAIN ANALYZE cho thấy Notification table có **5 rows toàn DB** (max 3/user), execution time **0.919ms** với index hiện tại `(userId, isRead, createdAt)`. Plan ban đầu định thêm composite index `(userId, createdAt DESC)` — bỏ vì premature optimization với data nhỏ vậy. Sort step trong query plan với 3 rows = cost 0.
+- **Root cause thực = Render free tier cold start** (15-min spin-down → request đầu chờ 30-60s warm-up). Không fix được code-side. Mitigation: keep-alive ping cron hoặc upgrade Render plan. Document để session sau không lặp lại investigation tương tự.
+- **Pattern cần nhớ cho future debug "API chậm"**: Luôn EXPLAIN ANALYZE + COUNT trước khi optimize. "Load chậm" trên Render free tier 90% là cold start, không phải DB.
+- **Wrap UX combo nhỏ vào 1 commit**: 3 task nhỏ (UX-1 + UX-2 + BUG-14 investigation) liên quan candidate UI/notification → 1 commit `d5b3a16` thay vì split, vì cùng feature area + investigation belongs với fix attempts.
+- **Skip session-wrap CLAUDE.md Read trùng** (per session-start lightweight skill): test thực tế cho thấy claudeMd auto-inject vẫn đầy đủ — không cần Read lại để wrap. Tiết kiệm ~3k.
+
+**Verified:** Production QA Playwright 4/4 PASS (`qa-scripts/ux-combo-1/qa.js`):
+- TC1 desktop cert header flex+gap-2 + subtitle marginTop=6px (mt-1.5)
+- TC2 desktop /candidate/notifications h1 left=272 (sidebar 240 + p-8 32) top=96 (không ở góc)
+- TC3 mobile 375 cert section render OK
+- TC4 mobile 375 notifications h1 left=16 (p-4) top=141
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **Stage 11 P3 — Gap Analysis on Saved Jobs**. Scope chỉ trên saved-jobs (không full match), tính gap skills/certs/experience giữa candidate profile và job requirements. Page mới `/candidate/saved-jobs/[id]/gap` hoặc tích hợp inline. Plan chi tiết trước theo `feedback_plan_before_main_task`, đợi "ok". Cân nhắc thêm `feedback_compact_after_plan` khi user duyệt plan (P3 là task ≥5 bước).
+
+**Blocker:** Không có. Render auto-deploy webhook vẫn hay broken — Manual Deploy quen pattern. 3 file `.claude/commands|skills/session-*.md` modified (per-session prompt copies) — không thuộc wrap, bỏ ngoài commit.
+
+---
+
 ## Session 47 — 2026-06-07
 
 **Commits:** `b4376c3` feat(exp-P2), `6b810c1` chore token optimization
