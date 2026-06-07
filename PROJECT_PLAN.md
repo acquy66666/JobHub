@@ -1,12 +1,17 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-07 (session 46 — Stage 11 P1 Certificate Bank DONE, QA 6/6 PASS)
+Last Updated: 2026-06-07 (session 47 — Stage 11 P2 Experience Tier DONE QA 6/6 PASS + token optimization CLAUDE.md 30k→3k)
 
 Stage 11 — Match Optimization (in progress):
 - [x] P1 Certificate Bank (2026-06-07, `fa16dbc`+`6e3dca1`+`08f7fcb`, QA 6/6 PASS) — 103 certs seeded, candidate upload+admin moderation, public profile show APPROVED only
-- [ ] P2 Experience Tier on Jobs
+- [x] P2 Experience Tier on Jobs (2026-06-07, `b4376c3`, QA 6/6 PASS) — Job.experienceTier 5 levels + auto-fill years preset + recommendation scoring + filter + UI badge/dropdown + candidate totalYears
 - [ ] P3 Gap Analysis on Saved Jobs
 - [ ] P4 Match Score v2 consolidated
+
+UX/Bug backlog (do user phát hiện 2026-06-07, lên lịch session sau):
+- [ ] UX-1 Certificate section trong /candidate/profile — icon chứng chỉ sát chữ nhỏ, cần spacing/alignment lại trong [CertificatesSection.tsx](frontend/src/components/certificates/CertificatesSection.tsx)
+- [ ] UX-2 /candidate/notifications layout — heading + subtitle bị đẩy lên góc trái trên cùng, không khớp các page khác (cần wrap container `max-w-... p-4 sm:p-8` giống các candidate page khác)
+- [ ] BUG-14 /candidate/notifications load chậm — investigate (có thể N+1 query, hoặc thiếu index trên `Notification(userId, createdAt)`, hoặc polling 60s vô tình block initial fetch). Profile Render trace + Supabase EXPLAIN.
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)

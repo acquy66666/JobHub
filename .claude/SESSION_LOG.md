@@ -2,6 +2,37 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 47 — 2026-06-07
+
+**Commits:** `b4376c3` feat(exp-P2), `6b810c1` chore token optimization
+
+**Done:**
+- Stage 11 P2 Experience Tier on Jobs ✅ + QA 6/6 PASS — Prisma `Job.experienceTier` enum NO_EXP/JUNIOR/MIDDLE/SENIOR/LEAD + `experienceYearsMin/Max` + `Candidate.totalYearsExperience` + Supabase migration `experience_tier_p2` (78 jobs backfilled NO_EXP) + employer create/update auto-fill years preset + recommendation scoring +0.10/-0.20 + filter `?experienceTier=` + JobForm 5-radio grid + JobCard badge + JobFilters dropdown + candidate profile totalYears input.
+- Token optimization: CLAUDE.md 30k→3k (Sessions 17-43 cleared, last 3 inline + link SESSION_LOG), session-start skill skip duplicate Read CLAUDE.md/MEMORY.md, .gitignore + qa-scripts/ + screenshots/qa_*.png (untracked 137→0).
+- 2 memory rules mới: `feedback_session_wrap_mandatory` (wrap bắt buộc cuối session) + `feedback_compact_after_plan` (chủ động /compact sau khi user duyệt plan task chính).
+- Backlog 3 UX/bug user phát hiện (UX-1 cert section icon spacing, UX-2 notifications layout heading, BUG-14 notifications load chậm) → ghi vào PROJECT_PLAN.
+
+**Why / Rationale:**
+- **Auto-fill years preset trong service không trong validator**: Validator chỉ check shape. Logic "tier → years" là business rule, đặt cùng service nơi resolve final data trước Prisma insert. Cho phép employer override sau (vd Junior nhưng cần 3 năm cho vị trí hẹp).
+- **Penalty -0.20 với `years < min - 1` chứ không phải `< min`**: Cho buffer 1 năm — candidate 2 năm apply Senior (min 5) chưa bị penalty nặng (2 < 5-1=4, vẫn fail nhưng cho fuzz nhỏ). Tránh hard cliff trên boundary.
+- **TC3/TC4 lần đầu fail vì 78 jobs backfill toàn NO_EXP**: Quyết định update 3 existing ACTIVE seed jobs sang JUNIOR (qua Supabase MCP) thay vì viết admin approve flow trong QA — đơn giản hơn, đồng thời tạo seed data demo cho filter.
+- **Trim CLAUDE.md vì baseline session-start 75-100k (~50% context)**: Phát hiện 4 thủ phạm — CLAUDE.md (~30k) + rules/*.md auto-load (~13k) + session-start re-Read trùng + 137 untracked files trong git status. Trim CLAUDE.md ROI cao nhất (1 lần edit → tiết kiệm mỗi session sau). Không gộp rules/* vì rủi ro lớn (sợ Claude không tự lookup khi cần) — để lazy-read.
+- **Memory rule `feedback_compact_after_plan` thay vì hardcode trong skill**: Compact là user-action, không phải Claude-action; memory rule chỉ nhắc Claude đề xuất, user quyết.
+- **Wrap mandatory rule**: User signal rõ — session wrap đem giá trị cho session sau. Quy ước hoá để Claude không quên ở session ngắn.
+
+**Verified:** QA Playwright production 6/6 PASS (`qa-scripts/exp-p2/qa.js`): TC1 POST 201 + auto-fill years [1,2] + TC2 UI 5-radio + click MIDDLE → [3,4] + TC3 filter ?experienceTier=JUNIOR total=3 all-junior + TC4 JobCard badges + filter dropdown + TC5 candidate totalYears=2 → JUNIOR matchScore=59 + TC6 mobile 375 + filter visible.
+
+**Bugs phát hiện mới (do user, chưa fix — session sau):**
+- UX-1 [CertificatesSection.tsx](frontend/src/components/certificates/CertificatesSection.tsx) — icon chứng chỉ sát chữ nhỏ, cần spacing/alignment.
+- UX-2 /candidate/notifications layout heading+subtitle bị đẩy lên góc trái trên cùng, không khớp các page khác → cần wrap container `max-w-... p-4 sm:p-8`.
+- BUG-14 /candidate/notifications load chậm — nghi N+1 query / thiếu index `Notification(userId, createdAt)` / polling 60s block initial fetch.
+
+**Next Action:** Session 48 — fix combo UX-1 + UX-2 + BUG-14 trong 1 session (3 task nhỏ liên quan đến notification + cert UI, dồn lại tiết kiệm context). Plan trước theo `feedback_plan_before_main_task`. Sau đó tiếp Stage 11 P3 Gap Analysis on Saved Jobs.
+
+**Blocker:** Không có. Render auto-deploy webhook vẫn hay broken — Manual Deploy đã quen pattern. 4 file `.claude/commands/*` + `.claude/skills/session-wrap.md` modified nhưng không thuộc wrap session này (per-session prompt copies từ central) — bỏ ngoài commit.
+
+---
+
 ## Session 46 — 2026-06-07
 
 **Commits:** `fa16dbc` feat(cert-P1), `6e3dca1` fix authGuard req.user.userId, `08f7fcb` fix Vercel ESLint quotes

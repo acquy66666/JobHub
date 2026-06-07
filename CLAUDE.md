@@ -13,7 +13,7 @@ Guidance for Claude Code working in this repo. Keep this file under ~150 lines �
 **Stage 11 — Match Optimization** (P1 ✅, **P2 ✅** session 47, P3-P4 pending). Stage 1-10 ✅ COMPLETE.
 
 **Last 3 sessions** — chi tiết rationale ở [`.claude/SESSION_LOG.md`](.claude/SESSION_LOG.md):
-- **Session 47 (2026-06-07)** — Stage 11 P2 Experience Tier DONE + QA 6/6. Commit `b4376c3`. + memory rule `feedback_session_wrap_mandatory`.
+- **Session 47 (2026-06-07)** — Stage 11 P2 Experience Tier DONE + QA 6/6 (`b4376c3`). Token optimization: CLAUDE.md 30k→3k + lightweight session-start + .gitignore qa-scripts (`6b810c1`). + 2 memory rules: `feedback_session_wrap_mandatory`, `feedback_compact_after_plan`.
 - **Session 46 (2026-06-07)** — Stage 11 P1 Certificate Bank DONE + QA 6/6. Commits `fa16dbc`/`6e3dca1`/`08f7fcb`. 103 certs, candidate upload + admin moderation.
 - **Session 45 (2026-06-06)** — Stage 10 P9 Candidate Preferences DONE + QA 6/6 → Stage 10 COMPLETE. Commit `062082b`.
 
