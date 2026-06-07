@@ -48,6 +48,13 @@ interface CandidateProfile {
   location?: string;
   skills?: string[];
   legacySkills?: string[];
+  preferredJobTypes?: string[];
+  preferredWorkModes?: string[];
+  preferredLocations?: string[];
+  preferredIndustries?: string[];
+  preferredSalaryMin?: number | null;
+  preferredSalaryMax?: number | null;
+  openToWork?: boolean;
   cvUrl?: string;
   cvFileName?: string;
   avatarUrl?: string;
@@ -63,6 +70,14 @@ export default function CandidateProfilePage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
+  const [prefJobTypes, setPrefJobTypes] = useState<string[]>([]);
+  const [prefWorkModes, setPrefWorkModes] = useState<string[]>([]);
+  const [prefLocations, setPrefLocations] = useState<string[]>([]);
+  const [prefIndustries, setPrefIndustries] = useState<string[]>([]);
+  const [prefSalaryMin, setPrefSalaryMin] = useState<string>("");
+  const [prefSalaryMax, setPrefSalaryMax] = useState<string>("");
+  const [openToWork, setOpenToWork] = useState<boolean>(true);
+  const [locInput, setLocInput] = useState<string>("");
   const [showExpModal, setShowExpModal] = useState(false);
   const [showEduModal, setShowEduModal] = useState(false);
   const [editExp, setEditExp] = useState<(ExpForm & { id: string }) | null>(null);
@@ -77,6 +92,17 @@ export default function CandidateProfilePage() {
   useEffect(() => {
     if (profile?.skills) setSkills(profile.skills);
   }, [profile?.skills?.join()]);
+
+  useEffect(() => {
+    if (!profile) return;
+    setPrefJobTypes(profile.preferredJobTypes ?? []);
+    setPrefWorkModes(profile.preferredWorkModes ?? []);
+    setPrefLocations(profile.preferredLocations ?? []);
+    setPrefIndustries(profile.preferredIndustries ?? []);
+    setPrefSalaryMin(profile.preferredSalaryMin ? String(profile.preferredSalaryMin) : "");
+    setPrefSalaryMax(profile.preferredSalaryMax ? String(profile.preferredSalaryMax) : "");
+    setOpenToWork(profile.openToWork ?? true);
+  }, [profile?.preferredJobTypes?.join(), profile?.preferredWorkModes?.join(), profile?.preferredLocations?.join(), profile?.preferredIndustries?.join(), profile?.preferredSalaryMin, profile?.preferredSalaryMax, profile?.openToWork]);
 
   const { register, handleSubmit, formState: { errors } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -199,6 +225,134 @@ export default function CandidateProfilePage() {
             {saved && <span className="text-[13px] text-green-400">✓ Đã lưu</span>}
           </div>
         </form>
+      </ScrollReveal>
+
+      {/* Preferences */}
+      <ScrollReveal direction="up" delay={0.07}>
+        <div data-testid="prefs-section" className="card-dark p-6 rounded-2xl space-y-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-[15px] font-bold text-t0">🎯 Sở thích công việc</h3>
+              <p className="text-[12px] text-t1 mt-0.5">Giúp gợi ý việc làm phù hợp hơn và lọc nhanh trên trang tìm việc.</p>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" checked={openToWork} onChange={(e) => setOpenToWork(e.target.checked)} className="sr-only peer" />
+              <span className="w-10 h-5 bg-bg-3 border border-border-dark rounded-full relative peer-checked:bg-brand-gradient transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5" />
+              <span className="text-[12px] font-medium text-t1">Đang tìm việc</span>
+            </label>
+          </div>
+
+          {/* JobTypes */}
+          <div>
+            <label className={labelClass}>Hình thức công việc</label>
+            <div className="flex flex-wrap gap-2" data-testid="pref-jobtypes">
+              {[
+                { v: "FULL_TIME", l: "Toàn thời gian" },
+                { v: "PART_TIME", l: "Bán thời gian" },
+                { v: "CONTRACT", l: "Hợp đồng" },
+                { v: "INTERNSHIP", l: "Thực tập" },
+                { v: "FREELANCE", l: "Freelance" },
+              ].map(({ v, l }) => {
+                const active = prefJobTypes.includes(v);
+                return (
+                  <button key={v} type="button" onClick={() => setPrefJobTypes((p) => p.includes(v) ? p.filter((x) => x !== v) : [...p, v])} className={`px-3 py-1.5 rounded-full border text-[12px] font-medium transition-all ${active ? "bg-[rgba(124,58,237,.18)] border-[rgba(124,58,237,.5)] text-t0" : "bg-bg-3 border-border-dark text-t1 hover:border-[rgba(124,58,237,.3)]"}`}>{l}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* WorkModes */}
+          <div>
+            <label className={labelClass}>Mô hình làm việc</label>
+            <div className="flex flex-wrap gap-2" data-testid="pref-workmodes">
+              {[
+                { v: "ON_SITE", l: "Tại văn phòng" },
+                { v: "REMOTE", l: "Làm từ xa" },
+                { v: "HYBRID", l: "Kết hợp" },
+              ].map(({ v, l }) => {
+                const active = prefWorkModes.includes(v);
+                return (
+                  <button key={v} type="button" onClick={() => setPrefWorkModes((p) => p.includes(v) ? p.filter((x) => x !== v) : [...p, v])} className={`px-3 py-1.5 rounded-full border text-[12px] font-medium transition-all ${active ? "bg-[rgba(59,130,246,.18)] border-[rgba(59,130,246,.5)] text-t0" : "bg-bg-3 border-border-dark text-t1 hover:border-[rgba(59,130,246,.3)]"}`}>{l}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Industries */}
+          <div>
+            <label className={labelClass}>Ngành nghề quan tâm</label>
+            <div className="flex flex-wrap gap-2" data-testid="pref-industries">
+              {["Công nghệ thông tin", "Tài chính - Ngân hàng", "Giáo dục", "Y tế", "Bán lẻ", "Marketing", "Kỹ thuật", "Nhân sự", "Kế toán", "Khác"].map((ind) => {
+                const active = prefIndustries.includes(ind);
+                return (
+                  <button key={ind} type="button" onClick={() => setPrefIndustries((p) => p.includes(ind) ? p.filter((x) => x !== ind) : [...p, ind])} className={`px-3 py-1.5 rounded-full border text-[12px] font-medium transition-all ${active ? "bg-[rgba(34,197,94,.18)] border-[rgba(34,197,94,.5)] text-t0" : "bg-bg-3 border-border-dark text-t1 hover:border-[rgba(34,197,94,.3)]"}`}>{ind}</button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Locations free chip */}
+          <div>
+            <label className={labelClass}>Địa điểm mong muốn</label>
+            <div className="flex flex-wrap gap-2 mb-2" data-testid="pref-locations">
+              {prefLocations.map((loc) => (
+                <span key={loc} className="inline-flex items-center gap-1 bg-bg-3 border border-border-dark text-t0 px-3 py-1 rounded-full text-[12px]">
+                  {loc}
+                  <button type="button" aria-label={`Xoá ${loc}`} onClick={() => setPrefLocations((p) => p.filter((x) => x !== loc))} className="text-t2 hover:text-red-400">×</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={locInput}
+                onChange={(e) => setLocInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); const v = locInput.trim(); if (v && !prefLocations.includes(v)) setPrefLocations((p) => [...p, v]); setLocInput(""); } }}
+                placeholder="VD: TP.HCM, Hà Nội, Đà Nẵng — Enter để thêm"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Salary range */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className={labelClass}>Lương tối thiểu (VND)</label>
+              <input type="number" min={0} value={prefSalaryMin} onChange={(e) => setPrefSalaryMin(e.target.value)} placeholder="VD: 15000000" className={inputClass} />
+            </div>
+            <div>
+              <label className={labelClass}>Lương kỳ vọng (VND)</label>
+              <input type="number" min={0} value={prefSalaryMax} onChange={(e) => setPrefSalaryMax(e.target.value)} placeholder="VD: 30000000" className={inputClass} />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                const payload = {
+                  preferredJobTypes: prefJobTypes,
+                  preferredWorkModes: prefWorkModes,
+                  preferredLocations: prefLocations,
+                  preferredIndustries: prefIndustries,
+                  preferredSalaryMin: prefSalaryMin === "" ? null : Number(prefSalaryMin),
+                  preferredSalaryMax: prefSalaryMax === "" ? null : Number(prefSalaryMax),
+                  openToWork,
+                };
+                api.put("/candidate/profile", payload).then(() => {
+                  qc.invalidateQueries({ queryKey: queryKeys.candidateProfile() });
+                  setSaved(true);
+                  setTimeout(() => setSaved(false), 2000);
+                });
+              }}
+              data-testid="prefs-save"
+              className="btn-primary px-6 py-2.5 rounded-xl text-[14px] font-semibold"
+            >
+              Lưu sở thích
+            </button>
+            {saved && <span className="text-[13px] text-green-400">✓ Đã lưu</span>}
+          </div>
+        </div>
       </ScrollReveal>
 
       {/* Experiences */}

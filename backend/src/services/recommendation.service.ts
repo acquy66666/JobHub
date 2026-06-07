@@ -23,6 +23,9 @@ export async function getRecommendedJobs(userId: string, limit: number = 10) {
       status: JobStatus.ACTIVE,
       expiresAt: { gt: new Date() },
       ...(excludeIds.length > 0 ? { id: { notIn: excludeIds } } : {}),
+      ...(candidate.preferredSalaryMin != null
+        ? { OR: [{ salaryMax: null }, { salaryMax: { gte: candidate.preferredSalaryMin } }] }
+        : {}),
     },
     include: {
       employer: { select: { id: true, companyName: true, logoUrl: true, isVerified: true } },
@@ -58,7 +61,15 @@ export async function getRecommendedJobs(userId: string, limit: number = 10) {
     const ageMs = now - new Date(job.createdAt).getTime();
     const recencyScore = Math.max(0, 1 - ageMs / thirtyDaysMs);
 
-    const totalScore = 0.5 * skillScore + 0.2 * locationScore + 0.2 * industryScore + 0.1 * recencyScore;
+    let totalScore = 0.5 * skillScore + 0.2 * locationScore + 0.2 * industryScore + 0.1 * recencyScore;
+
+    if (candidate.preferredJobTypes.length > 0 && candidate.preferredJobTypes.includes(job.jobType)) totalScore += 0.15;
+    if (candidate.preferredWorkModes.length > 0 && candidate.preferredWorkModes.includes(job.workMode)) totalScore += 0.15;
+    if (candidate.preferredLocations.length > 0) {
+      const jobLoc = job.location.toLowerCase();
+      if (candidate.preferredLocations.some((l) => jobLoc.includes(l.toLowerCase()))) totalScore += 0.10;
+    }
+    totalScore = Math.min(totalScore, 1);
 
     return { ...job, matchScore: Math.round(totalScore * 100), matchedSkills };
   });

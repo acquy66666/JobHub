@@ -8,6 +8,13 @@ export const updateProfileSchema = z.object({
   location: z.string().optional(),
   skills: z.array(z.string()).optional(),
   legacySkills: z.array(z.string()).optional(),
+  preferredJobTypes: z.array(z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'FREELANCE'])).optional(),
+  preferredWorkModes: z.array(z.enum(['ON_SITE', 'REMOTE', 'HYBRID'])).optional(),
+  preferredLocations: z.array(z.string()).optional(),
+  preferredIndustries: z.array(z.string()).optional(),
+  preferredSalaryMin: z.number().int().min(0).nullable().optional(),
+  preferredSalaryMax: z.number().int().min(0).nullable().optional(),
+  openToWork: z.boolean().optional(),
 });
 
 export const addExperienceSchema = z.object({

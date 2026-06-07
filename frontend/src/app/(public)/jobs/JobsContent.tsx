@@ -43,6 +43,33 @@ export function JobsContent() {
 
   const candidateSkills: string[] = profile?.skills ?? [];
 
+  const hasPrefs = Boolean(
+    user?.role === "CANDIDATE" && profile && (
+      (profile.preferredJobTypes?.length ?? 0) > 0 ||
+      (profile.preferredWorkModes?.length ?? 0) > 0 ||
+      (profile.preferredLocations?.length ?? 0) > 0 ||
+      (profile.preferredIndustries?.length ?? 0) > 0 ||
+      profile.preferredSalaryMin
+    )
+  );
+  const prefsApplied = searchParams.get("byPrefs") === "1";
+
+  function applyPrefs() {
+    if (!profile) return;
+    const p = new URLSearchParams();
+    p.set("byPrefs", "1");
+    (profile.preferredJobTypes ?? []).forEach((t: string) => p.append("jobType", t));
+    if (profile.preferredWorkModes?.[0]) p.set("workMode", profile.preferredWorkModes[0]);
+    if (profile.preferredLocations?.[0]) p.set("location", profile.preferredLocations[0]);
+    if (profile.preferredIndustries?.[0]) p.set("industry", profile.preferredIndustries[0]);
+    if (profile.preferredSalaryMin) p.set("salaryMin", String(profile.preferredSalaryMin));
+    router.push(`/jobs?${p.toString()}`);
+  }
+
+  function clearPrefs() {
+    router.push(`/jobs`);
+  }
+
   const jobs = data?.jobs ?? [];
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
@@ -82,6 +109,29 @@ export function JobsContent() {
           <p className="text-[15px] text-t1 mt-2">
             {total > 0 ? `Tìm thấy ${total} việc làm phù hợp` : "Không tìm thấy kết quả nào"}
           </p>
+        )}
+        {hasPrefs && (
+          <div className="mt-3">
+            {prefsApplied ? (
+              <button
+                type="button"
+                onClick={clearPrefs}
+                data-testid="prefs-clear-btn"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold bg-[rgba(124,58,237,.18)] border border-[rgba(124,58,237,.5)] text-t0 hover:bg-[rgba(124,58,237,.28)]"
+              >
+                ✓ Đang lọc theo sở thích · Xoá
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={applyPrefs}
+                data-testid="prefs-apply-btn"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold bg-bg-2 border border-border-dark text-t1 hover:border-[rgba(124,58,237,.5)] hover:text-t0"
+              >
+                🎯 Lọc theo sở thích của tôi
+              </button>
+            )}
+          </div>
         )}
       </ScrollReveal>
 

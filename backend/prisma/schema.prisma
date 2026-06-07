@@ -205,6 +205,13 @@ model Candidate {
   location        String?
   skills          String[]
   legacySkills    String[]      @default([])
+  preferredJobTypes    JobType[]  @default([])
+  preferredWorkModes   WorkMode[] @default([])
+  preferredLocations   String[]   @default([])
+  preferredIndustries  String[]   @default([])
+  preferredSalaryMin   Int?
+  preferredSalaryMax   Int?
+  openToWork           Boolean    @default(true)
   cvUrl           String?
   cvFileName      String?
   publicSlug      String?       @unique
