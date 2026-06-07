@@ -100,7 +100,7 @@ export default function CertificateUploadModal({ onClose }: { onClose: () => voi
 
           <div>
             <label className="block text-[13px] font-semibold text-t1 mb-1.5">
-              Điểm / Cấp độ <span className="text-[11px] text-t2 font-normal">(tuỳ chọn — VD: "IELTS 7.5", "TOEIC 850")</span>
+              Điểm / Cấp độ <span className="text-[11px] text-t2 font-normal">(tuỳ chọn — VD: &ldquo;IELTS 7.5&rdquo;, &ldquo;TOEIC 850&rdquo;)</span>
             </label>
             <input
               type="text"
