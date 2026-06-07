@@ -27,7 +27,7 @@ async function resolveCandidateId(userId: string): Promise<string> {
 
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const candidateId = await resolveCandidateId((req as Request & { userId: string }).userId);
+    const candidateId = await resolveCandidateId(((req as Request & { user?: { userId: string } }).user?.userId ?? ''));
     res.json(await certificateService.listForCandidate(candidateId));
   } catch (err) { next(err); }
 });
@@ -36,7 +36,7 @@ router.post('/', upload.single('file'), async (req: Request, res: Response, next
   try {
     if (!req.file) throw Object.assign(new Error('Thiếu file'), { status: 400 });
     const data = createCandidateCertificateSchema.parse(req.body);
-    const candidateId = await resolveCandidateId((req as Request & { userId: string }).userId);
+    const candidateId = await resolveCandidateId(((req as Request & { user?: { userId: string } }).user?.userId ?? ''));
     const created = await certificateService.create(candidateId, data, {
       buffer: req.file.buffer,
       originalname: req.file.originalname,
@@ -49,14 +49,14 @@ router.post('/', upload.single('file'), async (req: Request, res: Response, next
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const data = updateCandidateCertificateSchema.parse(req.body);
-    const candidateId = await resolveCandidateId((req as Request & { userId: string }).userId);
+    const candidateId = await resolveCandidateId(((req as Request & { user?: { userId: string } }).user?.userId ?? ''));
     res.json(await certificateService.update(candidateId, String(req.params.id), data));
   } catch (err) { next(err); }
 });
 
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const candidateId = await resolveCandidateId((req as Request & { userId: string }).userId);
+    const candidateId = await resolveCandidateId(((req as Request & { user?: { userId: string } }).user?.userId ?? ''));
     res.json(await certificateService.remove(candidateId, String(req.params.id)));
   } catch (err) { next(err); }
 });

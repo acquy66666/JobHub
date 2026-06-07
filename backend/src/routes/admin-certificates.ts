@@ -21,7 +21,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 
 router.patch('/:id/approve', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const adminId = (req as Request & { userId: string }).userId;
+    const adminId = ((req as Request & { user?: { userId: string } }).user?.userId ?? '');
     res.json(await certificateService.approve(adminId, String(req.params.id)));
   } catch (err) { next(err); }
 });
@@ -29,7 +29,7 @@ router.patch('/:id/approve', async (req: Request, res: Response, next: NextFunct
 router.patch('/:id/reject', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { adminNote } = adminRejectSchema.parse(req.body);
-    const adminId = (req as Request & { userId: string }).userId;
+    const adminId = ((req as Request & { user?: { userId: string } }).user?.userId ?? '');
     res.json(await certificateService.reject(adminId, String(req.params.id), adminNote));
   } catch (err) { next(err); }
 });
