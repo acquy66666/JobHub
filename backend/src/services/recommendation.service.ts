@@ -9,6 +9,7 @@ export async function getRecommendedJobs(userId: string, limit: number = 10) {
         select: { jobId: true, job: { select: { industry: true } } },
       },
       savedJobs: { select: { jobId: true } },
+      certificates: { where: { status: 'APPROVED' }, select: { certificateSlug: true } },
     },
   });
   if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
@@ -36,55 +37,74 @@ export async function getRecommendedJobs(userId: string, limit: number = 10) {
 
   const candidateSkillSlugs = new Set(candidate.skills);
   const candidateSkills = candidate.skills.map(s => s.toLowerCase());
+  const candidateCertSlugs = new Set(candidate.certificates.map(c => c.certificateSlug));
   const candidateLocation = candidate.location?.toLowerCase() ?? '';
   const now = Date.now();
   const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
 
   const scored = jobs.map(job => {
+    // Dimension 1: skills (weight 0.4)
     let matchedSkills: string[];
     let skillScore: number;
     if (Array.isArray(job.skillSlugs) && job.skillSlugs.length > 0) {
-      // Exact intersection: |candidate ∩ job| / |job|
       matchedSkills = job.skillSlugs.filter((s) => candidateSkillSlugs.has(s));
       skillScore = matchedSkills.length / job.skillSlugs.length;
     } else {
-      // Legacy text-substring fallback
       const jobText = (job.requirements + ' ' + job.description).toLowerCase();
       matchedSkills = candidateSkills.filter(s => jobText.includes(s));
       skillScore = candidateSkills.length > 0 ? matchedSkills.length / candidateSkills.length : 0;
     }
 
-    const locationScore = candidateLocation && job.location.toLowerCase().includes(candidateLocation) ? 1 : 0;
+    // Dimension 2: certificates (weight 0.2)
+    const reqCerts = job.requiredCertificateSlugs ?? [];
+    const certScore = reqCerts.length === 0
+      ? 1
+      : reqCerts.filter((s) => candidateCertSlugs.has(s)).length / reqCerts.length;
 
-    const industryScore = familiarIndustries.has(job.industry) ? 1 : 0;
+    // Dimension 3: experience (weight 0.2), graded [0,1]
+    let experienceScore: number;
+    const years = candidate.totalYearsExperience;
+    const min = job.experienceYearsMin;
+    const max = job.experienceYearsMax;
+    if (years == null || min == null) {
+      experienceScore = 0.7;
+    } else if (years >= min && (max == null || years <= max)) {
+      experienceScore = 1;
+    } else if (max != null && years > max) {
+      experienceScore = 0.8;
+    } else if (years >= min - 1) {
+      experienceScore = 0.6;
+    } else {
+      experienceScore = 0.2;
+    }
 
-    const ageMs = now - new Date(job.createdAt).getTime();
-    const recencyScore = Math.max(0, 1 - ageMs / thirtyDaysMs);
-
-    let totalScore = 0.5 * skillScore + 0.2 * locationScore + 0.2 * industryScore + 0.1 * recencyScore;
-
-    if (candidate.preferredJobTypes.length > 0 && candidate.preferredJobTypes.includes(job.jobType)) totalScore += 0.15;
-    if (candidate.preferredWorkModes.length > 0 && candidate.preferredWorkModes.includes(job.workMode)) totalScore += 0.15;
+    // Dimension 4: preferences (weight 0.2) — average of applicable sub-signals
+    const subs: number[] = [];
+    if (candidate.preferredJobTypes.length > 0) {
+      subs.push(candidate.preferredJobTypes.includes(job.jobType) ? 1 : 0);
+    }
+    if (candidate.preferredWorkModes.length > 0) {
+      subs.push(candidate.preferredWorkModes.includes(job.workMode) ? 1 : 0);
+    }
     if (candidate.preferredLocations.length > 0) {
       const jobLoc = job.location.toLowerCase();
-      if (candidate.preferredLocations.some((l) => jobLoc.includes(l.toLowerCase()))) totalScore += 0.10;
+      subs.push(candidate.preferredLocations.some((l) => jobLoc.includes(l.toLowerCase())) ? 1 : 0);
     }
-
-    // Experience tier scoring — only when candidate khai báo totalYearsExperience
-    if (candidate.totalYearsExperience != null) {
-      const years = candidate.totalYearsExperience;
-      const min = job.experienceYearsMin;
-      const max = job.experienceYearsMax;
-      if (min != null && max != null) {
-        if (years >= min && years <= max) {
-          totalScore += 0.10;
-        } else if (years < min - 1) {
-          totalScore -= 0.20;
-        }
-      }
+    if (candidateLocation) {
+      subs.push(job.location.toLowerCase().includes(candidateLocation) ? 1 : 0);
     }
+    if (familiarIndustries.size > 0) {
+      subs.push(familiarIndustries.has(job.industry) ? 1 : 0);
+    }
+    const ageMs = now - new Date(job.createdAt).getTime();
+    subs.push(Math.max(0, 1 - ageMs / thirtyDaysMs));
+    const preferenceScore = subs.reduce((a, b) => a + b, 0) / subs.length;
 
-    totalScore = Math.max(0, Math.min(totalScore, 1));
+    const totalScore =
+      0.4 * skillScore +
+      0.2 * certScore +
+      0.2 * experienceScore +
+      0.2 * preferenceScore;
 
     return { ...job, matchScore: Math.round(totalScore * 100), matchedSkills };
   });
