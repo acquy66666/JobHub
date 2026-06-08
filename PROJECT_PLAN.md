@@ -1,12 +1,12 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-09 (session 49 — Stage 11 P3 Gap Analysis on Saved Jobs DONE QA 6/6 PASS)
+Last Updated: 2026-06-10 (session 50 — Stage 11 P4 Match Score v2 DONE QA 5/5 PASS → Stage 11 ✅ COMPLETE)
 
-Stage 11 — Match Optimization (in progress):
+Stage 11 — Match Optimization ✅ COMPLETE:
 - [x] P1 Certificate Bank (2026-06-07, `fa16dbc`+`6e3dca1`+`08f7fcb`, QA 6/6 PASS) — 103 certs seeded, candidate upload+admin moderation, public profile show APPROVED only
 - [x] P2 Experience Tier on Jobs (2026-06-07, `b4376c3`, QA 6/6 PASS) — Job.experienceTier 5 levels + auto-fill years preset + recommendation scoring + filter + UI badge/dropdown + candidate totalYears
 - [x] P3 Gap Analysis on Saved Jobs (2026-06-09, `4fc2b28`, QA 6/6 PASS) — Job.requiredCertificateSlugs schema + GET /api/candidate/saved-jobs/:jobId/gap + JobForm cert picker + SavedJobsPage inline expand panel (skills/experience/certificates)
-- [ ] P4 Match Score v2 consolidated
+- [x] P4 Match Score v2 consolidated (2026-06-10, `5e08e92`, QA 5/5 PASS) — refactor recommendation.service.ts: skills 0.4 + certs 0.2 + exp 0.2 + prefs 0.2, mọi dim normalize [0,1]. Cert score dùng APPROVED certs vs job.requiredCertificateSlugs. Exp graded (null years → 0.7 neutral). Preferences = average sub-signals applicable.
 
 UX/Bug backlog:
 - [x] UX-1 Certificate section icon spacing (2026-06-08, `d5b3a16`) — tách emoji ra span gap-2 + tăng mt-1.5 subtitle

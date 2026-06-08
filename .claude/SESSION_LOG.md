@@ -2,6 +2,38 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 50 — 2026-06-10
+
+**Commits:** `5e08e92` feat(match-P4) consolidated match score v2
+
+**Done:**
+- Stage 11 P4 Match Score v2 consolidated — refactor `getRecommendedJobs` từ scoring lộn xộn (base 1.0 + bonus +0.40 + exp ±0.20, không clamp đúng) sang 4-dimension weighted sum 1.0: skills 0.4 + certs 0.2 + exp 0.2 + prefs 0.2. Cert dimension mới dùng `Job.requiredCertificateSlugs` (từ P3) vs candidate `certificates WHERE status='APPROVED'`. Files: [recommendation.service.ts](backend/src/services/recommendation.service.ts).
+- Update memory rule `feedback_token_budget_planning`: áp dụng cho MỌI task (không chỉ multi-step plan), target dư 10-20% trước wrap (cũ 10-15%).
+- **Stage 11 ✅ COMPLETE** (P1-P4 đều DONE).
+
+**Why / Rationale:**
+- **Weighted-sum 4-dim thay vì base+bonus mess cũ**: Code cũ base=1.0 + bonus +0.15+0.15+0.10+0.10-0.20 → totalScore vượt 1.0 thường xuyên, phải clamp. Mới = weighted sum tự khắc ∈ [0,1], không clamp. Dễ explain với hội đồng đồ án.
+- **certScore=1 khi `job.requiredCertificateSlugs=[]`**: Không penalize job không yêu cầu cert. Nếu set 0 sẽ sai bản chất ("không yêu cầu" ≠ "candidate fail"). Implication: 78/80 jobs chưa có cert reqs sẽ luôn cert=1 → cert dimension chủ yếu phân biệt giữa job-có-cert-req.
+- **experienceScore graded thay vì binary +0.10/-0.20**: Null years → 0.7 (neutral, không thưởng không phạt mạnh — candidate chưa khai không nên bị penalize). Over-qualified (years>max) → 0.8 (vẫn cao nhưng không 1.0 vì có thể mismatch level). Gần đạt (years≥min-1) → 0.6. Thiếu nhiều → 0.2. Graded smooth tránh hard cliff trên boundary.
+- **preferenceScore = average sub-signals applicable**: Chia cho số sub-signal candidate đã khai (jobType/workMode/prefLocations/candLocation/familiar industry/recency). Không khai → skip subsignal đó. Candidate profile sparse không bị penalize bất công. Recency luôn có (chia 30 ngày).
+- **QA TC3 phải reframe "filtered out of top 20"**: Controller cap limit=20. LOW job (skills=0, cert=0, exp neutral, prefs ~0) score ~18 — rớt khỏi top 20. Đó là behavior đúng. Đừng tăng cap controller chỉ để QA assert được — absence-from-top-N chính là proof of low scoring.
+- **Stage 11 đã COMPLETE → dự án production-ready toàn diện, không còn task pending trong plan**. Session sau cần user chỉ định task mới (UX polish, performance, demo prep nếu user OK).
+
+**Verified:** Production QA Playwright 5/5 PASS (`qa-scripts/match-v2/qa.js`):
+- TC1 API shape: status=200, 20 items, scores [93,65,60,...] tất cả ∈ [0,100]
+- TC2 HIGH job (seed32-j-01 Senior Frontend, skills [react,typescript]) top rank #0 score=93
+- TC3 LOW job (seed32-j-04 Fullstack, skills [docker,k8s,aws], certs [aws-saa,ielts], expMin=5) filtered out of top 20
+- TC4 sort monotonic desc: first=93 last=51
+- TC5 matchedSkills exposed: HIGH job returns [react, typescript]
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **Không có task pending trong PROJECT_PLAN**. Stage 11 ✅ COMPLETE. Session sau: chờ user chỉ định task mới (UX polish, performance optimization, hoặc bắt đầu demo prep khi user OK). KHÔNG tự đề xuất demo per `feedback_no_demo_prep_rush`.
+
+**Blocker:** Không có. 3 file `.claude/commands|skills/session-*.md` modified (per-session prompt copies) — bỏ ngoài commit như thường lệ.
+
+---
+
 ## Session 49 — 2026-06-09
 
 **Commits:** `4fc2b28` feat(gap-P3) gap analysis on saved jobs
