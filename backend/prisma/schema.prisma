@@ -412,6 +412,7 @@ model Job {
   experienceTier      ExperienceTier @default(NO_EXP)
   experienceYearsMin  Int?
   experienceYearsMax  Int?
+  requiredCertificateSlugs String[] @default([])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   applications        Application[]

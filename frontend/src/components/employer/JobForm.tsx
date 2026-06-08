@@ -13,6 +13,8 @@ import { SalaryBenchmarkWidget } from "./SalaryBenchmarkWidget";
 import { billingApi, TIER_META, type JobTier, type CreditBalance } from "@/lib/api/billing";
 import Link from "next/link";
 import SkillCombobox from "@/components/skills/SkillCombobox";
+import CertificateCombobox from "@/components/certificates/CertificateCombobox";
+import { certificatesApi, type Certificate } from "@/lib/api/certificates";
 
 const jobSchema = z.object({
   title: z.string().min(3, "Tiêu đề ít nhất 3 ký tự"),
@@ -30,6 +32,7 @@ const jobSchema = z.object({
   expiresAt: z.string().min(1, "Chọn ngày hết hạn"),
   tier: z.enum(["BASIC", "PREMIUM", "VIP"]),
   skillSlugs: z.array(z.string()).max(20, "Tối đa 20 kỹ năng").optional(),
+  requiredCertificateSlugs: z.array(z.string()).max(10, "Tối đa 10 chứng chỉ").optional(),
   experienceTier: z.enum(["NO_EXP", "JUNIOR", "MIDDLE", "SENIOR", "LEAD"]),
   experienceYearsMin: z.number().int().min(0).max(50).optional().nullable(),
   experienceYearsMax: z.number().int().min(0).max(50).optional().nullable(),
@@ -110,6 +113,7 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
       salaryCurrency: "VND",
       tier: "BASIC",
       skillSlugs: [],
+      requiredCertificateSlugs: [],
       experienceTier: "NO_EXP",
       ...defaultValues,
     },
@@ -359,6 +363,14 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
             <p className="text-[11px] text-t2 mt-1">Chọn từ ngân hàng kỹ năng — giúp ứng viên phù hợp tìm thấy tin nhanh hơn.</p>
           </div>
           <div>
+            <label className={labelClass}>Chứng chỉ yêu cầu (tuỳ chọn)</label>
+            <CertPickerSection
+              value={watched.requiredCertificateSlugs ?? []}
+              onChange={(slugs) => setValue("requiredCertificateSlugs", slugs, { shouldDirty: true })}
+            />
+            <p className="text-[11px] text-t2 mt-1">Tối đa 10 chứng chỉ — dùng để phân tích gap với ứng viên.</p>
+          </div>
+          <div>
             <label className={labelClass}>Quyền lợi</label>
             <textarea {...register("benefits")} rows={3} placeholder="Lương thưởng, bảo hiểm, các phúc lợi khác..." className={`${inputClass} resize-none`} />
           </div>
@@ -541,5 +553,56 @@ export function JobFormComponent({ defaultValues, jobId, mode }: Props) {
 
       <div className="hidden">{today}</div>
     </form>
+  );
+}
+
+function CertPickerSection({ value, onChange }: { value: string[]; onChange: (slugs: string[]) => void }) {
+  const { data: grouped } = useQuery({
+    queryKey: ["certificates", "by-category"],
+    queryFn: () => certificatesApi.listByCategory(),
+    staleTime: 60 * 60 * 1000,
+  });
+  const bySlug = new Map<string, Certificate>();
+  if (grouped) {
+    for (const list of Object.values(grouped)) for (const c of list as Certificate[]) bySlug.set(c.slug, c);
+  }
+  const atMax = value.length >= 10;
+  return (
+    <div className="space-y-2" data-testid="cert-picker-section">
+      {value.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {value.map((slug) => {
+            const c = bySlug.get(slug);
+            return (
+              <span
+                key={slug}
+                data-cert-slug={slug}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[rgba(124,58,237,.12)] border border-[rgba(124,58,237,.3)] text-[12px] text-[#B09BF8]"
+              >
+                {c?.nameVi ?? slug}
+                <button
+                  type="button"
+                  onClick={() => onChange(value.filter((s) => s !== slug))}
+                  className="text-t2 hover:text-red-400"
+                  aria-label="Xoá"
+                >
+                  ✕
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {!atMax && (
+        <CertificateCombobox
+          value={null}
+          onChange={(slug) => {
+            if (slug && !value.includes(slug)) onChange([...value, slug]);
+          }}
+          placeholder="Thêm chứng chỉ yêu cầu..."
+        />
+      )}
+      {atMax && <p className="text-[11px] text-yellow-400">Đã đạt giới hạn 10 chứng chỉ.</p>}
+    </div>
   );
 }

@@ -91,10 +91,27 @@ export const employerService = {
     }
     const skillSlugs = Array.from(new Set(rawSlugs));
 
+    const rawCertSlugs = Array.isArray(data.requiredCertificateSlugs) ? (data.requiredCertificateSlugs as string[]) : [];
+    let requiredCertificateSlugs: string[] = [];
+    if (rawCertSlugs.length > 0) {
+      const dedup = Array.from(new Set(rawCertSlugs));
+      const found = await prisma.certificate.findMany({ where: { slug: { in: dedup } }, select: { slug: true } });
+      const foundSet = new Set(found.map((c) => c.slug));
+      const invalidCerts = dedup.filter((s) => !foundSet.has(s));
+      if (invalidCerts.length > 0) {
+        throw Object.assign(new Error('Có chứng chỉ không hợp lệ'), {
+          status: 422,
+          code: 'INVALID_CERTIFICATES',
+          invalidCertificates: invalidCerts,
+        });
+      }
+      requiredCertificateSlugs = dedup;
+    }
+
     // Atomic: insert Job first, then consume credit (so CreditTransaction.jobId FK valid).
     // If credit insufficient → throw → tx rollback → Job not committed.
-    const { tier: _tier, skillSlugs: _slugs, ...rest } = data as Record<string, unknown> & { tier?: JobTier; skillSlugs?: string[] };
-    void _tier; void _slugs;
+    const { tier: _tier, skillSlugs: _slugs, requiredCertificateSlugs: _certs, ...rest } = data as Record<string, unknown> & { tier?: JobTier; skillSlugs?: string[]; requiredCertificateSlugs?: string[] };
+    void _tier; void _slugs; void _certs;
     applyExperienceYearsPreset(rest);
     return prisma.$transaction(async (tx) => {
       const newJob = await tx.job.create({
@@ -106,6 +123,7 @@ export const employerService = {
           tier,
           boostedUntil,
           skillSlugs,
+          requiredCertificateSlugs,
           isFlagged,
           ...(flagReason && { flagReason }),
         } as Parameters<typeof tx.job.create>[0]['data'],
@@ -162,6 +180,23 @@ export const employerService = {
         }
       }
       updateData.skillSlugs = Array.from(new Set(rawSlugs));
+    }
+    if (Array.isArray(data.requiredCertificateSlugs)) {
+      const rawCertSlugs = data.requiredCertificateSlugs as string[];
+      const dedup = Array.from(new Set(rawCertSlugs));
+      if (dedup.length > 0) {
+        const found = await prisma.certificate.findMany({ where: { slug: { in: dedup } }, select: { slug: true } });
+        const foundSet = new Set(found.map((c) => c.slug));
+        const invalidCerts = dedup.filter((s) => !foundSet.has(s));
+        if (invalidCerts.length > 0) {
+          throw Object.assign(new Error('Có chứng chỉ không hợp lệ'), {
+            status: 422,
+            code: 'INVALID_CERTIFICATES',
+            invalidCertificates: invalidCerts,
+          });
+        }
+      }
+      updateData.requiredCertificateSlugs = dedup;
     }
     const updated = await prisma.job.update({ where: { id: jobId }, data: updateData as Parameters<typeof prisma.job.update>[0]['data'] });
     skillService.triggerRecompute();

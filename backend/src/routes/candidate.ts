@@ -32,6 +32,7 @@ router.post('/applications', candidateController.applyJob);
 router.get('/saved-jobs', candidateController.getSavedJobs);
 router.post('/saved-jobs', candidateController.saveJob);
 router.delete('/saved-jobs/:jobId', candidateController.unsaveJob);
+router.get('/saved-jobs/:jobId/gap', candidateController.getJobGap);
 
 router.get('/job-alerts', candidateController.getJobAlerts);
 router.post('/job-alerts', candidateController.createJobAlert);

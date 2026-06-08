@@ -141,6 +141,13 @@ export const candidateController = {
     } catch (err) { next(err); }
   },
 
+  async getJobGap(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await candidateService.getJobGap(req.user!.userId, String(req.params.jobId));
+      res.json(result);
+    } catch (err) { next(err); }
+  },
+
   async getJobAlerts(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const result = await candidateService.getJobAlerts(req.user!.userId);

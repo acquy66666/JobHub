@@ -264,6 +264,72 @@ export const candidateService = {
     return { savedJobs, total, page, limit, totalPages: Math.ceil(total / limit) };
   },
 
+  async getJobGap(userId: string, jobId: string) {
+    const candidate = await prisma.candidate.findUnique({
+      where: { userId },
+      include: {
+        certificates: {
+          where: { status: 'APPROVED' },
+          select: { certificateSlug: true },
+        },
+      },
+    });
+    if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
+
+    const saved = await prisma.savedJob.findUnique({
+      where: { jobId_candidateId: { jobId, candidateId: candidate.id } },
+    });
+    if (!saved) throw Object.assign(new Error('Việc làm này chưa được lưu'), { status: 404 });
+
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        id: true,
+        title: true,
+        skillSlugs: true,
+        experienceYearsMin: true,
+        experienceTier: true,
+        requiredCertificateSlugs: true,
+      },
+    });
+    if (!job) throw Object.assign(new Error('Không tìm thấy việc làm'), { status: 404 });
+
+    const candSkills = new Set(candidate.skills);
+    const reqSkills: string[] = job.skillSlugs ?? [];
+    const haveSkills = reqSkills.filter((s) => candSkills.has(s));
+    const missingSkills = reqSkills.filter((s) => !candSkills.has(s));
+
+    const required = job.experienceYearsMin ?? null;
+    const have = candidate.totalYearsExperience ?? null;
+    const met = required === null ? true : (have ?? 0) >= required;
+    const shortBy = required === null || met ? 0 : required - (have ?? 0);
+
+    const candCertSlugs = new Set(candidate.certificates.map((c) => c.certificateSlug));
+    const reqCerts: string[] = job.requiredCertificateSlugs ?? [];
+    const haveCerts = reqCerts.filter((s) => candCertSlugs.has(s));
+    const missingCerts = reqCerts.filter((s) => !candCertSlugs.has(s));
+
+    const certMeta = reqCerts.length
+      ? await prisma.certificate.findMany({
+          where: { slug: { in: reqCerts } },
+          select: { slug: true, nameVi: true, nameEn: true, issuer: true },
+        })
+      : [];
+
+    return {
+      jobId: job.id,
+      jobTitle: job.title,
+      skills: { required: reqSkills, have: haveSkills, missing: missingSkills },
+      experience: { required, have, met, shortBy, tier: job.experienceTier },
+      certificates: {
+        required: reqCerts,
+        have: haveCerts,
+        missing: missingCerts,
+        meta: certMeta,
+      },
+    };
+  },
+
   async getJobAlerts(userId: string) {
     const candidate = await prisma.candidate.findUnique({ where: { userId } });
     if (!candidate) throw Object.assign(new Error('Không tìm thấy hồ sơ'), { status: 404 });
