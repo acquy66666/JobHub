@@ -10,14 +10,14 @@ Guidance for Claude Code working in this repo. Keep this file under ~150 lines �
 
 ## Current state
 
-**Stage 11 — Match Optimization** (P1 ✅, **P2 ✅** session 47, P3-P4 pending). Stage 1-10 ✅ COMPLETE.
+**Stage 11 — Match Optimization** (P1 ✅, P2 ✅, **P3 ✅** session 49, P4 pending). Stage 1-10 ✅ COMPLETE.
 
 **Last 3 sessions** — chi tiết rationale ở [`.claude/SESSION_LOG.md`](.claude/SESSION_LOG.md):
+- **Session 49 (2026-06-09)** — Stage 11 P3 Gap Analysis on Saved Jobs DONE QA 6/6 (`4fc2b28`). Schema `Job.requiredCertificateSlugs` + GET /api/candidate/saved-jobs/:jobId/gap + JobForm cert multi-select + SavedJobsPage inline expand panel. Scope α (add schema field) + A (inline expand).
 - **Session 48 (2026-06-08)** — UX-1 cert icon spacing + UX-2 notifications wrap DONE QA 4/4 (`d5b3a16`). BUG-14 investigated: Notification 5 rows / 0.919ms → root cause Render cold start, no code fix.
 - **Session 47 (2026-06-07)** — Stage 11 P2 Experience Tier DONE + QA 6/6 (`b4376c3`). Token optimization: CLAUDE.md 30k→3k + lightweight session-start + .gitignore qa-scripts (`6b810c1`). + 2 memory rules: `feedback_session_wrap_mandatory`, `feedback_compact_after_plan`.
-- **Session 46 (2026-06-07)** — Stage 11 P1 Certificate Bank DONE + QA 6/6. Commits `fa16dbc`/`6e3dca1`/`08f7fcb`. 103 certs, candidate upload + admin moderation.
 
-**Active backlog:** UX backlog đã clear. Tiếp: Stage 11 P3 Gap Analysis on Saved Jobs + P4 Match Score v2.
+**Active backlog:** Stage 11 P4 Match Score v2 consolidated.
 
 ## Repo layout
 

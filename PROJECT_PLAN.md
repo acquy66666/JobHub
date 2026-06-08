@@ -1,11 +1,11 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-08 (session 48 — UX-1 cert spacing + UX-2 notifications wrap DONE QA 4/4 PASS, BUG-14 investigated: Notification table 5 rows / 0.919ms — root cause Render cold start, no code fix)
+Last Updated: 2026-06-09 (session 49 — Stage 11 P3 Gap Analysis on Saved Jobs DONE QA 6/6 PASS)
 
 Stage 11 — Match Optimization (in progress):
 - [x] P1 Certificate Bank (2026-06-07, `fa16dbc`+`6e3dca1`+`08f7fcb`, QA 6/6 PASS) — 103 certs seeded, candidate upload+admin moderation, public profile show APPROVED only
 - [x] P2 Experience Tier on Jobs (2026-06-07, `b4376c3`, QA 6/6 PASS) — Job.experienceTier 5 levels + auto-fill years preset + recommendation scoring + filter + UI badge/dropdown + candidate totalYears
-- [ ] P3 Gap Analysis on Saved Jobs
+- [x] P3 Gap Analysis on Saved Jobs (2026-06-09, `4fc2b28`, QA 6/6 PASS) — Job.requiredCertificateSlugs schema + GET /api/candidate/saved-jobs/:jobId/gap + JobForm cert picker + SavedJobsPage inline expand panel (skills/experience/certificates)
 - [ ] P4 Match Score v2 consolidated
 
 UX/Bug backlog:

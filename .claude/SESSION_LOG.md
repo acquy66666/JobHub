@@ -2,6 +2,37 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 49 — 2026-06-09
+
+**Commits:** `4fc2b28` feat(gap-P3) gap analysis on saved jobs
+
+**Done:**
+- Stage 11 P3 Gap Analysis on Saved Jobs — schema `Job.requiredCertificateSlugs String[] @default([])` (Supabase MCP migration `add_job_required_certificate_slugs`) + backend `GET /api/candidate/saved-jobs/:jobId/gap` returns `{skills, experience, certificates}` shape + employer JobForm cert multi-select picker (max 10, reuse CertificateCombobox) + SavedJobsPage refactor grid→list với inline expand panel 3 section. Files: [schema.prisma](backend/prisma/schema.prisma), [candidate.service.ts](backend/src/services/candidate.service.ts), [employer.service.ts](backend/src/services/employer.service.ts), [JobForm.tsx](frontend/src/components/employer/JobForm.tsx), [saved-jobs/page.tsx](frontend/src/app/(candidate)/candidate/saved-jobs/page.tsx).
+
+**Why / Rationale:**
+- **Scope α (add schema field) thay vì β (skip cert gap) / γ (heuristic substring)**: +10-15k token đổi lại exact-match cert matching. Substring scan trên `job.requirements` text sẽ sai "AWS" vs "Amazon Web Services" và không reuse được dữ liệu APPROVED của candidate. Schema field cũng feed thẳng vào P4 match score sau.
+- **UX A inline expand thay vì B page riêng `/candidate/saved-jobs/[id]/gap`**: Không routing change, không mất ngữ cảnh "danh sách saved" khi xem gap, dễ so sánh nhiều job. Phải refactor grid 3-col → list 1-col vì panel cần full-width.
+- **Validate cert slugs ở service (Certificate findMany IN [...])** thay vì Zod validator vì cần DB lookup — pattern giống skill validation. Error code `INVALID_CERTIFICATES` để frontend phân biệt.
+- **GapPanel dùng `useQuery` riêng per jobId, staleTime 30s**: Tránh fetch hàng loạt khi mount; chỉ fetch khi user expand. 30s đủ cho user click qua lại nhiều job mà không thrash API.
+- **Seed test data bằng Supabase MCP `execute_sql` UPDATE** trên job `cmpnhjain000mrwvd2fs03lo9` (DevOps Engineer) thay vì viết admin route tạo job mới — đơn giản, không pollute DB, candidate sẵn skills [react,typescript,tieng-anh] sẽ thiếu [docker,kubernetes,aws] + [aws-saa,ielts] + exp 3 năm.
+- **Render deploy lần 1 không pick up commit 4fc2b28** (TC1-3 trả 404 dù endpoint code local OK + curl unauth trả 401). User phải Manual Deploy lần 2 mới fix. Lesson: 401 unauth chỉ chứng minh authGuard mount đúng prefix, KHÔNG chứng minh route exist — phải verify bằng request authenticated.
+
+**Verified:** Production QA Playwright 6/6 PASS (`qa-scripts/gap-p3/qa.js`):
+- TC1 API shape status=200 keys=jobId,jobTitle,skills,experience,certificates
+- TC2 seeded reqs: skills.req=3 / certs.req=2 / exp.req=3
+- TC3 missing: skills.missing=3 / certs.missing=2 / exp.met=false shortBy=3
+- TC4 JobForm cert roundtrip POST `['aws-saa','toeic-lr']` → GET trả về đúng cả 2
+- TC5 desktop UI: gap-skills + gap-experience + gap-certificates đủ với 2 chip cert missing + 3 chip skill missing
+- TC6 mobile 375 expand panel OK
+
+**Bugs phát hiện mới:** Không có.
+
+**Next Action:** **Stage 11 P4 — Match Score v2 consolidated**. Mở rộng `backend/src/services/recommendation.service.ts` combine 4 dimension: skills 0.4 + certificates 0.2 + experience 0.2 + preferences 0.2 (P2 hiện chỉ +0.10/-0.20 cho experience tier). Edge case cần plan: missing all certs vs missing some skills weight nào nặng hơn. Plan trước theo `feedback_plan_before_main_task` rồi đợi "ok".
+
+**Blocker:** Không có. Render Manual Deploy đã quen pattern. 3 file `.claude/commands|skills/session-*.md` modified (per-session prompt copies) — bỏ ngoài commit như thường lệ.
+
+---
+
 ## Session 48 — 2026-06-08
 
 **Commits:** `d5b3a16` fix(ux) cert section + notifications wrap
