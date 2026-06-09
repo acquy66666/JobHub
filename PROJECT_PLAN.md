@@ -1,13 +1,13 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-11 (session 52 — Stage 12 brief + P1 tokens + P2-A foundation DONE; Thesis B terminal precision)
+Last Updated: 2026-06-12 (session 53 — Stage 12 P2-B Homepage rewrite DONE; QA 5/5 functional pass)
 
 Stage 12 — UI Redesign (Thesis B: terminal precision):
 - [x] Phase 1 Research (2026-06-11, session 51) — 4 sub-agent reports in `.claude/redesign/phase1/`. Direction 3 (slate+amber) + Geist + 5-surface scope approved.
 - [x] Phase 2 DESIGN_BRIEF.md (2026-06-11, `d90c659`) — source of truth: tokens, typography, component inventory, differentiation, a11y. Light auto-detect via prefers-color-scheme added.
 - [x] Phase 3 P1 Design tokens & globals (2026-06-11, `3ef75d3`) — Direction 3 amber tokens applied, Inter→Geist, prefers-reduced-motion guard, ambient radial. Tailwind colors point to CSS vars. Legacy aliases gradual.
 - [x] Phase 3 P2-A Foundation (2026-06-11, `e97f060`) — Thesis B pivot after user feedback "đổi màu chưa đủ". Add Geist Mono, grain texture replace radial, row tokens, 9 primitives (Row/MonoNumber/StatHero/CmdK+parser/SidePanel/TabBar/Breadcrumb/HairlineSection/CapsLabel) + @radix-ui/react-dialog. Build pass.
-- [ ] Phase 3 P2-B Homepage rewrite — consume CmdK + Row hot-jobs + StatHero in `app/(public)/page.tsx` + `components/home/*`. Drop centered hero + 3-col features + decorative gradient.
+- [x] Phase 3 P2-B Homepage rewrite (2026-06-12, `58135b8`, QA 5/5 functional pass) — 4 new panels HeroPanel/HotJobsPanel/StatsHeroPanel/CTAPanel in `app/(public)/page.tsx` + `components/home/`. Drop 9 legacy sections (Hero/Features/HowItWorks/Vip/Featured/Employer/Stats/Companies/CTA). HotJobs fetch real `/api/jobs?limit=6` với fallback mock. CmdK onSubmit → `router.push('/jobs?q=...')`. Zero purple gradient on homepage.
 - [ ] Phase 3 P2-C Jobs list rewrite — persistent CmdK + Row table + SidePanel detail. Drop filter sidebar checkbox.
 - [ ] Phase 3 P2-D Candidate dashboard — TabBar + Breadcrumb + applications table accordion. Drop sidebar nav.
 - [ ] Phase 3 P2-E Employer applicants — TabBar + applicants table + bulk action bar.
@@ -28,9 +28,9 @@ UX/Bug backlog:
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
-Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A foundation DONE (Thesis B); P2-B Homepage rewrite is Next Action
+Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A + P2-B DONE (Thesis B); P2-C Jobs list rewrite is Next Action
 
-Next Action (session 53): **P2-B Homepage rewrite** — replace `frontend/src/app/(public)/page.tsx` + `components/home/{HeroSection,FeaturedJobsSection,StatsSection,HowItWorksSection,CompaniesSection,EmployerSection,CTASection}.tsx` với Thesis B layout: (1) left-aligned h1 + meta line (mono counts) + full-width CmdK, (2) HOT NÀY HairlineSection chứa Row list 5-8 jobs, (3) StatHero section với 1 giant number + 3 inline metrics, (4) hairline Footer mono. Drop centered hero, 3-col features, gradient text, stagger fade-up cliché. Consume primitives sẵn từ `frontend/src/components/ui/` + `components/search/CmdK.tsx`. Wire CmdK submit → `/jobs?q=<raw>` route. Real job data từ existing `useFeaturedJobs` hook.
+Next Action (session 54): **P2-C Jobs list rewrite** — replace `frontend/src/app/(public)/jobs/page.tsx` + `components/jobs/*` với Thesis B layout: (1) persistent sticky `<CmdK size="md">` top, drop filter sidebar checkbox layout, (2) main = Row list table-like (compact mode? hoặc default), (3) click Row → `<SidePanel>` slide-from-right show job detail thay vì navigate, (4) URL sync `?q=...&page=...`, (5) pagination mono hairline footer. Consume primitives `Row + CmdK + SidePanel + HairlineSection + MonoNumber`. Drop card grid, filter sidebar, salary range slider. Read q param khi mount → prefill CmdK. Sau P2-C có thể bắt đầu cleanup legacy aliases (`--accent-purple/--accent-blue/--pink/--gradient`) khi homepage + jobs đã migrate.
 
 ---
 

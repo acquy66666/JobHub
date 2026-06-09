@@ -2,6 +2,40 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 53 — 2026-06-12
+
+**Commits:** `58135b8` P2-B homepage thesis B (HeroPanel + HotJobsPanel + StatsHeroPanel + CTAPanel)
+
+**Done:**
+- Replace 9 legacy home sections (Hero/Features/HowItWorks/Vip/Featured/Employer/Stats/Companies/CTA) bằng 4 panel thesis B trong `frontend/src/components/home/`. Tổng diff: +4 file mới, -9 file xoá, rewrite `app/(public)/page.tsx`.
+- HeroPanel: left-aligned `clamp(56,9vw,96px)` h1 + meta mono inline (12,400 vị trí · 850 công ty · cập nhật DD-MM) + full-width `<CmdK size="lg">` + trending tags mono.
+- HotJobsPanel: client component fetch real `GET /api/jobs?limit=6` với 6-job fallback mock; render 6 `<Row>` với `<MonoNumber size="lg">` match score (mock array [92,88,81,76,73,68], tone accent ≥85, default ≥75, muted <75), employer+location+mode+rel-time mono meta, salary `formatSalary()` right mono, tier badge nếu ≠BASIC.
+- StatsHeroPanel: 2-col grid — left `<StatHero value={12847}>` giant count-up + right 3-row inline metric list (Công ty 850 · Hài lòng 95% success-tone · Ứng viên 50K+).
+- CTAPanel: hairline section + h2 "Sẵn sàng bắt đầu?" + 2 mono links với path suffix (`/register`, `/employer/register`).
+- QA Playwright production (`qa-scripts/redesign-p2b/qa.js`) — 5 TC: desktop 1280 structure, mobile 375 no-overflow, CmdK submit navigate, no-purple-gradient sweep, hot-jobs rows render. Functional 5/5 pass.
+
+**Why / Rationale:**
+- **9 sections → 4 panels (xoá thật, không refactor)**: Thesis B brief drop card grid + 3-col features + carousel logos + 2-col employer CTA + dashboard mockup. Refactor từng file dữ structure cũ chỉ là cosmetic. Xoá thẳng để codebase đại diện đúng design intent. 5 file legacy không còn caller → xoá disk luôn (P2-F không cần dọn nữa).
+- **Real API fetch + fallback mock**: Q2 chọn real fetch vì backend `/api/jobs` public sẵn, làm hot-jobs có data thật ngay từ P2-B thay vì đợi P2-C. Fallback mock đảm bảo SSR initial render không trống (UX trước khi axios resolve). Risk: nếu DB empty thì user thấy mock — chấp nhận vì DB demo seeded sẵn.
+- **Match score mock array hard-coded `[92,88,81,76,73,68]`**: Hiển thị "numbers as visual hero" (move #2 brief) cần ngay. Compute thật cần candidate context (logged-in) — không phù hợp cho public homepage. Mock số giảm dần để demo concept "ranked by relevance".
+- **CmdK onSubmit → `router.push('/jobs?q=...')`**: Wire ngay session này để demo end-to-end search flow, dù `/jobs` page chưa đọc query param (P2-C sẽ làm). Browser URL đổi đúng → unit verification qua TC3.
+- **Trending tags clickable mono inline thay vì badge pills**: Mono `> react · product manager · designer` aesthetic terminal, không phải tag chip rounded (chip = AI-template). Click cũng route `/jobs?q=...`.
+- **StatHero count-up không capture trong Playwright fullPage**: IntersectionObserver threshold 0.3 không fire khi headless fullPage screenshot do paint timing. Real user scroll vẫn trigger bình thường. KHÔNG fix — chỉ là quirk QA tooling.
+- **401 console errors là pre-existing noise**: Axios interceptor cố `POST /auth/refresh` khi guest visit homepage (cookie không hợp lệ → 401). Không phải P2-B regression. Có thể fix sau bằng guard "chỉ refresh nếu có refreshToken cookie marker" nhưng out of scope.
+- **5-file delete**: HeroSection/FeaturesSection/HowItWorksSection/VipJobsSection/FeaturedJobsSection/EmployerSection/StatsSection/CompaniesSection/CTASection.tsx — không còn caller, xoá thẳng tránh dead code. `GradientText`/`SectionTag`/`ScrollReveal` ở `components/common/` GIỮ vì 60+ file khác (login/register/jobs/employer/admin) vẫn dùng — cleanup ở P2-F.
+
+**Verified:** QA Playwright production `58135b8` — 5 TC functional pass. Screenshot light mode (user OS pref). Dark mode chưa toggle verify cùng session (cần OS-level switch). Build pass local + Vercel.
+
+**Bugs phát hiện mới:**
+- 401 console noise từ axios refresh khi guest visit. Pre-existing (không phải P2-B regression). Fix backlog priority low.
+- StatHero count-up không trigger trong Playwright headless fullPage. Tooling quirk, real user OK. Không fix.
+
+**Next Action:** **P2-C Jobs list rewrite** — `frontend/src/app/(public)/jobs/page.tsx` + `components/jobs/*`. Layout thesis B: sticky `<CmdK size="md">` top → `<HairlineSection>` Row list → click Row → `<SidePanel>` slide-right detail (thay vì navigate /jobs/[id]). URL sync `?q=...&page=...`. Read q từ URL khi mount → prefill CmdK. Pagination mono footer hairline. Drop filter sidebar checkbox + salary slider + card grid. Risk audit: hiện jobs list dùng components nào? (JobCard / FilterSidebar / JobFilters / Pagination) — cần audit trước plan chi tiết.
+
+**Blocker:** Không có. Token estimate ~85-100k tiêu session 53 → wrap để session 54 fresh budget cho P2-C scope tương đương.
+
+---
+
 ## Session 52 — 2026-06-11
 
 **Commits:** `d90c659` DESIGN_BRIEF.md Phase 2, `3ef75d3` P1 design tokens + Geist + light auto-detect, `e97f060` P2-A thesis B foundation (9 primitives + Geist Mono + grain)

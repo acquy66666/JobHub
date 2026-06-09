@@ -10,14 +10,14 @@ Guidance for Claude Code working in this repo. Keep this file under ~150 lines �
 
 ## Current state
 
-**Stage 12 — UI Redesign** (Thesis B: terminal precision) — Phase 2 brief + P1 tokens + P2-A foundation DONE session 52. Stage 1-11 ✅ COMPLETE.
+**Stage 12 — UI Redesign** (Thesis B: terminal precision) — Phase 2 brief + P1 + P2-A foundation + P2-B Homepage DONE. Stage 1-11 ✅ COMPLETE.
 
 **Last 3 sessions** — chi tiết rationale ở [`.claude/SESSION_LOG.md`](.claude/SESSION_LOG.md):
-- **Session 52 (2026-06-11)** — Stage 12 escalated: brief duyệt (`d90c659`) → P1 token swap (`3ef75d3`) → user "đổi màu chưa đủ" → re-plan thành **Thesis B terminal precision** (hairline rows, mono numbers, CmdK search, no card grid) → **P2-A foundation** ship (`e97f060`): Geist Mono + grain texture + 9 primitives (Row/MonoNumber/StatHero/CmdK/SidePanel/TabBar/Breadcrumb/HairlineSection/CapsLabel) + Radix Dialog. Legacy classes gradual-deprecate 2 sessions. Build pass, chưa QA visible (foundation only).
-- **Session 51 (2026-06-11)** — Stage 12 Phase 1 UI Redesign Research DONE. 4 sub-agent reports saved to `.claude/redesign/phase1/` (trend, competitor, design-system, a11y). User approved **Direction 3 Deep slate + amber** + Geist Variable + 5-surface scope.
-- **Session 50 (2026-06-10)** — Stage 11 P4 Match Score v2 consolidated DONE QA 5/5 (`5e08e92`). Refactor recommendation.service.ts: skills 0.4 + certs 0.2 + exp 0.2 + prefs 0.2.
+- **Session 53 (2026-06-12)** — Stage 12 P2-B Homepage rewrite DONE (`58135b8`). Replace 9 legacy home sections với 4 thesis B panels: HeroPanel (left-aligned h1 + mono meta + CmdK), HotJobsPanel (real `/api/jobs?limit=6` + fallback, 6 Row + MonoNumber match score), StatsHeroPanel (StatHero giant + 3 inline metrics), CTAPanel (mono links). QA Playwright 1280+375 pass functional 5/5 (401 console noise pre-existing, không liên quan). Drop 5 unused home components.
+- **Session 52 (2026-06-11)** — Stage 12 escalated: brief duyệt (`d90c659`) → P1 token swap (`3ef75d3`) → user "đổi màu chưa đủ" → re-plan thành **Thesis B terminal precision** → **P2-A foundation** ship (`e97f060`): Geist Mono + grain texture + 9 primitives + Radix Dialog. Legacy aliases gradual-deprecate.
+- **Session 51 (2026-06-11)** — Stage 12 Phase 1 UI Redesign Research DONE. User approved **Direction 3 Deep slate + amber** + Geist Variable + 5-surface scope.
 
-**Active backlog:** P2-B Homepage rewrite (consume CmdK + Row + StatHero) → P2-C Jobs list → P2-D Candidate dash → P2-E Employer applicants → P2-F final QA.
+**Active backlog:** P2-C Jobs list rewrite → P2-D Candidate dash → P2-E Employer applicants → P2-F final QA + drop legacy aliases.
 
 ## Repo layout
 
