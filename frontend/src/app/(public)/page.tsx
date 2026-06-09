@@ -1,29 +1,19 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturesSection } from "@/components/home/FeaturesSection";
-import { HowItWorksSection } from "@/components/home/HowItWorksSection";
-import { FeaturedJobsSection } from "@/components/home/FeaturedJobsSection";
-import { VipJobsSection } from "@/components/home/VipJobsSection";
-import { EmployerSection } from "@/components/home/EmployerSection";
-import { StatsSection } from "@/components/home/StatsSection";
-import { CompaniesSection } from "@/components/home/CompaniesSection";
-import { CTASection } from "@/components/home/CTASection";
+import { HeroPanel } from "@/components/home/HeroPanel";
+import { HotJobsPanel } from "@/components/home/HotJobsPanel";
+import { StatsHeroPanel } from "@/components/home/StatsHeroPanel";
+import { CTAPanel } from "@/components/home/CTAPanel";
 
 export default function HomePage() {
   return (
     <>
       <Navbar />
       <main>
-        <HeroSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <VipJobsSection />
-        <FeaturedJobsSection />
-        <EmployerSection />
-        <StatsSection />
-        <CompaniesSection />
-        <CTASection />
+        <HeroPanel />
+        <HotJobsPanel />
+        <StatsHeroPanel />
+        <CTAPanel />
       </main>
       <Footer />
     </>
