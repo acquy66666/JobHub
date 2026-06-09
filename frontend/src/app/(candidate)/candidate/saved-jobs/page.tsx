@@ -1,11 +1,12 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { queryKeys } from "@/lib/queryKeys";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
-import { Pagination } from "@/components/common/Pagination";
-import { JobCard } from "@/components/jobs/JobCard";
+import { formatSalary, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { MonoNumber } from "@/components/ui/MonoNumber";
 
 type GapResponse = {
   jobId: string;
@@ -20,6 +21,19 @@ type GapResponse = {
   };
 };
 
+interface SavedItem {
+  job: {
+    id: string;
+    title: string;
+    location: string;
+    salaryMin: number | null;
+    salaryMax: number | null;
+    salaryCurrency: string;
+    createdAt: string;
+    employer: { companyName: string };
+  };
+}
+
 export default function SavedJobsPage() {
   const [page, setPage] = useState(1);
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
@@ -27,7 +41,7 @@ export default function SavedJobsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.candidateSavedJobs(page),
-    queryFn: () => api.get("/candidate/saved-jobs", { params: { page, limit: 9 } }).then((r) => r.data),
+    queryFn: () => api.get("/candidate/saved-jobs", { params: { page, limit: 20 } }).then((r) => r.data),
   });
 
   const unsaveMutation = useMutation({
@@ -37,7 +51,10 @@ export default function SavedJobsPage() {
       const previous = qc.getQueryData(queryKeys.candidateSavedJobs(page));
       qc.setQueryData(queryKeys.candidateSavedJobs(page), (old: Record<string, unknown> | undefined) => ({
         ...old,
-        savedJobs: (old?.savedJobs as { job: { id: string } }[] | undefined)?.filter((item) => item.job.id !== jobId) ?? [],
+        savedJobs:
+          (old?.savedJobs as { job: { id: string } }[] | undefined)?.filter(
+            (item) => item.job.id !== jobId,
+          ) ?? [],
       }));
       return { previous };
     },
@@ -47,59 +64,125 @@ export default function SavedJobsPage() {
     onSettled: () => qc.invalidateQueries({ queryKey: queryKeys.candidateSavedJobs(page) }),
   });
 
-  const savedJobs = data?.savedJobs ?? [];
+  const savedJobs: SavedItem[] = data?.savedJobs ?? [];
+  const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl space-y-6">
-      <ScrollReveal direction="up">
-        <h1 className="text-[24px] font-extrabold text-t0 mb-1">Việc làm đã lưu</h1>
-        <p className="text-[14px] text-t1">Các tin tuyển dụng bạn đã đánh dấu yêu thích. Mở rộng để xem khoảng cách hồ sơ.</p>
-      </ScrollReveal>
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8">
+        <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">
+          Việc làm đã lưu
+        </h1>
+        <p className="font-mono text-[13px] text-[var(--t1)] mt-2">
+          {`> ${total} tin · click row để xem gap với hồ sơ`}
+        </p>
+      </section>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-48 bg-bg-2 rounded-2xl animate-pulse" />)}
-        </div>
-      ) : savedJobs.length === 0 ? (
-        <ScrollReveal direction="up" delay={0.05}>
-          <div className="card-dark p-12 rounded-2xl text-center">
-            <div className="text-5xl mb-4">🔖</div>
-            <h3 className="text-[18px] font-bold text-t0 mb-2">Chưa có việc làm đã lưu</h3>
-            <p className="text-[14px] text-t1">Lưu các tin tuyển dụng yêu thích để xem lại sau.</p>
+      <HairlineSection label="DANH SÁCH">
+        {isLoading ? (
+          <p className="px-4 md:px-6 py-8 font-mono text-[13px] text-[var(--t2)]">đang tải…</p>
+        ) : savedJobs.length === 0 ? (
+          <div className="px-4 md:px-6 py-10 text-center">
+            <p className="font-mono text-[13px] text-[var(--t2)]">Bạn chưa lưu tin tuyển dụng nào.</p>
+            <a
+              href="/jobs"
+              className="inline-block mt-3 font-mono text-[13px] text-[var(--accent)] hover:underline"
+            >
+              → tìm việc
+            </a>
           </div>
-        </ScrollReveal>
-      ) : (
-        <>
-          <div className="space-y-4">
-            {savedJobs.map((item: { job: Parameters<typeof JobCard>[0]['job'] }, i: number) => {
-              const isExpanded = expandedJobId === item.job.id;
-              return (
-                <ScrollReveal key={item.job.id} direction="up" delay={i * 0.05}>
-                  <div data-testid="saved-job-row" data-job-id={item.job.id}>
-                    <JobCard
-                      job={item.job}
-                      isSaved
-                      onUnsave={(jobId) => unsaveMutation.mutate(jobId)}
+        ) : (
+          savedJobs.map(({ job }, i) => {
+            const isExpanded = expandedJobId === job.id;
+            const idx = String((page - 1) * 20 + i + 1).padStart(2, "0");
+            return (
+              <div
+                key={job.id}
+                className={`border-b border-[var(--border)] border-l-2 ${
+                  isExpanded ? "border-l-[var(--accent)] bg-[var(--accent-dim)]" : "border-l-transparent"
+                }`}
+                data-testid="saved-job-row"
+                data-job-id={job.id}
+              >
+                <button
+                  type="button"
+                  data-testid="gap-toggle-btn"
+                  onClick={() => setExpandedJobId(isExpanded ? null : job.id)}
+                  className="w-full grid grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center gap-4 px-4 md:px-6 min-h-[var(--row-h)] text-left hover:bg-[var(--accent-dim)] transition-colors duration-100"
+                  aria-expanded={isExpanded}
+                >
+                  <div className="flex items-center">
+                    <MonoNumber size="lg" tone="muted">{idx}</MonoNumber>
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[15px] md:text-[17px] font-semibold text-[var(--t0)] truncate">
+                      {job.title}
+                    </div>
+                    <div className="font-mono text-[12px] text-[var(--t1)] truncate mt-0.5">
+                      {job.employer.companyName} · {job.location} · {timeAgo(job.createdAt)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-mono text-[13px] text-[var(--t0)] hidden sm:inline">
+                      {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-[var(--t2)] transition-transform ${
+                        isExpanded ? "rotate-180" : ""
+                      }`}
                     />
-                    <div className="mt-2 flex justify-end">
+                  </div>
+                </button>
+
+                {isExpanded && (
+                  <div className="px-4 md:px-6 pb-6 pt-2 border-t border-[var(--border)]">
+                    <div className="flex gap-4 flex-wrap mt-3 font-mono text-[12px]">
+                      <a
+                        href={`/jobs/${job.id}`}
+                        className="text-[var(--accent)] hover:underline"
+                      >
+                        → mở tin tuyển dụng
+                      </a>
                       <button
                         type="button"
-                        data-testid="gap-toggle-btn"
-                        onClick={() => setExpandedJobId(isExpanded ? null : item.job.id)}
-                        className="text-[12px] px-3 py-1.5 rounded-lg border border-[rgba(124,58,237,.3)] text-[#B09BF8] hover:bg-[rgba(124,58,237,.1)] transition-colors"
+                        onClick={() => unsaveMutation.mutate(job.id)}
+                        className="text-[var(--t1)] hover:text-red-400 transition-colors"
                       >
-                        {isExpanded ? "Ẩn phân tích gap" : "Xem gap với hồ sơ"}
+                        → bỏ lưu
                       </button>
                     </div>
-                    {isExpanded && <GapPanel jobId={item.job.id} />}
+                    <GapPanel jobId={job.id} />
                   </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </>
+                )}
+              </div>
+            );
+          })
+        )}
+      </HairlineSection>
+
+      {totalPages > 1 && (
+        <div className="px-4 md:px-6 py-6 flex items-center justify-between font-mono text-[13px] border-t border-[var(--border)]">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--t0)] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-4 h-4" /> prev
+          </button>
+          <span className="text-[var(--t2)] tabular-nums">
+            page {page}/{totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--t0)] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            next <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       )}
     </div>
   );
@@ -114,15 +197,15 @@ function GapPanel({ jobId }: { jobId: string }) {
 
   if (isLoading) {
     return (
-      <div data-testid="gap-panel" className="mt-3 card-dark p-5 rounded-2xl">
-        <p className="text-[13px] text-t2">Đang phân tích khoảng cách...</p>
+      <div data-testid="gap-panel" className="mt-5">
+        <p className="font-mono text-[12px] text-[var(--t2)]">đang phân tích khoảng cách…</p>
       </div>
     );
   }
   if (isError || !data) {
     return (
-      <div data-testid="gap-panel" className="mt-3 card-dark p-5 rounded-2xl">
-        <p className="text-[13px] text-red-400">Không tải được dữ liệu gap.</p>
+      <div data-testid="gap-panel" className="mt-5">
+        <p className="font-mono text-[12px] text-red-400">không tải được dữ liệu gap.</p>
       </div>
     );
   }
@@ -133,29 +216,35 @@ function GapPanel({ jobId }: { jobId: string }) {
   const certsAllMet = data.certificates.missing.length === 0 && data.certificates.required.length > 0;
 
   return (
-    <div data-testid="gap-panel" className="mt-3 card-dark p-5 rounded-2xl space-y-4">
-      <h3 className="text-[14px] font-bold text-t0">Phân tích khoảng cách hồ sơ</h3>
+    <div data-testid="gap-panel" className="mt-5 space-y-5">
+      <p className="font-mono text-[11px] uppercase tracking-wider text-[var(--t2)]">
+        phân tích khoảng cách hồ sơ
+      </p>
 
       <section data-testid="gap-skills">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] font-semibold uppercase tracking-wide text-t2">Kỹ năng</span>
+        <div className="flex items-center justify-between mb-2 font-mono text-[12px]">
+          <span className="text-[var(--t2)] uppercase tracking-wide">kỹ năng</span>
           {data.skills.required.length === 0 ? (
-            <span className="text-[11px] text-t2">Tin chưa yêu cầu kỹ năng cụ thể</span>
+            <span className="text-[var(--t2)]">tin chưa yêu cầu kỹ năng</span>
           ) : skillsAllMet ? (
-            <span className="text-[11px] text-green-400">✓ Đủ {data.skills.required.length}/{data.skills.required.length}</span>
+            <span className="text-green-400">
+              ✓ đủ {data.skills.required.length}/{data.skills.required.length}
+            </span>
           ) : (
-            <span className="text-[11px] text-yellow-400">Thiếu {data.skills.missing.length}/{data.skills.required.length}</span>
+            <span className="text-yellow-400">
+              thiếu {data.skills.missing.length}/{data.skills.required.length}
+            </span>
           )}
         </div>
         {data.skills.required.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[12px]">
             {data.skills.have.map((s) => (
-              <span key={s} data-cert-have-slug={s} className="px-2 py-0.5 rounded-md bg-[rgba(34,197,94,.12)] border border-[rgba(34,197,94,.25)] text-[11px] text-green-400">
+              <span key={s} data-cert-have-slug={s} className="text-green-400">
                 ✓ {s}
               </span>
             ))}
             {data.skills.missing.map((s) => (
-              <span key={s} data-skill-missing-slug={s} className="px-2 py-0.5 rounded-md bg-[rgba(245,158,11,.12)] border border-[rgba(245,158,11,.25)] text-[11px] text-yellow-300">
+              <span key={s} data-skill-missing-slug={s} className="text-yellow-400">
                 ⚠ {s}
               </span>
             ))}
@@ -163,39 +252,47 @@ function GapPanel({ jobId }: { jobId: string }) {
         )}
       </section>
 
-      <section data-testid="gap-experience">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-[12px] font-semibold uppercase tracking-wide text-t2">Kinh nghiệm</span>
+      <section data-testid="gap-experience" className="font-mono text-[12px]">
+        <div className="flex items-center justify-between">
+          <span className="text-[var(--t2)] uppercase tracking-wide">kinh nghiệm</span>
           {data.experience.required === null ? (
-            <span className="text-[11px] text-t2">Tin không yêu cầu kinh nghiệm</span>
+            <span className="text-[var(--t2)]">không yêu cầu</span>
           ) : expMet ? (
-            <span className="text-[11px] text-green-400">✓ Đạt ({data.experience.have ?? 0}/{data.experience.required} năm)</span>
+            <span className="text-green-400">
+              ✓ đạt ({data.experience.have ?? 0}/{data.experience.required} năm)
+            </span>
           ) : (
-            <span className="text-[11px] text-yellow-400">Thiếu {data.experience.shortBy} năm ({data.experience.have ?? 0}/{data.experience.required})</span>
+            <span className="text-yellow-400">
+              thiếu {data.experience.shortBy} năm ({data.experience.have ?? 0}/{data.experience.required})
+            </span>
           )}
         </div>
       </section>
 
       <section data-testid="gap-certificates">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[12px] font-semibold uppercase tracking-wide text-t2">Chứng chỉ</span>
+        <div className="flex items-center justify-between mb-2 font-mono text-[12px]">
+          <span className="text-[var(--t2)] uppercase tracking-wide">chứng chỉ</span>
           {data.certificates.required.length === 0 ? (
-            <span className="text-[11px] text-t2">Tin không yêu cầu chứng chỉ</span>
+            <span className="text-[var(--t2)]">không yêu cầu</span>
           ) : certsAllMet ? (
-            <span className="text-[11px] text-green-400">✓ Đủ {data.certificates.required.length}/{data.certificates.required.length}</span>
+            <span className="text-green-400">
+              ✓ đủ {data.certificates.required.length}/{data.certificates.required.length}
+            </span>
           ) : (
-            <span className="text-[11px] text-yellow-400">Thiếu {data.certificates.missing.length}/{data.certificates.required.length}</span>
+            <span className="text-yellow-400">
+              thiếu {data.certificates.missing.length}/{data.certificates.required.length}
+            </span>
           )}
         </div>
         {data.certificates.required.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[12px]">
             {data.certificates.have.map((slug) => (
-              <span key={slug} className="px-2 py-0.5 rounded-md bg-[rgba(34,197,94,.12)] border border-[rgba(34,197,94,.25)] text-[11px] text-green-400">
+              <span key={slug} className="text-green-400">
                 ✓ {certMeta.get(slug)?.nameVi ?? slug}
               </span>
             ))}
             {data.certificates.missing.map((slug) => (
-              <span key={slug} data-cert-missing-slug={slug} className="px-2 py-0.5 rounded-md bg-[rgba(245,158,11,.12)] border border-[rgba(245,158,11,.25)] text-[11px] text-yellow-300">
+              <span key={slug} data-cert-missing-slug={slug} className="text-yellow-400">
                 ⚠ {certMeta.get(slug)?.nameVi ?? slug}
               </span>
             ))}

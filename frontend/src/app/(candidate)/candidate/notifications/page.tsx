@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft, ChevronRight, Check, X } from "lucide-react";
 import { queryKeys } from "@/lib/queryKeys";
 import { timeAgo } from "@/lib/formatters";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
-import { Pagination } from "@/components/common/Pagination";
 import { useToast } from "@/store/toastStore";
 import api from "@/lib/api";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { MonoNumber } from "@/components/ui/MonoNumber";
 
 interface Notification {
   id: string;
@@ -18,29 +19,21 @@ interface Notification {
   createdAt: string;
 }
 
-const TYPE_ICON: Record<string, string> = {
-  APPLICATION_STATUS_CHANGED: "📋",
-  NEW_JOB_FROM_FOLLOWED_COMPANY: "🏢",
-  NEW_MATCHED_JOB: "✨",
-  JOB_EXPIRING_SOON: "⏰",
-  SYSTEM: "🔔",
-};
-
 const TYPE_LABEL: Record<string, string> = {
-  APPLICATION_STATUS_CHANGED: "Cập nhật đơn",
-  NEW_JOB_FROM_FOLLOWED_COMPANY: "Công ty theo dõi",
-  NEW_MATCHED_JOB: "Việc phù hợp",
-  INTERVIEW_SCHEDULED: "Phỏng vấn",
-  JOB_EXPIRING_SOON: "Sắp hết hạn",
-  SYSTEM: "Hệ thống",
+  APPLICATION_STATUS_CHANGED: "đơn",
+  NEW_JOB_FROM_FOLLOWED_COMPANY: "công ty",
+  NEW_MATCHED_JOB: "phù hợp",
+  INTERVIEW_SCHEDULED: "phỏng vấn",
+  JOB_EXPIRING_SOON: "hết hạn",
+  SYSTEM: "hệ thống",
 };
 
-const FILTER_TABS: { value: string; label: string }[] = [
-  { value: "all", label: "Tất cả" },
-  { value: "APPLICATION_STATUS_CHANGED", label: "Cập nhật đơn" },
-  { value: "NEW_JOB_FROM_FOLLOWED_COMPANY", label: "Công ty theo dõi" },
-  { value: "NEW_MATCHED_JOB", label: "Việc phù hợp" },
-  { value: "INTERVIEW_SCHEDULED", label: "Phỏng vấn" },
+const FILTERS: { value: string; label: string }[] = [
+  { value: "all", label: "tất cả" },
+  { value: "APPLICATION_STATUS_CHANGED", label: "đơn" },
+  { value: "NEW_JOB_FROM_FOLLOWED_COMPANY", label: "công ty theo dõi" },
+  { value: "NEW_MATCHED_JOB", label: "phù hợp" },
+  { value: "INTERVIEW_SCHEDULED", label: "phỏng vấn" },
 ];
 
 export default function NotificationsPage() {
@@ -52,7 +45,9 @@ export default function NotificationsPage() {
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.notifications(page),
     queryFn: () =>
-      api.get(`/notifications?page=${page}&limit=20`).then((r) => r.data as { notifications: Notification[]; total: number; totalPages: number }),
+      api
+        .get(`/notifications?page=${page}&limit=20`)
+        .then((r) => r.data as { notifications: Notification[]; total: number; totalPages: number }),
     staleTime: 30_000,
   });
 
@@ -85,152 +80,144 @@ export default function NotificationsPage() {
   const totalPages = data?.totalPages ?? 1;
   const hasUnread = notifications.some((n) => !n.isRead);
   const filtered = filter === "all" ? notifications : notifications.filter((n) => n.type === filter);
-  const tabCounts: Record<string, number> = FILTER_TABS.reduce((acc, t) => {
-    acc[t.value] = t.value === "all" ? notifications.length : notifications.filter((n) => n.type === t.value).length;
-    return acc;
-  }, {} as Record<string, number>);
 
   return (
-    <div className="p-4 sm:p-8 max-w-5xl space-y-6">
-      <ScrollReveal>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-t0">Thông báo</h1>
-            <p className="text-[13px] text-t2 mt-1">Tất cả thông báo từ hệ thống</p>
-          </div>
-          {hasUnread && (
-            <button
-              onClick={() => markAllMutation.mutate()}
-              disabled={markAllMutation.isPending}
-              className="text-[13px] font-medium text-[#7C3AED] hover:text-[#9D5CF6] transition-colors"
-            >
-              {markAllMutation.isPending ? "Đang xử lý..." : "Đánh dấu tất cả đã đọc"}
-            </button>
-          )}
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8 flex items-end justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">
+            Thông báo
+          </h1>
+          <p className="font-mono text-[13px] text-[var(--t1)] mt-2">
+            {`> ${notifications.length} thông báo${hasUnread ? " · có chưa đọc" : ""}`}
+          </p>
         </div>
-      </ScrollReveal>
+        {hasUnread && (
+          <button
+            onClick={() => markAllMutation.mutate()}
+            disabled={markAllMutation.isPending}
+            className="font-mono text-[13px] text-[var(--accent)] hover:underline disabled:opacity-50"
+          >
+            → đánh dấu tất cả đã đọc
+          </button>
+        )}
+      </section>
 
-      <ScrollReveal delay={50}>
-        <div role="tablist" aria-label="Lọc thông báo" className="flex gap-2 overflow-x-auto -mx-2 px-2 pb-1">
-          {FILTER_TABS.map((t) => {
-            const active = filter === t.value;
-            const count = tabCounts[t.value] ?? 0;
+      <div
+        role="tablist"
+        aria-label="Lọc thông báo"
+        className="px-4 md:px-6 pb-4 flex gap-x-5 gap-y-2 flex-wrap font-mono text-[13px]"
+      >
+        {FILTERS.map((t) => {
+          const active = filter === t.value;
+          return (
+            <button
+              key={t.value}
+              role="tab"
+              aria-selected={active}
+              onClick={() => setFilter(t.value)}
+              className={`transition-colors ${
+                active
+                  ? "text-[var(--accent)]"
+                  : "text-[var(--t1)] hover:text-[var(--t0)]"
+              }`}
+            >
+              {active ? `[${t.label}]` : t.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <HairlineSection label="DANH SÁCH">
+        {isLoading ? (
+          <p className="px-4 md:px-6 py-8 font-mono text-[13px] text-[var(--t2)]">đang tải…</p>
+        ) : filtered.length === 0 ? (
+          <p className="px-4 md:px-6 py-10 text-center font-mono text-[13px] text-[var(--t2)]">
+            {notifications.length === 0
+              ? "Chưa có thông báo nào."
+              : "Không có thông báo nào ở mục này."}
+          </p>
+        ) : (
+          filtered.map((noti, i) => {
+            const idx = String((page - 1) * 20 + i + 1).padStart(2, "0");
             return (
-              <button
-                key={t.value}
-                role="tab"
-                aria-selected={active}
-                onClick={() => setFilter(t.value)}
-                className={`shrink-0 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all whitespace-nowrap border ${
-                  active
-                    ? "bg-gradient-to-br from-[#7C3AED] to-[#3B82F6] text-white border-transparent shadow-[0_4px_18px_rgba(124,58,237,.32)]"
-                    : "bg-bg-2 text-t1 border-border-dark hover:text-t0 hover:bg-bg-3"
+              <div
+                key={noti.id}
+                className={`group border-b border-[var(--border)] border-l-2 ${
+                  !noti.isRead ? "border-l-[var(--accent)] bg-[var(--accent-dim)]" : "border-l-transparent"
                 }`}
               >
-                {t.label}
-                <span className={`ml-1.5 text-[11px] font-medium ${active ? "text-white/80" : "text-t2"}`}>({count})</span>
-              </button>
-            );
-          })}
-        </div>
-      </ScrollReveal>
-
-      <ScrollReveal delay={100}>
-        <div className="bg-bg-2 border border-border-dark rounded-2xl overflow-hidden">
-          {isLoading ? (
-            <div className="divide-y divide-border-dark">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="px-6 py-4 animate-pulse">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 bg-white/10 rounded-full shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-white/10 rounded w-1/3" />
-                      <div className="h-3 bg-white/10 rounded w-2/3" />
-                      <div className="h-2 bg-white/10 rounded w-1/4" />
-                    </div>
+                <div className="grid grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center gap-4 px-4 md:px-6 py-4">
+                  <div className="flex items-center">
+                    <MonoNumber size="lg" tone={!noti.isRead ? "accent" : "muted"}>{idx}</MonoNumber>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : notifications.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="text-4xl mb-3">🔔</div>
-              <p className="text-[14px] font-medium text-t1">Chưa có thông báo nào</p>
-              <p className="text-[12px] text-t2 mt-1">Các cập nhật về đơn ứng tuyển sẽ hiển thị ở đây</p>
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="text-4xl mb-3">🗂️</div>
-              <p className="text-[14px] font-medium text-t1">Không có thông báo nào ở mục này</p>
-              <p className="text-[12px] text-t2 mt-1">Thử chọn tab khác hoặc xem tất cả</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-border-dark">
-              {filtered.map((noti) => (
-                <div
-                  key={noti.id}
-                  className={`px-6 py-4 flex items-start gap-3 group transition-colors ${
-                    !noti.isRead ? "bg-[rgba(124,58,237,.04)]" : "hover:bg-white/[.02]"
-                  }`}
-                >
-                  <span className="text-xl shrink-0 mt-0.5">{TYPE_ICON[noti.type] ?? "🔔"}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-[10px] font-semibold tracking-wider text-t2 uppercase">
-                        {TYPE_LABEL[noti.type] ?? "Thông báo"}
-                      </span>
-                      {!noti.isRead && (
-                        <span className="w-1.5 h-1.5 bg-[#7C3AED] rounded-full shrink-0" />
-                      )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 font-mono text-[11px] uppercase tracking-wider text-[var(--t2)]">
+                      <span>{TYPE_LABEL[noti.type] ?? "thông báo"}</span>
+                      <span className="text-[var(--t2)]">·</span>
+                      <span className="tabular-nums">{timeAgo(noti.createdAt)}</span>
                     </div>
-                    <p className={`text-[13px] font-semibold ${!noti.isRead ? "text-t0" : "text-t1"}`}>
+                    <p className={`text-[14px] font-semibold truncate ${!noti.isRead ? "text-[var(--t0)]" : "text-[var(--t1)]"}`}>
                       {noti.title}
                     </p>
-                    <p className="text-[12px] text-t2 mt-0.5 leading-relaxed">{noti.message}</p>
-                    <p className="text-[11px] text-t2 mt-1">{timeAgo(noti.createdAt)}</p>
+                    <p className="text-[13px] text-[var(--t1)] mt-0.5 line-clamp-2 leading-relaxed">
+                      {noti.message}
+                    </p>
                     {noti.link && (
                       <a
                         href={noti.link}
                         onClick={() => !noti.isRead && markReadMutation.mutate(noti.id)}
-                        className="inline-block mt-1 text-[11px] text-[#7C3AED] hover:underline"
+                        className="inline-block mt-1 font-mono text-[12px] text-[var(--accent)] hover:underline"
                       >
-                        Xem chi tiết →
+                        → xem chi tiết
                       </a>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     {!noti.isRead && (
                       <button
                         onClick={() => markReadMutation.mutate(noti.id)}
-                        title="Đánh dấu đã đọc"
-                        className="p-1.5 rounded-lg hover:bg-white/[.06] text-t2 hover:text-t0 transition-colors"
+                        title="đánh dấu đã đọc"
+                        className="p-1.5 text-[var(--t2)] hover:text-[var(--t0)] transition-colors"
                       >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                        <Check className="w-4 h-4" />
                       </button>
                     )}
                     <button
                       onClick={() => deleteMutation.mutate(noti.id)}
-                      title="Xóa"
-                      className="p-1.5 rounded-lg hover:bg-white/[.06] text-t2 hover:text-red-400 transition-colors"
+                      title="xoá"
+                      className="p-1.5 text-[var(--t2)] hover:text-red-400 transition-colors"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </ScrollReveal>
+              </div>
+            );
+          })
+        )}
+      </HairlineSection>
 
       {totalPages > 1 && (
-        <ScrollReveal delay={150}>
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
-        </ScrollReveal>
+        <div className="px-4 md:px-6 py-6 flex items-center justify-between font-mono text-[13px] border-t border-[var(--border)]">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--t0)] disabled:opacity-30"
+          >
+            <ChevronLeft className="w-4 h-4" /> prev
+          </button>
+          <span className="text-[var(--t2)] tabular-nums">page {page}/{totalPages}</span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--t0)] disabled:opacity-30"
+          >
+            next <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       )}
     </div>
   );
