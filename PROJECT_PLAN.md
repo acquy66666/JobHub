@@ -1,6 +1,6 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-13 (session 54 — Stage 12 P2-C Jobs list rewrite DONE; QA 5/5 pass)
+Last Updated: 2026-06-14 (session 55 — Stage 12 P2-D Candidate dashboard rewrite DONE; QA 6/6 pass)
 
 Stage 12 — UI Redesign (Thesis B: terminal precision):
 - [x] Phase 1 Research (2026-06-11, session 51) — 4 sub-agent reports in `.claude/redesign/phase1/`. Direction 3 (slate+amber) + Geist + 5-surface scope approved.
@@ -9,9 +9,9 @@ Stage 12 — UI Redesign (Thesis B: terminal precision):
 - [x] Phase 3 P2-A Foundation (2026-06-11, `e97f060`) — Thesis B pivot after user feedback "đổi màu chưa đủ". Add Geist Mono, grain texture replace radial, row tokens, 9 primitives (Row/MonoNumber/StatHero/CmdK+parser/SidePanel/TabBar/Breadcrumb/HairlineSection/CapsLabel) + @radix-ui/react-dialog. Build pass.
 - [x] Phase 3 P2-B Homepage rewrite (2026-06-12, `58135b8`, QA 5/5 functional pass) — 4 new panels HeroPanel/HotJobsPanel/StatsHeroPanel/CTAPanel in `app/(public)/page.tsx` + `components/home/`. Drop 9 legacy sections (Hero/Features/HowItWorks/Vip/Featured/Employer/Stats/Companies/CTA). HotJobs fetch real `/api/jobs?limit=6` với fallback mock. CmdK onSubmit → `router.push('/jobs?q=...')`. Zero purple gradient on homepage.
 - [x] Phase 3 P2-C Jobs list rewrite (2026-06-13, `f6e39b6`, QA 5/5 PASS) — `app/(public)/jobs/JobsContent.tsx` rewrite: sticky CmdK + HairlineSection Row list (20/page) + SidePanel slide-right Radix Dialog reuse ApplyModal. URL sync `?q=&page=&job=`. Mono hairline pagination. Drop filter sidebar + card grid + ScrollReveal. Deep-link `/jobs/[id]` route giữ nguyên.
-- [ ] Phase 3 P2-D Candidate dashboard — TabBar + Breadcrumb + applications table accordion. Drop sidebar nav.
+- [x] Phase 3 P2-D Candidate dashboard rewrite (2026-06-14, `e739147`, QA 6/6 PASS) — Drop sidebar 240px (11 emoji items) → TabBar 7 tabs + Breadcrumb mono ở `(candidate)/layout.tsx`. Rewrite 6 core pages (dashboard 4-stat mono + 4 HairlineSection; applications Row accordion với CV/cover letter/interview/timeline inline; saved-jobs Row accordion preserving gap test IDs; notifications Row mono filter tabs; recommended Row + MonoNumber match score). Profile NOT touched (defer P2-F).
 - [ ] Phase 3 P2-E Employer applicants — TabBar + applicants table + bulk action bar.
-- [ ] Phase 3 P2-F Final QA + REDESIGN_SUMMARY.md — Playwright dark+light @ 1280/375, sweep legacy purple stragglers, a11y verification, drop legacy aliases.
+- [ ] Phase 3 P2-F Final QA + REDESIGN_SUMMARY.md — Playwright dark+light @ 1280/375, sweep legacy purple stragglers, a11y verification, drop legacy aliases, refactor profile/page.tsx 556 LOC (deferred from P2-D).
 
 Stage 11 — Match Optimization ✅ COMPLETE:
 
@@ -28,9 +28,9 @@ UX/Bug backlog:
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
-Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A + P2-B + P2-C DONE (Thesis B); P2-D Candidate dashboard is Next Action
+Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A + P2-B + P2-C + P2-D DONE (Thesis B); P2-E Employer applicants is Next Action
 
-Next Action (session 55): **P2-D Candidate dashboard rewrite** — audit trước (`frontend/src/app/(candidate)/candidate/*` — dashboard, applications, saved-jobs, profile, notifications, …), map components nào dùng card-dark/gradient-text/Sidebar cũ → drop/keep. Apply Thesis B: Breadcrumb mono top + TabBar replace Sidebar nav + applications table accordion mode (compact row click → expand inline, theo `feedback_*_accordion` UX direction). Reuse primitives Row/MonoNumber/TabBar/Breadcrumb/HairlineSection. Sau P2-D ưu tiên P2-E Employer applicants tương tự, rồi P2-F final QA + drop legacy aliases.
+Next Action (session 56): **P2-E Employer applicants rewrite** — audit trước `frontend/src/app/(employer)/employer/*` (dashboard, jobs, jobs/[id]/applications, candidates, profile, billing, stats…), map component dùng card-dark/Sidebar/gradient cũ → drop/keep. Apply Thesis B: rewrite `(employer)/layout.tsx` Breadcrumb + TabBar (employer-specific tabs) tương tự P2-D layout shell. Trọng tâm `jobs/[id]/applications/page.tsx` — applicants table accordion compact row → expand inline (CV viewer + screening answers + status timeline + bulk action bar khi multi-select). Reuse primitives Row/MonoNumber/TabBar/Breadcrumb/HairlineSection. Plan chi tiết trước, đợi user duyệt mới code.
 
 ---
 

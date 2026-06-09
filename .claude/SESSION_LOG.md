@@ -2,6 +2,41 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 55 — 2026-06-14
+
+**Commits:** `e739147` P2-D candidate dashboard rewrite thesis B (Breadcrumb + TabBar + Row accordion)
+
+**Done:**
+- Rewrite `(candidate)/layout.tsx` 149→63 LOC. Drop sidebar fixed 240px + 11-item emoji nav (HOẠT ĐỘNG/HỒ SƠ/KHÁM PHÁ/CÀI ĐẶT groups) + avatar circle + mobile hamburger overlay. Mới: Breadcrumb mono `~ / candidate / <route>` + email mono phải + TabBar 7 tabs ngang (Tổng quan/Đơn ứng tuyển/Việc đã lưu/Phù hợp/Hồ sơ/CV/Thông báo).
+- Rewrite `dashboard/page.tsx` 379→235 LOC. Hero greeting + mono completion line. 4 mono stats (apps/saved/viewed/cv) — drop gradient card stats. 4 HairlineSection: ĐƠN GẦN ĐÂY (5 row mono), ĐỀ XUẤT (4 row + MonoNumber match), TOP KỸ NĂNG (mono links inline), ĐÃ XEM (recently viewed mono row). Drop ScrollReveal/gradient-text/profile-progress-bar/quick-actions.
+- Rewrite `applications/page.tsx` 403→260 LOC. Drop kanban + timeline view toggle (3 view modes → 1 unified Row accordion). Click row expand inline panel: CV link mono + cover letter + interview badge (xác nhận/từ chối) + Timeline component (mono `time · status → status // note`). Pagination mono prev/page/next thay `<Pagination>` component.
+- Rewrite `saved-jobs/page.tsx` 207→220 LOC. JobCard grid 3-col → Row accordion với gap analysis inline (preserve Stage 11 P3 test IDs: `saved-job-row`, `gap-toggle-btn`, `gap-panel`, `data-skill-missing-slug`, `data-cert-have-slug`, `data-cert-missing-slug`). Mono prev/next pagination.
+- Rewrite `notifications/page.tsx` 237→205 LOC. Drop gradient pill filter chips → mono inline filter tabs (`[active]` bracket). Drop pulse skeletons + emoji icon circles. Mono row với MonoNumber idx lead (accent if unread, muted if read) + type label uppercase + timestamp tabular-nums.
+- Rewrite `recommended/page.tsx` 137→100 LOC. Card grid 2-col → single HairlineSection Row list. MonoNumber match score lead (accent ≥85 / default ≥70 / muted) + matchedSkills inline mono `✓ react, ts, next +2`.
+- QA Playwright (`qa-scripts/redesign-p2d/qa.js`) 6 TC production với login candidate fixture (Demo@2026): TC1 dashboard shell (breadcrumb=1, tabs=7, mono=13, h1 verified), TC2 mobile 375 no overflow, TC3 tab active state, TC4 applications accordion expand (rowCount=20 expanded+panel verified run 1), TC5 saved-jobs gap accordion (rowCount=12 gapVisible verified), TC6 recommended rows + match score (rowCount=20). **Pass 6/6.**
+
+**Why / Rationale:**
+- **Drop sidebar 240px cố định → TabBar ngang**: thesis B refuse cột nav bên trái (quá AI-template/dashboard cliché). Horizontal TabBar fit content density cao hơn — recover 240px full-width cho list scan. 11 items emoji → 7 tabs essential; secondary routes (recently-viewed/compare/job-alerts/skills/preview/onboarding) vẫn route được qua direct URL hoặc Breadcrumb crumb path nhưng không chiếm tab slot.
+- **Profile page intentionally NOT touched**: `profile/page.tsx` 556 LOC chứa nhiều `useEffect` form watcher + skill picker + experience/education repeater. Refactor wrapper card-dark → HairlineSection rủi ro vỡ form state nếu touch nhầm. Scope rõ "section wrapper swap only" nhưng trade-off thời gian + token không xứng cho 1 session — defer P2-F khi cleanup legacy aliases có thể làm gọn trong context riêng.
+- **Applications: drop 3 view modes (list/kanban/timeline) → 1 unified accordion**: kanban view (4-col status grid) là card-cliché không fit thesis B. Timeline view trùng nội dung với expanded accordion. Giữ 1 mode đơn giản: row click expand inline panel chứa cả CV + cover letter + interview + status history → cognitive load thấp hơn switch tab. Bulk action có thể add sau nếu cần.
+- **Saved-jobs accordion preserve gap test IDs**: Stage 11 P3 đã có Playwright QA gap analysis với test IDs cụ thể (gap-toggle-btn, gap-panel, data-cert-missing-slug…). Refactor MUST giữ nguyên IDs để không vỡ P3 regression. Pill skills/certs (rounded-md border) đổi thành mono inline `✓ react` / `⚠ aws` tone-only — vẫn data-* attrs intact.
+- **Recommended: MonoNumber match score lead với 3 tone tiers**: tone="accent" khi ≥85 (highly matched, draw eye), default ≥70, muted <70. Score là Stage 11 P4 v2 output — surface visually qua Lead column 80px width làm "anchor" cho row scan. Đây là differentiation move #2 từ brief — show, don't tell.
+- **TabBar 7 tabs vs dropdown menu**: tính cả Thông báo (notifications) vì là essential CTA cho candidate. Khám phá/Compare/Followed-companies/Job-alerts là secondary — không deserve tab slot. Cách tiếp cận: list view qua direct URL hoặc add dropdown "Khám phá" sau nếu user phản hồi.
+- **Dashboard hero greeting tone xuống**: hero cũ "Xin chào, {name}! 👋" + progress bar + 3 quick action buttons + radial glow → quá hype. Mới: 1 h1 + 1 mono line `> hồ sơ X% · N/M mục hoàn thành · hoàn thiện →`. Đủ context, không "ăn sống".
+- **Token budget call: wrap sau P2-D thay vì làm tiếp P2-E**: ước P2-D ~65k actual + audit. P2-E tương tự cần ~50-60k + wrap 8k → cộng dồn ~130k. Pattern 3 session liên tiếp (52/53/54) đều 1 surface/session, không phải coincidence. Wrap sạch session 55 hơn ép squeeze P2-E mid-budget.
+
+**Verified:** Playwright production 6/6 — `qa-scripts/redesign-p2d/{result.json, dashboard-1280.png, dashboard-375.png, applications-accordion.png, saved-jobs-gap.png, recommended-1280.png}`. TC1 ban đầu false-fail do deploy chưa live khi test bắt đầu (Vercel build ~80s post-push); re-run + verify-tc1.js standalone confirm structural assertions pass (breadcrumb=1 + tabs=7 + mono=13 + h1="Xin chào, Lê Minh Hùng.").
+
+**Bugs phát hiện mới:**
+- 401 console noise pre-existing (axios refresh) tiếp tục — same notes như session 53-54, không phải P2-D regression.
+- `profile/page.tsx` 556 LOC vẫn dùng card-dark/gradient-text — defer P2-F (đã ghi vào PROJECT_PLAN backlog).
+
+**Next Action:** **P2-E Employer applicants rewrite** — audit `frontend/src/app/(employer)/employer/*` trước (dashboard/jobs/jobs/[id]/applications/candidates/profile/billing/stats). Apply Thesis B: rewrite `(employer)/layout.tsx` Breadcrumb + TabBar (employer-specific tabs) tương tự P2-D layout shell. Trọng tâm `jobs/[id]/applications/page.tsx` — applicants table accordion compact row → expand inline (CV viewer + screening answers + status timeline + bulk action bar khi multi-select). Plan chi tiết trước, đợi duyệt.
+
+**Blocker:** Không có. Vercel auto-deploy hoạt động (poll ~60-80s deploy live). Backend Render warm cả session.
+
+---
+
 ## Session 54 — 2026-06-13
 
 **Commits:** `f6e39b6` P2-C jobs list rewrite thesis B (CmdK + Row + SidePanel)
