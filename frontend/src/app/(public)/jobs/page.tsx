@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { JobsContent } from "./JobsContent";
-import { JobCardSkeleton } from "@/components/jobs/JobCardSkeleton";
 
 export const metadata: Metadata = {
   title: "Tìm việc làm",
@@ -15,13 +14,21 @@ export const metadata: Metadata = {
 
 function JobsPageSkeleton() {
   return (
-    <div className="max-w-wrap mx-auto px-6 py-8 pt-24">
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
-        <div className="h-[600px] bg-bg-2 rounded-2xl animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
+    <div className="max-w-[1280px] mx-auto pt-20 px-4 md:px-6">
+      <div className="font-mono text-[12px] text-[var(--t2)] py-4">~ / jobs</div>
+      <div className="h-11 bg-[var(--bg-2)] animate-pulse rounded-sharp mb-6" />
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div
+          key={i}
+          className="border-b border-[var(--border)] min-h-[var(--row-h)] flex items-center gap-4"
+        >
+          <div className="w-16 h-6 bg-[var(--bg-2)] animate-pulse rounded-sharp" />
+          <div className="flex-1 space-y-2">
+            <div className="h-4 bg-[var(--bg-2)] animate-pulse rounded-sharp w-1/2" />
+            <div className="h-3 bg-[var(--bg-2)] animate-pulse rounded-sharp w-1/3" />
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }

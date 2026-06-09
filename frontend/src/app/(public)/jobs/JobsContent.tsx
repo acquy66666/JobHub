@@ -1,35 +1,86 @@
 "use client";
+
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { queryKeys } from "@/lib/queryKeys";
-import { JobFilters } from "@/components/jobs/JobFilters";
-import { JobCard } from "@/components/jobs/JobCard";
-import { JobCardSkeleton } from "@/components/jobs/JobCardSkeleton";
-import { Pagination } from "@/components/common/Pagination";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { Row } from "@/components/ui/Row";
+import { MonoNumber } from "@/components/ui/MonoNumber";
+import { CmdK } from "@/components/search/CmdK";
+import { SidePanel } from "@/components/ui/SidePanel";
+import { ApplyModal } from "@/components/jobs/ApplyModal";
 import { useAuthStore } from "@/store/authStore";
 import { computeMatchScore } from "@/lib/matchScore";
 import api from "@/lib/api";
 
+const LIMIT = 20;
+
+interface JobListItem {
+  id: string;
+  title: string;
+  location: string;
+  jobType: string;
+  workMode: string;
+  industry: string;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryCurrency?: string;
+  tier?: string;
+  requirements?: string;
+  createdAt: string;
+  employer: { id: string; companyName: string; logoUrl?: string | null };
+}
+
+function formatSalary(min?: number | null, max?: number | null, currency?: string) {
+  if (!min && !max) return "Thoả thuận";
+  const unit = currency === "VND" || !currency ? "tr" : currency;
+  const div = currency === "VND" || !currency ? 1_000_000 : 1;
+  const lo = min ? Math.round(min / div) : null;
+  const hi = max ? Math.round(max / div) : null;
+  if (lo && hi) return `${lo}–${hi}${unit}`;
+  if (lo) return `≥ ${lo}${unit}`;
+  if (hi) return `≤ ${hi}${unit}`;
+  return "Thoả thuận";
+}
+
+function relTime(iso: string) {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return "vừa xong";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  return `${Math.floor(diff / 86400)}d`;
+}
+
+function modeLabel(m: string) {
+  if (m === "REMOTE") return "remote";
+  if (m === "HYBRID") return "hybrid";
+  return "on-site";
+}
+
+function typeLabel(t: string) {
+  const map: Record<string, string> = {
+    FULL_TIME: "full-time",
+    PART_TIME: "part-time",
+    CONTRACT: "contract",
+    INTERNSHIP: "intern",
+    FREELANCE: "freelance",
+  };
+  return map[t] ?? t.toLowerCase();
+}
+
 export function JobsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [filterOpen, setFilterOpen] = useState(false);
   const { user } = useAuthStore();
 
-  const filters = {
-    page: parseInt(searchParams.get("page") ?? "1"),
-    keyword: searchParams.get("keyword") ?? undefined,
-    location: searchParams.get("location") ?? undefined,
-    industry: searchParams.get("industry") ?? undefined,
-    jobType: searchParams.getAll("jobType").join(",") || undefined,
-    workMode: searchParams.get("workMode") ?? undefined,
-    salaryMin: searchParams.get("salaryMin") ?? undefined,
-    salaryMax: searchParams.get("salaryMax") ?? undefined,
-    experienceTier: searchParams.get("experienceTier") ?? undefined,
-  };
+  const q = searchParams.get("q") ?? "";
+  const page = parseInt(searchParams.get("page") ?? "1", 10);
+  const selectedJobId = searchParams.get("job");
+
+  const filters = { keyword: q || undefined, page, limit: LIMIT };
 
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.jobs(filters),
@@ -44,150 +95,281 @@ export function JobsContent() {
 
   const candidateSkills: string[] = profile?.skills ?? [];
 
-  const hasPrefs = Boolean(
-    user?.role === "CANDIDATE" && profile && (
-      (profile.preferredJobTypes?.length ?? 0) > 0 ||
-      (profile.preferredWorkModes?.length ?? 0) > 0 ||
-      (profile.preferredLocations?.length ?? 0) > 0 ||
-      (profile.preferredIndustries?.length ?? 0) > 0 ||
-      profile.preferredSalaryMin
-    )
-  );
-  const prefsApplied = searchParams.get("byPrefs") === "1";
+  const jobs: JobListItem[] = data?.jobs ?? [];
+  const totalPages: number = data?.totalPages ?? 1;
+  const total: number = data?.total ?? 0;
 
-  function applyPrefs() {
-    if (!profile) return;
-    const p = new URLSearchParams();
-    p.set("byPrefs", "1");
-    (profile.preferredJobTypes ?? []).forEach((t: string) => p.append("jobType", t));
-    if (profile.preferredWorkModes?.[0]) p.set("workMode", profile.preferredWorkModes[0]);
-    if (profile.preferredLocations?.[0]) p.set("location", profile.preferredLocations[0]);
-    if (profile.preferredIndustries?.[0]) p.set("industry", profile.preferredIndustries[0]);
-    if (profile.preferredSalaryMin) p.set("salaryMin", String(profile.preferredSalaryMin));
-    router.push(`/jobs?${p.toString()}`);
-  }
-
-  function clearPrefs() {
-    router.push(`/jobs`);
-  }
-
-  const jobs = data?.jobs ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const total = data?.total ?? 0;
-
-  function handlePageChange(page: number) {
+  function pushParams(next: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
-    params.set("page", String(page));
-    router.push(`/jobs?${params.toString()}`);
+    Object.entries(next).forEach(([k, v]) => {
+      if (v == null || v === "") params.delete(k);
+      else params.set(k, v);
+    });
+    router.push(`/jobs${params.toString() ? `?${params}` : ""}`);
   }
 
-  const initialFilters = {
-    keyword: searchParams.get("keyword") ?? "",
-    location: searchParams.get("location") ?? "",
-    industry: searchParams.get("industry") ?? "",
-    jobTypes: searchParams.getAll("jobType"),
-    workMode: searchParams.get("workMode") ?? "",
-    salaryMin: searchParams.get("salaryMin") ?? "",
-    salaryMax: searchParams.get("salaryMax") ?? "",
-    experienceTier: searchParams.get("experienceTier") ?? "",
-  };
+  function handleSubmitSearch(raw: string) {
+    pushParams({ q: raw.trim() || null, page: null });
+  }
+
+  function openJob(id: string) {
+    pushParams({ job: id });
+  }
+
+  function closeJob() {
+    pushParams({ job: null });
+  }
+
+  function goPage(p: number) {
+    pushParams({ page: p > 1 ? String(p) : null });
+  }
 
   return (
-    <div className="max-w-wrap mx-auto px-6 py-8 pt-24">
-      {/* Breadcrumb */}
-      <div className="mb-6">
-        <Link href="/" className="inline-flex items-center gap-1.5 text-[13px] text-t2 hover:text-t0 transition-colors">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-          Trang chủ
-        </Link>
-      </div>
-
-      {/* Page header */}
-      <ScrollReveal direction="up" className="mb-8">
-        <h1 className="text-[clamp(28px,4vw,40px)] font-extrabold text-t0 tracking-tight">
-          Tìm <span className="gradient-text">việc làm</span>
-        </h1>
-        {!isLoading && (
-          <p className="text-[15px] text-t1 mt-2">
-            {total > 0 ? `Tìm thấy ${total} việc làm phù hợp` : "Không tìm thấy kết quả nào"}
-          </p>
-        )}
-        {hasPrefs && (
-          <div className="mt-3">
-            {prefsApplied ? (
-              <button
-                type="button"
-                onClick={clearPrefs}
-                data-testid="prefs-clear-btn"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold bg-[rgba(124,58,237,.18)] border border-[rgba(124,58,237,.5)] text-t0 hover:bg-[rgba(124,58,237,.28)]"
-              >
-                ✓ Đang lọc theo sở thích · Xoá
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={applyPrefs}
-                data-testid="prefs-apply-btn"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[12px] font-semibold bg-bg-2 border border-border-dark text-t1 hover:border-[rgba(124,58,237,.5)] hover:text-t0"
-              >
-                🎯 Lọc theo sở thích của tôi
-              </button>
-            )}
-          </div>
-        )}
-      </ScrollReveal>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
-        {/* Filter sidebar */}
-        <div>
-          {/* Mobile toggle */}
-          <button
-            className="lg:hidden w-full mb-3 flex items-center justify-between px-4 py-3 bg-bg-2 border border-border-dark rounded-2xl text-[13px] font-semibold text-t1 hover:text-t0 transition-colors"
-            onClick={() => setFilterOpen((o) => !o)}
-          >
-            <span>Bộ lọc tìm kiếm</span>
-            <svg className={`w-4 h-4 transition-transform ${filterOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          <div className={`${filterOpen ? "block" : "hidden"} lg:block`}>
-            <ScrollReveal direction="left">
-              <JobFilters initial={initialFilters} />
-            </ScrollReveal>
-          </div>
-        </div>
-
-        {/* Job list */}
-        <div>
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Array.from({ length: 6 }).map((_, i) => <JobCardSkeleton key={i} />)}
-            </div>
-          ) : jobs.length === 0 ? (
-            <div className="card-dark p-12 rounded-2xl text-center">
-              <div className="text-5xl mb-4">🔍</div>
-              <h3 className="text-[18px] font-bold text-t0 mb-2">Không tìm thấy việc làm</h3>
-              <p className="text-[14px] text-t1">Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm</p>
-            </div>
-          ) : (
+    <>
+      <div className="max-w-[1280px] mx-auto pt-20">
+        {/* Breadcrumb */}
+        <div className="px-4 md:px-6 py-4 font-mono text-[12px] text-[var(--t2)]">
+          <Link href="/" className="hover:text-[var(--t0)] transition-colors">~</Link>
+          <span className="mx-2">/</span>
+          <span className="text-[var(--t1)]">jobs</span>
+          {q && (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {jobs.map((job: Parameters<typeof JobCard>[0]['job'] & { requirements?: string }, i: number) => {
-                  const matchScore = user?.role === "CANDIDATE" && candidateSkills.length > 0 && job.requirements
-                    ? computeMatchScore(candidateSkills, job.requirements).score
-                    : undefined;
-                  return (
-                    <ScrollReveal key={job.id} direction="up" delay={i * 0.05}>
-                      <JobCard job={job} matchScore={matchScore} />
-                    </ScrollReveal>
-                  );
-                })}
-              </div>
-              <Pagination page={filters.page} totalPages={totalPages} onPageChange={handlePageChange} />
+              <span className="mx-2">?</span>
+              <span className="text-[var(--accent)]">q={q}</span>
             </>
           )}
         </div>
+
+        {/* Sticky CmdK */}
+        <div className="sticky top-16 z-20 bg-[var(--bg-0)] border-b border-[var(--border)] px-4 md:px-6 py-4">
+          <CmdK
+            size="md"
+            defaultValue={q}
+            onSubmit={handleSubmitSearch}
+            placeholder="Tìm việc — gõ skill, công ty, location…"
+          />
+        </div>
+
+        {/* Results list */}
+        <HairlineSection
+          label="KẾT QUẢ"
+          meta={
+            <span className="font-mono">
+              {isLoading
+                ? "đang tải..."
+                : total === 0
+                ? "0 kết quả"
+                : `${total} vị trí · trang ${page}/${totalPages}`}
+            </span>
+          }
+          topRule={false}
+        >
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="border-b border-[var(--border)] min-h-[var(--row-h)] px-4 md:px-6 flex items-center"
+              >
+                <div className="w-16 h-6 bg-[var(--bg-2)] animate-pulse rounded-sharp mr-4" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-[var(--bg-2)] animate-pulse rounded-sharp w-1/2" />
+                  <div className="h-3 bg-[var(--bg-2)] animate-pulse rounded-sharp w-1/3" />
+                </div>
+              </div>
+            ))
+          ) : jobs.length === 0 ? (
+            <div className="px-4 md:px-6 py-16 font-mono text-[14px] text-[var(--t1)]">
+              <div className="text-[var(--t0)] mb-2">&gt; không tìm thấy việc làm</div>
+              <div className="text-[12px] text-[var(--t2)]">
+                thử từ khoá khác · hoặc xoá filter ở thanh tìm kiếm
+              </div>
+            </div>
+          ) : (
+            <>
+              {jobs.map((job, i) => {
+                const match =
+                  user?.role === "CANDIDATE" && candidateSkills.length > 0 && job.requirements
+                    ? computeMatchScore(candidateSkills, job.requirements).score
+                    : null;
+                const indexNum = (page - 1) * LIMIT + i + 1;
+                return (
+                  <Row
+                    key={job.id}
+                    active={selectedJobId === job.id}
+                    onClick={() => openJob(job.id)}
+                  >
+                    <Row.Lead>
+                      {match != null ? (
+                        <MonoNumber
+                          size="lg"
+                          tone={match >= 85 ? "accent" : match >= 70 ? "default" : "muted"}
+                        >
+                          {match}
+                        </MonoNumber>
+                      ) : (
+                        <MonoNumber size="md" tone="muted">
+                          {String(indexNum).padStart(2, "0")}
+                        </MonoNumber>
+                      )}
+                    </Row.Lead>
+                    <Row.Body
+                      title={job.title}
+                      meta={
+                        <span className="font-mono text-[12px]">
+                          {job.employer.companyName} · {job.location} · {modeLabel(job.workMode)} · {typeLabel(job.jobType)} · {relTime(job.createdAt)}
+                        </span>
+                      }
+                    />
+                    <Row.End>
+                      <MonoNumber size="md">
+                        {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+                      </MonoNumber>
+                      {job.tier && job.tier !== "BASIC" && (
+                        <span className="text-[10px] font-mono uppercase tracking-[0.1em] text-[var(--accent)]">
+                          {job.tier}
+                        </span>
+                      )}
+                    </Row.End>
+                  </Row>
+                );
+              })}
+
+              {/* Pagination footer */}
+              <div className="flex items-center justify-between px-4 md:px-6 py-4 border-t border-[var(--border)] font-mono text-[13px]">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => goPage(page - 1)}
+                  className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--accent)] disabled:opacity-30 disabled:hover:text-[var(--t1)] transition-colors"
+                >
+                  <ChevronLeft size={14} /> prev
+                </button>
+                <span className="text-[var(--t2)]">
+                  {page} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => goPage(page + 1)}
+                  className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--accent)] disabled:opacity-30 disabled:hover:text-[var(--t1)] transition-colors"
+                >
+                  next <ChevronRight size={14} />
+                </button>
+              </div>
+            </>
+          )}
+        </HairlineSection>
       </div>
+
+      <JobDetailSidePanel jobId={selectedJobId} onClose={closeJob} />
+    </>
+  );
+}
+
+function JobDetailSidePanel({ jobId, onClose }: { jobId: string | null; onClose: () => void }) {
+  const open = !!jobId;
+  const [applyOpen, setApplyOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) setApplyOpen(false);
+  }, [open]);
+
+  const { data: job, isLoading } = useQuery({
+    queryKey: queryKeys.job(jobId ?? ""),
+    queryFn: () => api.get(`/jobs/${jobId}`).then((r) => r.data),
+    enabled: open,
+  });
+
+  return (
+    <>
+      <SidePanel
+        open={open}
+        onOpenChange={(o) => !o && onClose()}
+        title={job?.title ?? (isLoading ? "Đang tải…" : "")}
+        meta={
+          job && (
+            <span>
+              {job.employer?.companyName} · {job.location} · {modeLabel(job.workMode)} · {typeLabel(job.jobType)}
+            </span>
+          )
+        }
+      >
+        {isLoading || !job ? (
+          <div className="font-mono text-[13px] text-[var(--t2)]">&gt; loading…</div>
+        ) : (
+          <div className="space-y-6 text-[14px] text-[var(--t1)] leading-[1.7]">
+            <div className="flex flex-wrap gap-4 font-mono text-[12px] text-[var(--t1)]">
+              <span>
+                <span className="text-[var(--t2)]">salary:</span>{" "}
+                <span className="text-[var(--t0)]">
+                  {formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)}
+                </span>
+              </span>
+              <span>
+                <span className="text-[var(--t2)]">industry:</span>{" "}
+                <span className="text-[var(--t0)]">{job.industry}</span>
+              </span>
+              <span>
+                <span className="text-[var(--t2)]">posted:</span>{" "}
+                <span className="text-[var(--t0)]">{relTime(job.createdAt)}</span>
+              </span>
+              {job.tier && job.tier !== "BASIC" && (
+                <span className="text-[var(--accent)] uppercase tracking-[0.1em]">{job.tier}</span>
+              )}
+            </div>
+
+            <Section title="MÔ TẢ">
+              <p className="whitespace-pre-wrap">{job.description}</p>
+            </Section>
+
+            <Section title="YÊU CẦU">
+              <p className="whitespace-pre-wrap">{job.requirements}</p>
+            </Section>
+
+            {job.benefits && (
+              <Section title="PHÚC LỢI">
+                <p className="whitespace-pre-wrap">{job.benefits}</p>
+              </Section>
+            )}
+
+            <div className="flex items-center gap-3 pt-2 border-t border-[var(--border)]">
+              <button
+                type="button"
+                onClick={() => setApplyOpen(true)}
+                className="px-4 py-2 bg-[var(--accent)] text-[var(--bg-0)] font-mono text-[13px] uppercase tracking-[0.08em] rounded-sharp hover:opacity-90 transition-opacity"
+              >
+                Ứng tuyển
+              </button>
+              <Link
+                href={`/jobs/${job.id}`}
+                className="font-mono text-[13px] text-[var(--t1)] hover:text-[var(--accent)] transition-colors"
+              >
+                &gt; xem trang đầy đủ →
+              </Link>
+            </div>
+          </div>
+        )}
+      </SidePanel>
+
+      {job && (
+        <ApplyModal
+          jobId={job.id}
+          jobTitle={job.title}
+          isOpen={applyOpen}
+          onClose={() => setApplyOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[11px] font-mono uppercase tracking-[0.1em] text-[var(--t2)] mb-2">
+        {title}
+      </div>
+      {children}
     </div>
   );
 }
