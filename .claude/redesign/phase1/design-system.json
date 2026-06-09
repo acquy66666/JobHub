@@ -1,0 +1,82 @@
+{
+  "_meta": {
+    "agent": "Design System Scout",
+    "dataSource": "Training knowledge. WebFetch denied in environment.",
+    "scope": "shadcn/ui + Tailwind UI + Radix + OriginUI + MagicUI for JobHub redesign"
+  },
+  "recommendedComponents": {
+    "jobCard": {
+      "source": "shadcn/ui Card + OriginUI card-07/card-08 horizontal variants",
+      "url": "https://ui.shadcn.com/docs/components/card",
+      "why": "shadcn Card gives bare Card/CardHeader/CardContent skeleton with zero opinionated styling. OriginUI card-07/08 add horizontal layout (logo left, details right) mapping 1:1 to job card anatomy. List view = horizontal, grid view = vertical — both from same primitive.",
+      "customization": "Background var(--bg-2), border var(--border), group-hover:border-purple-600/40 + -translate-y-0.5. Custom Badge for type/salary/remote. Border-radius rounded-2xl."
+    },
+    "searchFilter": {
+      "source": "shadcn Sheet (mobile drawer) + Accordion + Checkbox + Slider + TailwindUI sidebar filter pattern",
+      "url": "https://ui.shadcn.com/docs/components/sheet",
+      "why": "Sheet handles mobile filter drawer (slide-in) with no z-index work. Accordion collapses filter groups cleanly. Radix Slider for salary range = accessible dual-thumb. TailwindUI Filters-on-sidebar ecommerce pattern is closest proven analog.",
+      "customization": "TailwindUI white bg → var(--bg-1). Accordion trigger border-bottom var(--border). Checkbox accent-purple ring. Sticky sidebar on desktop (top-20 h-[calc(100vh-5rem)] overflow-y-auto)."
+    },
+    "candidateDashboard": {
+      "source": "shadcn Dashboard-01 sidebar layout + Tabs + OriginUI timeline for application status",
+      "url": "https://ui.shadcn.com/blocks#dashboard-01",
+      "why": "Dashboard-01 ships collapsible sidebar nav + main content area matching candidate portal structure (Saved Jobs / Applications / Profile / Settings). OriginUI stepper/timeline renders status progression (PENDING → REVIEWING → ACCEPTED/REJECTED) better than plain Badge.",
+      "customization": "Sidebar bg var(--bg-1), active nav item gradient-text + bg-purple/10 pill. Timeline dots: green ACCEPTED, red REJECTED, yellow REVIEWING, muted PENDING."
+    },
+    "employerDashboard": {
+      "source": "shadcn Dashboard-02 + DataTable + Recharts AreaChart",
+      "url": "https://ui.shadcn.com/blocks#dashboard-02",
+      "why": "Dashboard-02 = stat cards + chart + recent-activity table, exactly the employer analytics shape (views, applications, conversion). shadcn DataTable (TanStack v8) handles applicant list with sorting, row selection for bulk status-update, column visibility — no custom table code.",
+      "customization": "Stat cards: bg-bg-2, icon in gradient circle, delta badge green/red. Chart: Recharts AreaChart gradient fill purple → transparent. Table row hover bg-bg-3."
+    },
+    "adminTable": {
+      "source": "shadcn DataTable (TanStack Table v8) + Dashboard-05 layout",
+      "url": "https://ui.shadcn.com/docs/components/data-table",
+      "why": "DataTable + TanStack handles 10k+ rows via @tanstack/react-virtual, built-in column visibility, multi-sort, bulk row selection (ban/unban, approve/reject). Dashboard-05 adds full-width table with toolbar matching admin panel reqs.",
+      "customization": "Toolbar bg-bg-1, header bg-bg-2 sticky, alternating row bg-bg-0/bg-bg-2. Bulk action bar slides up from bottom (fixed) when rows selected."
+    },
+    "forms": {
+      "source": "shadcn Form (RHF + Zod) + manual step state + react-dropzone + Tiptap for rich text",
+      "url": "https://ui.shadcn.com/docs/components/form",
+      "why": "shadcn Form wraps RHF with FormField/Item/Label/Message — accessible errors + consistent spacing. Multi-step job post (Basic → Requirements → Preferences → Preview) via manual step state + Framer Motion AnimatePresence (no conflicting form contexts). react-dropzone integrates with existing Cloudinary pipeline. Tiptap headless = HTML output via Controller.",
+      "customization": "Input/Select/Textarea bg-bg-2 border-border focus:ring-purple/20. Step indicator: numbered circles gradient active. File dropzone dashed border-border, hover:border-purple/40, drag-active:bg-purple/5."
+    },
+    "emptyStates": {
+      "source": "OriginUI empty-state components + MagicUI AnimatedList for skeleton feeds",
+      "url": "https://originui.com/empty-states",
+      "why": "OriginUI ships 8 empty-state variants (icon + heading + description + CTA) — usable directly for 'No saved jobs', 'No applications', 'No job posts'. MagicUI AnimatedList renders skeleton cards with staggered shimmer matching existing Framer Motion convention. Skeletons mirror exact card/row shapes — no layout shift.",
+      "customization": "Empty state icon: 48px in gradient circle bg-purple/10. Skeleton shimmer: bg-gradient-to-r from-bg-2 via-bg-3 to-bg-2 animate-shimmer. CTA = primary gradient style."
+    }
+  },
+  "blocksToBorrow": [
+    { "name": "shadcn Dashboard-01", "url": "https://ui.shadcn.com/blocks#dashboard-01", "useFor": "Candidate/Employer dashboard shell — collapsible sidebar + topbar + main content" },
+    { "name": "shadcn Dashboard-02", "url": "https://ui.shadcn.com/blocks#dashboard-02", "useFor": "Employer analytics — stat cards + area chart + recent applicants table pre-wired" },
+    { "name": "shadcn Dashboard-05", "url": "https://ui.shadcn.com/blocks#dashboard-05", "useFor": "Admin user/job management — full-width DataTable + search toolbar + column visibility" },
+    { "name": "shadcn Authentication-01", "url": "https://ui.shadcn.com/blocks#authentication-01", "useFor": "Login/Register — two-column layout with gradient brand panel" },
+    { "name": "TailwindUI Stacked Layout w/ sidebar filters", "url": "https://tailwindui.com/components/application-ui/layouts/stacked-layouts", "useFor": "Public job listing — top search + left sidebar + job card grid" },
+    { "name": "OriginUI card-07 horizontal", "url": "https://originui.com/cards", "useFor": "Job card list-view — logo left, title+company+badges center, salary+CTA right" },
+    { "name": "MagicUI AnimatedList", "url": "https://magicui.design/docs/components/animated-list", "useFor": "Notification feed + recent-activity in dashboards — staggered entrance" },
+    { "name": "MagicUI NumberTicker", "url": "https://magicui.design/docs/components/number-ticker", "useFor": "Admin stats + employer metrics — count-up on scroll-into-view" }
+  ],
+  "primitivesLayer": [
+    { "primitive": "Radix Dialog", "useFor": "Apply modal, confirm-delete, image preview — auto focus trap + a11y" },
+    { "primitive": "Radix Select", "useFor": "Industry/JobType/WorkMode/Location dropdowns — keyboard nav + SR out of box" },
+    { "primitive": "Radix Slider", "useFor": "Salary range dual-thumb filter — accessible aria-valuemin/max" },
+    { "primitive": "Radix Popover", "useFor": "Date picker (expiry, exp dates), column filter menus in admin table" },
+    { "primitive": "Radix Tooltip", "useFor": "Icon-only buttons in admin toolbar + employer actions — prevent unlabeled icon confusion" },
+    { "primitive": "Radix DropdownMenu", "useFor": "Row actions in DataTable — Edit/Pause/Delete job; View/Accept/Reject applicant" },
+    { "primitive": "Radix Tabs", "useFor": "Candidate dashboard sections (Profile/Applications/Saved), Employer job detail tabs" },
+    { "primitive": "Radix Accordion", "useFor": "Filter sidebar collapsible groups + job requirements expand sections" }
+  ],
+  "customizationNotes": "Critical rule: never use shadcn's default zinc/slate scheme. Remap every CSS var in globals.css — --background: #07070D, --card: #13131E, --border: #252538, --primary: #7C3AED, --ring: rgba(124,58,237,0.3). Prevents generic light-gray shadcn look. Replace all rounded-md defaults with rounded-2xl on cards, rounded-xl on inputs/buttons. Every interactive element needs purple glow on focus (box-shadow: 0 0 0 3px rgba(124,58,237,0.15)) replacing default browser outlines. Preserve motion convention: list renders use Framer Motion staggerChildren 0.06s, page sections use whileInView fadeUp. For Radix portal content (Select/Popover/DropdownMenu) explicitly override portal container bg — Radix portals outside component tree and inherit wrong bg if not overridden.",
+  "antiPatterns": [
+    "Using shadcn default --background: white or zinc-50 without remap → light-theme bleed",
+    "Using shadcn Card with default shadow-sm → invisible on dark bg; use border + hover glow instead",
+    "Using Radix Select default white dropdown without portal override → must override bg-bg-2/border-border",
+    "Using MagicUI components with default light shimmer colors → all shimmer needs dark palette",
+    "Stacking multiple Framer Motion layout animations on DataTable rows → jank with 50+ rows; use CSS transition only",
+    "Using TailwindUI white/gray sidebar directly without full color token swap",
+    "Using shadcn Badge default gray pill for job type/status → must use custom colored badge tokens",
+    "Using external stepper library for multi-step forms → conflicts with RHF context; use manual step + AnimatePresence"
+  ]
+}

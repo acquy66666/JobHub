@@ -1,0 +1,126 @@
+{
+  "_meta": {
+    "agent": "Trend Researcher",
+    "dataSource": "Synthesized from training knowledge (cutoff Jan 2026). WebSearch/WebFetch were permission-denied in this environment.",
+    "scope": "Job platform UI trends 2024-2025 + anti-AI patterns"
+  },
+  "topTrends": [
+    {
+      "name": "Editorial typography & asymmetric grids",
+      "description": "Magazine-style layouts with intentional off-grid alignment, oversized serif/display headings (50-80px) paired with utilitarian sans body. Pioneered by Stripe Press, Linear changelog, Vercel /design.",
+      "example": "Linear's marketing site uses a 12-col grid but content blocks land at columns 2-7 or 5-12 — never centered. Reads like a printed page, not a SaaS landing."
+    },
+    {
+      "name": "Data-forward job cards (no decorative bloat)",
+      "description": "Cards strip illustration and 3D mockups; surface match score, salary, recency, and skill tags as the primary visual hierarchy. Information density up, ornamentation down.",
+      "example": "Ashby and Wellfound (Y Combinator) list jobs as compact rows with salary band always visible — no 'Thỏa thuận' evasion, no hero photos."
+    },
+    {
+      "name": "Tactile micro-interactions over scroll-jacking",
+      "description": "Replace heavy scroll animations with subtle hover physics: cursor-following spotlight, magnetic buttons, weight-based card lift. Framer Motion layoutId for shared element transitions between list ↔ detail views.",
+      "example": "Vercel dashboard hover-card glow that tracks cursor position via radial gradient mask."
+    },
+    {
+      "name": "Monochrome + 1 accent (no gradient)",
+      "description": "Counter to the purple-blue gradient era — use a single saturated accent (often unexpected: lime, amber, electric blue) against pure neutrals. Gradients confined to background ambient lighting, never on buttons or text.",
+      "example": "Linear: pure black/white + electric blue accent only. No gradient buttons. Posthog: cream + hot pink accent."
+    },
+    {
+      "name": "Semantic motion (not decorative)",
+      "description": "Animations explain state changes — skeleton morphs into content, list items stagger to draw eye to top result, status badges pulse only when fresh. Motion as feedback, not entertainment.",
+      "example": "Linear status changes animate the card border before the badge text, signaling 'something updated here' without a toast."
+    },
+    {
+      "name": "Inline density with progressive disclosure",
+      "description": "Show 80% of information inline (no modal click-through for basics), expand for the remaining 20%. Job detail accordion inside the list row instead of a separate page.",
+      "example": "Notion-style inline expand of database rows. Ashby applicant pipeline shows status + last activity inline, expands to full timeline on click."
+    },
+    {
+      "name": "Variable fonts for fine-grained hierarchy",
+      "description": "Use a single variable font (Inter, Geist, InterVariable) across weights 400-900 with fluid clamp() sizing. Avoids the bloat of loading 4 font files.",
+      "example": "Geist Sans from Vercel — single font covers UI labels at 12px through hero at 80px without secondary font."
+    }
+  ],
+  "avoidPatterns": [
+    {
+      "pattern": "Purple-to-blue diagonal gradient on buttons + text",
+      "why": "This exact gradient (Stripe-inspired, popularized 2020-2022) is now THE marker of AI-generated UI. Every Lovable/v0/Bolt output uses it. Currently in JobHub globals.css — primary visual liability."
+    },
+    {
+      "pattern": "Glassmorphism cards (backdrop-blur + low-opacity bg + light border)",
+      "why": "Peaked 2021, now ubiquitous in AI output. Reads as 'I asked ChatGPT to make it look modern'. Worse on dark themes where contrast suffers."
+    },
+    {
+      "pattern": "Hero with 3-column 'features' grid below + icon-circle each",
+      "why": "Universal AI fallback layout. Every recruitment platform demo has 'Find Jobs / Apply Fast / Get Hired' as 3 icon cards. Reads as template."
+    },
+    {
+      "pattern": "Generic stock photography of diverse hands typing on laptops",
+      "why": "Instantly screams 2018 stock site. Real platforms show product UI screenshots or no imagery at all."
+    },
+    {
+      "pattern": "Centered hero with massive heading + single CTA + 'trusted by' logo strip",
+      "why": "Bootstrap landing page template — recognizable in 0.3 seconds. Use asymmetric layout or product-first hero instead."
+    },
+    {
+      "pattern": "Rainbow-colored skill tags with no semantic meaning",
+      "why": "When every tag is a different color, color stops conveying information. Use single muted tag color + reserve color for status only."
+    },
+    {
+      "pattern": "Floating chatbot bubble bottom-right with sparkle emoji",
+      "why": "AI-bolted-on signal. If AI is core, integrate it into the search bar or apply flow, not a corner bubble."
+    },
+    {
+      "pattern": "Excessive emoji in UI labels (✨ Apply Now, 🚀 Get Started)",
+      "why": "ChatGPT default voice. Professional product UIs use icons (Lucide) not emoji."
+    },
+    {
+      "pattern": "Drop-shadow + 1px border + rounded-lg on every card",
+      "why": "Tailwind default styling. Choose ONE separation method (border OR shadow OR background diff) per surface."
+    }
+  ],
+  "colorDirections": [
+    {
+      "name": "Editorial cream",
+      "palette": ["#F5F1E8", "#E8E1D0", "#1A1815", "#C8392E"],
+      "mood": "Warm, considered, almost printed. Cream background + near-black text + tomato-red accent. Differentiates from every other VN job site (all white) and from JobHub's current dark theme. Risk: less 'tech' feeling."
+    },
+    {
+      "name": "Industrial mono + lime",
+      "palette": ["#0A0A0A", "#1A1A1A", "#262626", "#D9F500", "#FAFAFA"],
+      "mood": "Pure black/gray/white + electric lime accent (used sparingly for CTAs and active states only). Brutalist, confident, anti-gradient. Closest to Linear/Posthog aesthetic. Best fit for tech recruitment."
+    },
+    {
+      "name": "Deep slate + amber",
+      "palette": ["#0F1419", "#1C2128", "#2D333B", "#FBA518", "#E6EDF3"],
+      "mood": "Reads like a developer tool (close to GitHub dark + a warm accent). Less aggressive than current purple, more grown-up. Salary numbers in amber pop without screaming."
+    },
+    {
+      "name": "Refined dark + jade",
+      "palette": ["#07070D", "#0E0E18", "#1A1A28", "#10B981", "#F5F5FF"],
+      "mood": "Minimal departure from current JobHub palette — same dark base, swap purple-blue gradient for single jade-green accent (matches financial/'salary' semantic universally). Lowest-risk refresh path."
+    }
+  ],
+  "typographyTrends": [
+    {
+      "trend": "Variable single-font system",
+      "examples": ["Geist Sans", "Inter Variable", "Söhne", "Diatype"],
+      "rationale": "One variable font covers 11px UI to 80px hero. Removes need for secondary display font and reduces bundle by 60%."
+    },
+    {
+      "trend": "Serif display heading + sans body",
+      "examples": ["Tiempos Headline + Inter", "Fraunces + Inter", "Instrument Serif + Geist"],
+      "rationale": "Magazine cover effect. Serif on hero + section titles signals 'craft', sans for tabular UI signals 'utility'. Strong differentiator from all 4 VN competitors (all-sans)."
+    },
+    {
+      "trend": "Numerical tabular figures for salaries/stats",
+      "examples": ["font-feature-settings: 'tnum' on Inter", "JetBrains Mono for code-like values"],
+      "rationale": "Salary ranges with proportional figures look uneven; tabular figures align columns visually. Small detail, huge polish boost on listing pages."
+    },
+    {
+      "trend": "Fluid clamp() typography",
+      "examples": ["clamp(2rem, 5vw, 4.5rem) for hero", "clamp(1rem, 1.2vw, 1.125rem) for body"],
+      "rationale": "Single rule covers mobile → 4K. Removes 90% of `md:text-4xl lg:text-5xl xl:text-6xl` chain noise from Tailwind."
+    }
+  ]
+}

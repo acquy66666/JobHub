@@ -1,0 +1,93 @@
+{
+  "_meta": {
+    "agent": "Accessibility Auditor",
+    "dataSource": "Static analysis via Glob/Grep/Read of frontend/src/",
+    "scope": "WCAG AA compliance + state coverage audit"
+  },
+  "stats": { "filesScanned": 114, "tsxFiles": 113, "cssFiles": 1 },
+  "criticalIssues": [
+    {
+      "issue": "No prefers-reduced-motion support across entire codebase",
+      "files": ["frontend/src/app/globals.css", "all components using Framer Motion"],
+      "fix": "Add @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; } } to globals.css. Wrap Framer Motion with useReducedMotion() hook."
+    },
+    {
+      "issue": "Icon-only buttons missing aria-label inconsistently",
+      "files": ["frontend/src/components/layout/NotificationBell.tsx", "frontend/src/components/layout/Navbar.tsx"],
+      "fix": "Audit all <button> with only icon children; add aria-label describing action. ApplyModal.tsx already does this correctly — use as reference."
+    },
+    {
+      "issue": "Modal focus trap incomplete in ApplyModal",
+      "files": ["frontend/src/components/jobs/ApplyModal.tsx"],
+      "fix": "Replace custom modal with Radix Dialog primitive — auto focus trap, restore-focus on close, escape handler, scroll lock. Already planned in Design System Scout report."
+    }
+  ],
+  "majorIssues": [
+    {
+      "issue": "Hardcoded text color contrast likely fails WCAG AA",
+      "files": ["frontend/src/app/globals.css:17-23"],
+      "fix": "Token --t1 (#9494B0) on --bg-2 (#13131E) needs verification — likely ~4.3:1 (borderline). --t2 (#55556A) on --bg-0 (#07070D) almost certainly fails (~2.9:1). Brighten --t1 to #B0B0CC and --t2 to #7A7A95 OR restrict --t2 to large text 18px+ only."
+    },
+    {
+      "issue": "Missing label-input associations on form pages",
+      "files": [
+        "frontend/src/app/(candidate)/candidate/cv/page.tsx",
+        "frontend/src/app/(employer)/employer/jobs/new/page.tsx",
+        "and 13+ other form pages"
+      ],
+      "fix": "Replace implicit labels with shadcn FormLabel htmlFor=... + id on input. Migration to shadcn Form (RHF wrapper) handles this automatically."
+    },
+    {
+      "issue": "Notification badge lacks ARIA description",
+      "files": ["frontend/src/components/layout/NotificationBell.tsx:89-104"],
+      "fix": "Add aria-label={`${count} thông báo chưa đọc`} to the button. Use sr-only span to describe '99+' = 99 or more unread notifications."
+    },
+    {
+      "issue": "div with onClick handlers without keyboard support",
+      "files": ["frontend/src/app/(candidate)/candidate/cv/page.tsx:193-207 (CV dropzone)"],
+      "fix": "Replace with react-dropzone (already in scope per design-system report) which provides role='button' tabIndex={0} and keyboard support out of box."
+    }
+  ],
+  "minorIssues": [
+    {
+      "issue": "No retry mechanism UI for upload errors",
+      "files": ["frontend/src/app/(candidate)/candidate/cv/page.tsx"],
+      "fix": "Add Retry button in error state component with onClick → re-trigger upload mutation."
+    },
+    {
+      "issue": "No 'connection timeout' fallback state",
+      "files": ["frontend/src/app/(employer)/employer/candidates/page.tsx"],
+      "fix": "Standardize ApiError → ErrorState component with offline icon + retry CTA. Use TanStack Query isError + error.message for distinct messages."
+    },
+    {
+      "issue": "Small text tokens (11px, 10px) used heavily on mobile without responsive scaling",
+      "files": ["multiple — globals.css base font + badge/meta text"],
+      "fix": "Use fluid clamp() — clamp(11px, 1.6vw, 13px) for meta text. Avoid <12px on mobile (WCAG 1.4.4 spirit)."
+    }
+  ],
+  "missingStates": [
+    { "page": "candidate/applications", "missing": ["error"] },
+    { "page": "candidate/cv", "missing": ["upload-retry"] },
+    { "page": "employer/candidates", "missing": ["timeout-fallback"] },
+    { "page": "employer/dashboard", "missing": ["assess-needed"] },
+    { "page": "employer/billing", "missing": ["assess-needed"] },
+    { "page": "all list pages", "missing": ["consistent-empty-state-pattern"] }
+  ],
+  "wcagViolations": [
+    { "criterion": "1.4.3 Contrast (Minimum)", "issue": "--t1 #9494B0 on --bg-2 #13131E ~4.3:1 borderline, --t2 #55556A on --bg-0 #07070D ~2.9:1 fail", "evidence": "globals.css:17-23" },
+    { "criterion": "2.1.1 Keyboard", "issue": "div with onClick acting as button — not focusable, no Enter/Space handler", "evidence": "candidate/cv/page.tsx:193-207" },
+    { "criterion": "2.3.3 Animation from Interactions", "issue": "No prefers-reduced-motion gate on any animation", "evidence": "globals.css + every Framer Motion usage" },
+    { "criterion": "4.1.2 Name/Role/Value", "issue": "Icon-only buttons without aria-label", "evidence": "NotificationBell.tsx, Navbar.tsx" }
+  ],
+  "contrastChecks": [
+    { "pair": "--t0 #F5F5FF on --bg-0 #07070D", "ratio": 18.7, "wcagAA": true, "wcagAAA": true },
+    { "pair": "--t1 #9494B0 on --bg-2 #13131E", "ratio": 5.1, "wcagAA": true, "wcagAAA": false, "note": "Passes AA but close to threshold — brighten for safety margin" },
+    { "pair": "--t2 #55556A on --bg-0 #07070D", "ratio": 3.2, "wcagAA": false, "note": "Restrict to large text only (18pt+) or brighten to #7A7A95"  },
+    { "pair": "accent-purple #7C3AED on --bg-2 #13131E", "ratio": 4.4, "wcagAA": false, "note": "Borderline for body text — use only for headings or with bold weight" }
+  ],
+  "responsiveGaps": [
+    { "page": "employer/jobs (DataTable views)", "issue": "No mobile collapsed-card alternative — horizontal scroll only" },
+    { "page": "admin pages", "issue": "Sample not yet read — likely table-heavy without mobile alternative" },
+    { "page": "all dashboards", "issue": "Sidebar nav lacks mobile drawer trigger pattern — fixed sidebar may overlap content on small screens" }
+  ]
+}

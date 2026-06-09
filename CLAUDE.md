@@ -10,14 +10,14 @@ Guidance for Claude Code working in this repo. Keep this file under ~150 lines �
 
 ## Current state
 
-**Stage 11 — Match Optimization** ✅ COMPLETE (P1-P4 all done, session 50). Stage 1-10 ✅ COMPLETE.
+**Stage 12 — UI Redesign** (anti-AI aesthetic) — Phase 1 Research DONE session 51. Stage 1-11 ✅ COMPLETE.
 
 **Last 3 sessions** — chi tiết rationale ở [`.claude/SESSION_LOG.md`](.claude/SESSION_LOG.md):
-- **Session 50 (2026-06-10)** — Stage 11 P4 Match Score v2 consolidated DONE QA 5/5 (`5e08e92`). Refactor recommendation.service.ts: skills 0.4 + certs 0.2 + exp 0.2 + prefs 0.2, mọi dimension normalize [0,1]. Cert dimension dùng `requiredCertificateSlugs` (P3) vs candidate APPROVED certs. Exp graded 0.2-1.0 (null years → 0.7 neutral). + Update memory rule `feedback_token_budget_planning` (áp dụng cho mọi task, target 10-20% dư).
-- **Session 49 (2026-06-09)** — Stage 11 P3 Gap Analysis on Saved Jobs DONE QA 6/6 (`4fc2b28`). Schema `Job.requiredCertificateSlugs` + GET /api/candidate/saved-jobs/:jobId/gap + JobForm cert multi-select + SavedJobsPage inline expand panel.
-- **Session 48 (2026-06-08)** — UX-1 cert icon spacing + UX-2 notifications wrap DONE QA 4/4 (`d5b3a16`). BUG-14 investigated: Notification 5 rows / 0.919ms → root cause Render cold start, no code fix.
+- **Session 51 (2026-06-11)** — Stage 12 Phase 1 UI Redesign Research DONE. 4 sub-agent reports saved to `.claude/redesign/phase1/` (trend, competitor, design-system, a11y). User approved **Direction 3 Deep slate + amber** (`#0F1419` base + `#FBA518` accent, drop purple-blue gradient) + Geist Variable single-font + 5-surface scope. Next: Phase 2 synthesize DESIGN_BRIEF.md.
+- **Session 50 (2026-06-10)** — Stage 11 P4 Match Score v2 consolidated DONE QA 5/5 (`5e08e92`). Refactor recommendation.service.ts: skills 0.4 + certs 0.2 + exp 0.2 + prefs 0.2, mọi dimension normalize [0,1].
+- **Session 49 (2026-06-09)** — Stage 11 P3 Gap Analysis on Saved Jobs DONE QA 6/6 (`4fc2b28`). Schema `Job.requiredCertificateSlugs` + endpoint + JobForm cert multi-select + inline expand panel.
 
-**Active backlog:** Không có task pending. Toàn bộ Stage 1-11 ✅ COMPLETE.
+**Active backlog:** Stage 12 Phase 2 (DESIGN_BRIEF.md synthesis) → Phase 3 implement 5 surfaces.
 
 ## Repo layout
 

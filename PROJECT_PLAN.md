@@ -1,6 +1,16 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-10 (session 50 — Stage 11 P4 Match Score v2 DONE QA 5/5 PASS → Stage 11 ✅ COMPLETE)
+Last Updated: 2026-06-11 (session 51 — Stage 12 UI Redesign Phase 1 research DONE, Direction 3 + scope approved)
+
+Stage 12 — UI Redesign (anti-AI aesthetic):
+- [x] Phase 1 Research (2026-06-11) — 4 sub-agent reports saved to `.claude/redesign/phase1/` (trend, competitor, design-system, a11y). Color direction approved: **Direction 3 Deep slate + amber** (`#0F1419` base + `#FBA518` accent). Typography: Geist Variable single-font. Scope = 5 surfaces (homepage hero, job listing + JobCard, candidate dashboard, employer applicant table, globals.css token swap).
+- [ ] Phase 2 Synthesize DESIGN_BRIEF.md at project root — visual identity + color tokens + typography scale + component inventory + differentiation strategy + a11y targets
+- [ ] Phase 3 P1 Design tokens & globals — swap purple-blue gradient → amber, brighten --t2 contrast, add prefers-reduced-motion guard, install Geist Variable
+- [ ] Phase 3 P2 Shared components — Button (drop gradient, solid amber), Badge (muted skill tags), Card (border-only no glassmorphism), Input/Modal (Radix Dialog migration)
+- [ ] Phase 3 P3 Feature surfaces (5 selected) — JobCard with match score badge inline, JobList asymmetric hero, candidate dashboard sidebar, employer applicant DataTable
+- [ ] Phase 3 P4 QA — Playwright production verification + responsive 375px + WCAG AA contrast check
+
+Stage 11 — Match Optimization ✅ COMPLETE:
 
 Stage 11 — Match Optimization ✅ COMPLETE:
 - [x] P1 Certificate Bank (2026-06-07, `fa16dbc`+`6e3dca1`+`08f7fcb`, QA 6/6 PASS) — 103 certs seeded, candidate upload+admin moderation, public profile show APPROVED only
@@ -15,7 +25,9 @@ UX/Bug backlog:
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
-Status: Toàn bộ Stage 1-10 ✅ COMPLETE | Dự án production-ready, không còn task pending
+Status: Stage 1-11 ✅ COMPLETE | Stage 12 UI Redesign Phase 1 DONE, Phase 2 (DESIGN_BRIEF) là Next Action
+
+Next Action (session 52): Synthesize `DESIGN_BRIEF.md` at project root từ 4 JSON reports in `.claude/redesign/phase1/`, áp dụng Direction 3 (slate + amber) + 5-surface scope đã duyệt. Brief phải có: color token mapping (old purple-blue → new slate+amber), typography scale (Geist clamp), component inventory grouped by role (5 surfaces), differentiation strategy (inline match score + dark-first), a11y targets (WCAG AA contrast + reduced-motion + Radix focus trap).
 
 ---
 

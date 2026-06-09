@@ -1,0 +1,164 @@
+{
+  "_meta": {
+    "agent": "Competitor Analyst",
+    "dataSource": "Training knowledge (mid-2025). WebFetch/WebSearch denied in environment.",
+    "scope": "TopCV, VietnamWorks, ITviec, CareerBuilder VN"
+  },
+  "competitors": [
+    {
+      "name": "TopCV",
+      "url": "https://www.topcv.vn",
+      "layout": "Full-width light theme with fixed white navbar, prominent hero search bar centered on homepage, 3-column job card grid on listing page, right-panel sticky filter sidebar. Footer is heavy with links.",
+      "colors": ["#00B14F", "#FFFFFF", "#F5F5F5", "#212F3F", "#FF7D55"],
+      "typography": "Roboto primary; headings bold 700-800; body 400-500; line-height ~1.6 Vietnamese-optimized",
+      "jobCardStyle": "White card with subtle drop shadow, company logo left 40x40px, job title + company name + location stacked right, salary highlighted in green (#00B14F) badge bottom-left, 'Tin hot' yellow badge top-right when featured",
+      "searchFilterStyle": "Dual-input hero bar (keyword + location) with green CTA. Listing page has left sidebar with accordion-style filters (industry, job type, salary range, experience level, work mode) using checkboxes; active filters shown as removable chips above results",
+      "strengths": [
+        "Market leader in Vietnam — highest brand recognition",
+        "Comprehensive CV builder integrated into candidate dashboard",
+        "Rich filter system with saved search and email alerts",
+        "Employer branding pages with culture photos/videos",
+        "'Apply with TopCV profile' 1-click apply reduces friction"
+      ],
+      "weaknesses": [
+        "Visually dated — white/light theme with flat green feels 2017-era",
+        "Job card density low; salary often hidden behind 'Thỏa thuận'",
+        "Mobile experience laggy with poor touch targets",
+        "Dashboard cluttered with too many CTAs competing",
+        "No dark mode — eye strain on extended browsing"
+      ],
+      "differentiators": [
+        "Integrated CV builder with downloadable PDF templates",
+        "TopCV Score — AI-driven profile completeness scoring",
+        "Employer-side talent pool search with candidate ranking"
+      ]
+    },
+    {
+      "name": "VietnamWorks",
+      "url": "https://www.vietnamworks.com",
+      "layout": "Wide fixed navbar (white/light gray), full-width hero with search bar, 2-column job listing grid on desktop (1-col mobile), prominent 'featured employer' horizontal scroll row, left sidebar filter on listing page",
+      "colors": ["#E41C38", "#FFFFFF", "#F8F8F8", "#333333", "#FF6600"],
+      "typography": "Open Sans or Nunito (varies); headings 600-700; red #E41C38 brand/CTA; body dark gray #333",
+      "jobCardStyle": "White card 1px gray border, company logo top-left 48x48px, job title bold link, company + location secondary text, salary in orange or 'Thỏa thuận', posted-date label, skill tags as small gray pills bottom",
+      "searchFilterStyle": "Single hero search input with location dropdown. Listing filter sidebar uses collapsible sections — radio for single-select, checkbox for multi. 'Quick Apply' toggle filter for profile-only applications",
+      "strengths": [
+        "Strong international employer presence (multinational hiring)",
+        "Long-established trust and large database",
+        "Bilingual UI VI/EN — good for foreign companies hiring local",
+        "Premium job placement with visibility boost",
+        "Structured application tracking dashboard"
+      ],
+      "weaknesses": [
+        "Red primary (#E41C38) feels aggressive, inconsistent with modern job platform tone",
+        "UI density uneven — sparse on some pages, overwhelming on others",
+        "CV builder basic vs TopCV",
+        "No real-time chat between employer and candidate",
+        "Recommendation algorithm weak — mostly title match, not skills"
+      ],
+      "differentiators": [
+        "Bilingual English-Vietnamese throughout",
+        "Quick Apply using saved profile (no CV upload needed)",
+        "Annual salary survey reports — credibility signal"
+      ]
+    },
+    {
+      "name": "ITviec",
+      "url": "https://itviec.com",
+      "layout": "Dark-accented navbar (#1A2332) with white content below; tech-focused niche; hero with keyword + city search; 2-col job listing grid with sticky filter panel; company profile pages rich with tech stack tags",
+      "colors": ["#DB1F28", "#1A2332", "#FFFFFF", "#F6F6F6", "#00A870"],
+      "typography": "Inter or system-ui; strong tech aesthetic; tag/badge heavy; code-like monospace for tech stack labels; heading 700+",
+      "jobCardStyle": "White card, left-aligned company logo 48x48px, job title bold red link on hover, tech skill tags as colored pills (per-language distinct color), salary range prominent in green, 'Hot'/'Urgent' badge overlay top-right, remote/onsite badge",
+      "searchFilterStyle": "Keyword + location hero. Left filter panel with tech-skill tag cloud (clickable), company size, salary range slider, remote toggle. Filter state bookmarkable via URL params",
+      "strengths": [
+        "Only major platform laser-focused on IT/tech — high signal-to-noise",
+        "Tech stack tag system on job cards — invaluable for engineers",
+        "Glassdoor-style company reviews integrated into employer profiles",
+        "Salary range displayed by default — no 'Thỏa thuận' evasion",
+        "Active blog and community content"
+      ],
+      "weaknesses": [
+        "Niche-only — useless for non-tech roles",
+        "Design functional but not premium; dark navy navbar clashes with white body",
+        "Mobile filter UX poor — drawer slides inconsistently",
+        "No skill-gap or match scoring shown to candidates",
+        "No status tracking dashboard — candidates rely on email"
+      ],
+      "differentiators": [
+        "Tech-tag filtering by specific stack (React, Node, Docker, etc.)",
+        "Anonymous Glassdoor-style company reviews",
+        "Salary transparency enforced — all listings show range"
+      ]
+    },
+    {
+      "name": "CareerBuilder VN",
+      "url": "https://careerbuilder.vn",
+      "layout": "Traditional portal: fixed white navbar, full-width hero banner (image background, search overlay), category icon grid below hero, 3-col job grid listing, right-sidebar ad space, heavy footer",
+      "colors": ["#0055B3", "#FFFFFF", "#F4F4F4", "#E8F0FE", "#FF6600"],
+      "typography": "Arial/sans-serif fallback; headings blue #0055B3; body dark gray; little typographic hierarchy — most text feels same weight",
+      "jobCardStyle": "White card 1px light gray border, small company logo top-left, job title blue link, company + location below, salary in orange if disclosed, 'Deadline: dd/mm/yyyy' in red bottom-right, urgency labels like 'Tuyển gấp' in red badge",
+      "searchFilterStyle": "Hero search with keyword + industry dropdown + location dropdown + button. Listing filter horizontal tab-style above results (industry/job type/salary/level/age) plus secondary sidebar",
+      "strengths": [
+        "Large job volume across all industries and seniority",
+        "Long-established brand (CareerBuilder global) — trust",
+        "Category browse grid intuitive for less tech-savvy users",
+        "Reliable email job alerts"
+      ],
+      "weaknesses": [
+        "Most visually outdated — feels 2012 portal",
+        "Age filter field is legally questionable, discrimination risk",
+        "Ad-heavy layout breaks visual hierarchy",
+        "Extremely slow page loads — heavy unoptimized assets",
+        "No skill matching, no profile scoring, no modern recommendations",
+        "Mobile site is unstyled desktop shrink"
+      ],
+      "differentiators": [
+        "Broadest industry coverage including blue-collar/vocational",
+        "Global brand affiliation credibility with large corporations"
+      ]
+    }
+  ],
+  "commonPatterns": [
+    "White/light background with colored accent (red/green/blue) — all 4 are light theme",
+    "2-3 column job card grid on desktop, 1-col mobile",
+    "Left sidebar or top-row filter panel with collapsible sections",
+    "Company logo prominently top-left 40-48px on every job card",
+    "Hero search bar with keyword + location as two primary inputs",
+    "Salary either as range or hidden behind 'Thỏa thuận'",
+    "Fixed top navbar with logo + search + login/register CTAs",
+    "Saved jobs / bookmark on listing page",
+    "Email job alert subscription",
+    "Pagination (not infinite scroll)",
+    "Separate dashboards candidate vs employer",
+    "Application status tracking (PENDING / VIEWED / REJECTED minimum)"
+  ],
+  "gapOpportunities": [
+    {
+      "gap": "Dark-first design",
+      "rationale": "All 4 use white/light. Dark-first is differentiating, reduces eye strain on long browsing, appeals strongly to 18-35 tech demo. None even offer a dark toggle."
+    },
+    {
+      "gap": "Real-time match score on job cards",
+      "rationale": "None show personalized match % on listing page. JobHub's Stage 11 score (skills 0.4 + certs 0.2 + exp 0.2 + prefs 0.2) as a badge on each card would be unique, immediately useful, reduces time-to-apply."
+    },
+    {
+      "gap": "Inline skill-gap analysis on saved/browsed jobs",
+      "rationale": "ITviec shows tech tags but none say 'you are missing 2 of 5 required skills' with next steps. JobHub's gap analysis (Stage 11 P3) — competitors have zero equivalent."
+    },
+    {
+      "gap": "Glassdoor-style reviews outside IT niche",
+      "rationale": "ITviec has reviews only for tech. No VN platform offers employer reviews for general industries."
+    },
+    {
+      "gap": "Enforced salary transparency",
+      "rationale": "Only ITviec bans 'Thỏa thuận'. Enforcing salary display via form validation is candidate-trust-building differentiator."
+    },
+    {
+      "gap": "Modern micro-animation and scroll-reveal UI",
+      "rationale": "All 4 are static — no scroll animations, hover states, transitions. Framer Motion scroll reveals create premium feel none offer."
+    },
+    {
+      "gap": "Certificate-based credential matching visible to candidates",
+      "rationale": "No VN job platform surfaces required certifications on job cards or in filters. JobHub's cert dimension (Stage 11 P3) addresses a real pain point completely unmet."
+    }
+  ]
+}
