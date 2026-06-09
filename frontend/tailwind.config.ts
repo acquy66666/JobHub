@@ -35,6 +35,14 @@ const config: Config = {
       },
       fontFamily: {
         sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "SF Mono", "Menlo", "monospace"],
+      },
+      borderRadius: {
+        sharp: "2px",
+      },
+      height: {
+        row: "var(--row-h)",
+        "row-compact": "var(--row-h-compact)",
       },
       maxWidth: {
         wrap: "1180px",

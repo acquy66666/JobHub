@@ -1,74 +1,144 @@
 # Session Wrap Skill
 
-Tổng kết session làm việc, đồng bộ thay đổi vào CLAUDE.md và PROJECT_PLAN.md.
-Được gọi bằng lệnh `/session-wrap` vào cuối mỗi session.
+Tổng kết session, đồng bộ thay đổi vào CLAUDE.md + PROJECT_PLAN.md + SESSION_LOG.md, commit.
+
+**Không hỏi user.** Tự thu thập từ context + git rồi thực hiện luôn.
 
 ---
 
-## Các bước thực hiện
+## Bước 1 — Thu thập thông tin session
 
-### Bước 1 — Thu thập thông tin session
+Chạy song song:
 
-Hỏi user tuần tự các câu sau (chờ trả lời từng câu, không hỏi tất cả cùng lúc):
+1. `git log --oneline <prev_wrap>..HEAD` — danh sách commits session này. Nếu không xác định được `prev_wrap`, dùng `git log --oneline -15` rồi cắt theo entry cuối trong `SESSION_LOG.md`.
+2. `git status --short` — file chưa commit (cần quyết định: commit cùng wrap, hay flag là dang dở).
+3. Đọc entry cuối `SESSION_LOG.md` để biết điểm bắt đầu session này.
+4. Đọc `CLAUDE.md` + `PROJECT_PLAN.md` hiện tại — biết chỗ cần update.
 
-**Câu 1:**
-> "Session này bạn đã làm gì? Liệt kê ngắn gọn các thay đổi, tính năng đã thêm, hoặc bug đã fix."
+Từ context hội thoại + git, tự tổng hợp:
 
-**Câu 2:**
-> "Có bug mới hoặc vấn đề nào phát hiện ra nhưng chưa fix không? Mô tả ngắn và file liên quan nếu biết."
-
-**Câu 3:**
-> "Có test case nào đã verify thành công hoặc thất bại không? (TC1, TC2a, TC3, v.v.)"
-
-**Câu 4:**
-> "Có quyết định kỹ thuật, lưu ý đặc biệt, hoặc điều gì cần nhớ cho session sau không?"
-
----
-
-### Bước 2 — Tổng hợp và sinh prompt
-
-Từ câu trả lời của user, tổng hợp thành 1 đoạn mô tả súc tích rồi **in ra màn hình** prompt sau để user copy-paste vào thanh chat:
-
-```
-/compact [NỘI DUNG TỔNG HỢP]. Từ thông tin này, hãy cập nhật @CLAUDE.md và @PROJECT_PLAN.md: (1) trong CLAUDE.md cập nhật mục "Stage 5 pending/done" và danh sách bugs nếu có thay đổi; (2) trong PROJECT_PLAN.md tick [x] các task/TC đã hoàn thành, thêm bug mới vào mục "Bugs phát hiện khi verify", cập nhật "Next Action" cho session tiếp theo. Commit tất cả thay đổi với message mô tả session này.
-```
-
-Trong đó `[NỘI DUNG TỔNG HỢP]` được thay bằng đoạn tổng hợp thực tế từ câu trả lời của user.
+- **Commits session này:** list hash + 1 dòng mô tả.
+- **TC đã verify:** TC nào pass/fail (suy luận từ conversation; nếu không chắc → ghi "chưa verify").
+- **Bug mới phát hiện chưa fix:** mô tả + file liên quan.
+- **Quyết định kỹ thuật quan trọng / rationale:** điều gì cần nhớ cho session sau (vd: "chọn accordion thay vì modal vì giảm cognitive load", "không dùng X vì Y").
+- **Next Action:** task ưu tiên cho session sau.
+- **Blocker còn tồn tại:** liệt kê hoặc "không có".
 
 ---
 
-### Bước 3 — Hướng dẫn user
+## Bước 2 — Cập nhật file
 
-In ra hướng dẫn:
+Thực hiện trực tiếp (không sinh prompt cho user copy):
 
+### 2a. Cập nhật `PROJECT_PLAN.md`
+
+- Sửa `Last Updated` → ngày hôm nay + 1 dòng tóm tắt session.
+- Tick `[x]` task/TC đã hoàn thành (kèm commit hash ngắn nếu có).
+- Thêm bug mới vào mục "Bugs phát hiện khi verify".
+- Cập nhật "Next Action" cho session sau.
+- Xoá/cập nhật "Blockers" nếu đã giải quyết.
+
+### 2b. Cập nhật `CLAUDE.md`
+
+- Thêm/cập nhật dòng `Session N (YYYY-MM-DD):` với tóm tắt 1-3 dòng + commit hash.
+- Cập nhật `Stage X done/pending` nếu thay đổi.
+- Cập nhật danh sách bugs nếu có thay đổi (thêm bug mới hoặc đánh dấu fixed).
+
+### 2c. Cập nhật `.claude/SESSION_LOG.md` (TẠO MỚI nếu chưa có)
+
+Append entry mới theo format chuẩn — đây là log dài hạn giúp session sau hiểu rationale, không chỉ "đã làm gì":
+
+```markdown
+## Session [N] — [YYYY-MM-DD]
+
+**Commits:** `hash1` task A, `hash2` task B, `hash3` task C
+
+**Done:**
+- [Task A] — [1 dòng mô tả tác động]
+- [Task B] — [...]
+
+**Why / Rationale:** [Quyết định quan trọng + lý do — phần này quan trọng nhất cho session sau. Vd: "Chọn server-side filter thay client-side để fix pagination bug khi tag filter cắt sau khi paginate"]
+
+**Verified:** [TC pass / fail, hoặc "chưa verify production"]
+
+**Bugs phát hiện mới:** [Mô tả + file, hoặc "không có"]
+
+**Next Action:** [Task ưu tiên #1 cho session sau + scope/file]
+
+**Blocker:** [Nếu có, vd: "Render auto-deploy webhook hay broken — cần manual deploy"]
 ```
-✅ Prompt đã sẵn sàng — copy đoạn trên và paste vào thanh chat, rồi nhấn Enter.
-   Lệnh /compact sẽ nén lịch sử hội thoại và tự động cập nhật CLAUDE.md + PROJECT_PLAN.md.
-```
+
+### 2d. Auto-memory check
+
+Nếu trong session có:
+- User đưa feedback/rule mới ("đừng làm X", "luôn làm Y", "từ giờ trở đi…") → đảm bảo đã lưu vào `memory/` rồi (nếu chưa → lưu ngay).
+- Quyết định kỹ thuật bất ngờ hoặc lý do non-obvious không thể derive từ code → cân nhắc lưu vào memory.
 
 ---
 
-## Quy tắc tổng hợp nội dung
+## Bước 3 — Commit
 
-Khi viết đoạn `[NỘI DUNG TỔNG HỢP]`, tuân theo format:
-
-```
-Session [ngày hiện tại]: [danh sách thay đổi chính, mỗi item cách nhau bằng dấu chấm phẩy]. 
-Bug mới: [mô tả hoặc "không có"]. 
-TC đã verify: [danh sách hoặc "không có"]. 
-Lưu ý: [ghi chú đặc biệt hoặc "không có"].
-```
-
-Ví dụ output thực tế:
+Commit tất cả thay đổi (CLAUDE.md, PROJECT_PLAN.md, SESSION_LOG.md) với message:
 
 ```
-/compact Session 2026-05-28: fix middleware AUTH_ONLY không chặn /login và /register nữa; thêm useEffect auto-redirect trong LoginForm khi user đã có session; AuthProvider gọi clearAuth() khi refresh thất bại. Bug mới: không có. TC đã verify: TC2b (employer login) thành công. Lưu ý: cookie refreshToken có maxAge 7 ngày nên cần logout trước khi test tài khoản khác. Từ thông tin này, hãy cập nhật @CLAUDE.md và @PROJECT_PLAN.md: (1) trong CLAUDE.md cập nhật mục "Stage 5 pending/done" và danh sách bugs nếu có thay đổi; (2) trong PROJECT_PLAN.md tick [x] các task/TC đã hoàn thành, thêm bug mới vào mục "Bugs phát hiện khi verify", cập nhật "Next Action" cho session tiếp theo. Commit tất cả thay đổi với message mô tả session này.
+chore: session wrap YYYY-MM-DD — [tóm tắt 1 dòng]
 ```
+
+Không commit nếu không có gì thực sự thay đổi.
+
+---
+
+## Bước 4 — In tóm tắt + Compact Brief
+
+### 4a. Tóm tắt ngắn
+
+```
+✅ Session wrap hoàn tất.
+Commits session này: [hash list]
+CLAUDE.md: [thay đổi 1 dòng]
+PROJECT_PLAN.md: [thay đổi 1 dòng]
+SESSION_LOG.md: [entry mới — Session N]
+Next action: [bước ưu tiên #1 cho session sau]
+```
+
+### 4b. Compact Brief (paste cùng `/compact`)
+
+In code fence để user copy nguyên si paste cùng `/compact`. Post-compaction self sẽ đọc brief này để bắt nhịp ngay, không phải đọc lại file.
+
+```
+=== COMPACT BRIEF — Session [N] ([YYYY-MM-DD]) ===
+
+ĐÃ LÀM:
+- [Task] (`hash`) — [thay đổi gì, file chính]
+
+VÌ SAO CHỌN CÁCH NÀY:
+- [Task]: [Lý do non-obvious + trade-off đã cân nhắc]
+
+CẦN NHỚ CHO SESSION SAU:
+- Rule/feedback mới: [hoặc "không có"]
+- Constraint kỹ thuật mới: [hoặc "không có"]
+- File/state dang dở: [hoặc "không có"]
+- TC chưa verify: [hoặc "không có"]
+
+BUG MỚI CHƯA FIX:
+- [Mô tả + file, hoặc "không có"]
+
+NEXT ACTION:
+[Task cụ thể + file/scope + lý do ưu tiên]
+
+RULE CẦN TUÂN THỦ:
+- [Rule từ MEMORY.md áp dụng cho task next]
+
+=== END BRIEF ===
+```
+
+Brief 15-30 dòng. Rationale > diff. Cụ thể file + hash. Không lặp PROJECT_PLAN.
 
 ---
 
 ## Lưu ý
 
-- Skill này chỉ **sinh ra prompt**, không tự chỉnh sửa file. User cần paste prompt vào chat để thực hiện.
-- Nếu user không nhớ hết, có thể bỏ qua câu nào bằng cách trả lời "không có" hoặc "bỏ qua".
-- Gọi `/session-wrap` trước khi đóng tab hoặc kết thúc ngày làm việc.
+- Nếu CLAUDE.md / PROJECT_PLAN.md đã update liên tục trong session, chỉ bổ sung phần còn thiếu.
+- Nếu `git status` còn file chưa commit không thuộc wrap (vd: feature dở) → KHÔNG tự commit, ghi rõ trong SESSION_LOG `Blocker` hoặc `Next Action`.
+- Nếu thông tin TC pass/fail chỉ user mới biết → hỏi đúng 1 câu duy nhất, không hỏi tuần tự nhiều câu.
+- **Mục tiêu của SESSION_LOG**: session sau đọc 2 entry gần nhất là đủ hiểu "đã đi đến đâu, vì sao chọn hướng này, đang dở gì". Không trùng lặp với PROJECT_PLAN (checklist) hay CLAUDE.md (state snapshot).
