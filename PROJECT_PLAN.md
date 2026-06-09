@@ -1,6 +1,6 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-14 (session 55 — Stage 12 P2-D Candidate dashboard rewrite DONE; QA 6/6 pass)
+Last Updated: 2026-06-15 (session 56 — Stage 12 P2-E Employer applicants rewrite DONE; QA 7/7 pass)
 
 Stage 12 — UI Redesign (Thesis B: terminal precision):
 - [x] Phase 1 Research (2026-06-11, session 51) — 4 sub-agent reports in `.claude/redesign/phase1/`. Direction 3 (slate+amber) + Geist + 5-surface scope approved.
@@ -10,8 +10,8 @@ Stage 12 — UI Redesign (Thesis B: terminal precision):
 - [x] Phase 3 P2-B Homepage rewrite (2026-06-12, `58135b8`, QA 5/5 functional pass) — 4 new panels HeroPanel/HotJobsPanel/StatsHeroPanel/CTAPanel in `app/(public)/page.tsx` + `components/home/`. Drop 9 legacy sections (Hero/Features/HowItWorks/Vip/Featured/Employer/Stats/Companies/CTA). HotJobs fetch real `/api/jobs?limit=6` với fallback mock. CmdK onSubmit → `router.push('/jobs?q=...')`. Zero purple gradient on homepage.
 - [x] Phase 3 P2-C Jobs list rewrite (2026-06-13, `f6e39b6`, QA 5/5 PASS) — `app/(public)/jobs/JobsContent.tsx` rewrite: sticky CmdK + HairlineSection Row list (20/page) + SidePanel slide-right Radix Dialog reuse ApplyModal. URL sync `?q=&page=&job=`. Mono hairline pagination. Drop filter sidebar + card grid + ScrollReveal. Deep-link `/jobs/[id]` route giữ nguyên.
 - [x] Phase 3 P2-D Candidate dashboard rewrite (2026-06-14, `e739147`, QA 6/6 PASS) — Drop sidebar 240px (11 emoji items) → TabBar 7 tabs + Breadcrumb mono ở `(candidate)/layout.tsx`. Rewrite 6 core pages (dashboard 4-stat mono + 4 HairlineSection; applications Row accordion với CV/cover letter/interview/timeline inline; saved-jobs Row accordion preserving gap test IDs; notifications Row mono filter tabs; recommended Row + MonoNumber match score). Profile NOT touched (defer P2-F).
-- [ ] Phase 3 P2-E Employer applicants — TabBar + applicants table + bulk action bar.
-- [ ] Phase 3 P2-F Final QA + REDESIGN_SUMMARY.md — Playwright dark+light @ 1280/375, sweep legacy purple stragglers, a11y verification, drop legacy aliases, refactor profile/page.tsx 556 LOC (deferred from P2-D).
+- [x] Phase 3 P2-E Employer applicants (2026-06-15, `34958a8`, QA 7/7 PASS) — Drop sidebar 240px (9 emoji) + CreditBadge box → Breadcrumb + TabBar 7 tabs + CreditInline ở `(employer)/layout.tsx`. Rewrite dashboard/jobs/jobs[id]applications/applications/candidates với HairlineSection + Row + MonoNumber. `jobs/[id]/applications` drop List/Kanban toggle → unified Row accordion + multi-select checkbox + sticky bulk action bar (accept/reject/reviewing all, sequential PATCH). Light touch stats + profile (wrapper swap). Test IDs: `employer-app-row/expanded`, `bulk-action-bar`, `bulk-select-checkbox`, `employer-job-row`.
+- [ ] Phase 3 P2-F Final QA + REDESIGN_SUMMARY.md — Playwright dark+light @ 1280/375, sweep legacy purple stragglers, a11y verification, drop legacy aliases (`--accent-purple/--accent-blue/--pink/--gradient`), refactor candidate/profile/page.tsx 556 LOC (deferred từ P2-D), employer/billing/page.tsx rewrite (deferred từ P2-E), cleanup `components/common/{GradientText,SectionTag,ScrollReveal}` + `components/jobs/{JobCard,JobFilters,JobCardSkeleton,CompareBar}` nếu no callers.
 
 Stage 11 — Match Optimization ✅ COMPLETE:
 
@@ -28,9 +28,9 @@ UX/Bug backlog:
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
-Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A + P2-B + P2-C + P2-D DONE (Thesis B); P2-E Employer applicants is Next Action
+Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A + P2-B + P2-C + P2-D + P2-E DONE (Thesis B); P2-F Final QA + cleanup is Next Action
 
-Next Action (session 56): **P2-E Employer applicants rewrite** — audit trước `frontend/src/app/(employer)/employer/*` (dashboard, jobs, jobs/[id]/applications, candidates, profile, billing, stats…), map component dùng card-dark/Sidebar/gradient cũ → drop/keep. Apply Thesis B: rewrite `(employer)/layout.tsx` Breadcrumb + TabBar (employer-specific tabs) tương tự P2-D layout shell. Trọng tâm `jobs/[id]/applications/page.tsx` — applicants table accordion compact row → expand inline (CV viewer + screening answers + status timeline + bulk action bar khi multi-select). Reuse primitives Row/MonoNumber/TabBar/Breadcrumb/HairlineSection. Plan chi tiết trước, đợi user duyệt mới code.
+Next Action (session 57): **P2-F Final QA + cleanup** — (1) sweep legacy `card-dark`/`gradient-text`/`bg-brand-gradient`/`btn-primary` qua grep, fix or document; (2) refactor `frontend/src/app/(candidate)/candidate/profile/page.tsx` (556 LOC form-heavy, defer từ P2-D) — wrap section bằng HairlineSection, drop card-dark, GIỮ form logic intact (test trước khi commit); (3) rewrite `frontend/src/app/(employer)/employer/billing/page.tsx` + `billing/shop/page.tsx` + `billing/orders/[id]/page.tsx` (defer từ P2-E) — Row mono cho order list; (4) drop legacy aliases `--accent-purple/--accent-blue/--pink/--gradient` ở `globals.css` + `tailwind.config.ts` sau khi grep 0 caller; (5) cleanup unused components `components/common/{GradientText,SectionTag,ScrollReveal}` + `components/jobs/{JobCard,JobFilters,JobCardSkeleton,CompareBar}` nếu unused; (6) Playwright a11y + dark/light @ 1280+375 sweep; (7) viết `REDESIGN_SUMMARY.md`. Plan chi tiết trước, đợi user duyệt mới code.
 
 ---
 

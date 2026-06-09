@@ -2,6 +2,44 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 56 — 2026-06-15
+
+**Commits:** `34958a8` P2-E employer applicants rewrite thesis B (TabBar + bulk action + Row accordion)
+
+**Done:**
+- Rewrite `(employer)/layout.tsx` 115→100 LOC. Drop sidebar fixed 240px + 9-item emoji nav + CreditBadge box bottom + mobile hamburger. Mới: Breadcrumb mono (`~ / employer / <route>`) + CreditInline mono (`credits: b·p·v`) phải + email + TabBar 7 tabs (Tổng quan/Tin tuyển dụng/Ứng viên/Tìm ứng viên/Thống kê/Hồ sơ/Credits). Drop tab "Đăng tin" + "Đề xuất kỹ năng" (secondary direct URL).
+- Rewrite `dashboard/page.tsx` 290→230 LOC. Hero `Chào, {companyName}.` + mono completion line. 4 mono stats (totalJobs/activeJobs/totalApplications/totalViews) — drop gradient stat cards. 3 HairlineSection: ĐƠN MỚI CHỜ DUYỆT, TIN GẦN ĐÂY, HOÀN THIỆN HỒ SƠ (conditional). Drop hero gradient + progress bar + 3 quick action buttons + ScrollReveal.
+- Rewrite `jobs/page.tsx` 161→230 LOC. card-dark grid → HairlineSection Row accordion. Click row expand inline: action links (đơn ứng tuyển/câu hỏi/sửa/xem công khai) + pause/resume/delete buttons. Mono pagination prev/page/next. Top right "+ tin mới" link.
+- Rewrite `jobs/[id]/applications/page.tsx` 597→480 LOC (file core). Drop List+Kanban view toggle (2 mode → 1 unified accordion). Drop ScrollReveal + framer-motion AnimatePresence. New: Row accordion mỗi đơn (Lead checkbox + MonoNumber idx, Body name+tag+headline+timeAgo, End CV link+status badge+chevron). Click row expand: email + cover letter + screening answers + status select + note input + tag select + NotesInline + InterviewAccordion. **Bulk action bar sticky top-16** (visible khi `selected.size > 0`): mono count + "✓ chấp nhận tất" + "✕ từ chối tất" + "◐ đang xem" + "bỏ chọn". Implement bằng `Promise.all` sequential PATCH (không cần backend endpoint mới).
+- Rewrite `applications/page.tsx` 390→310 LOC cross-job applicants. card-dark + framer-motion → HairlineSection Row accordion. 5 mono stat row (tổng/chờ duyệt/đang xem/trúng tuyển success-tone/từ chối danger-tone). Filter mono inline `[active]` bracket + job select + keyword input. Click row expand: email + headline + location + cover letter + status quick buttons + tag quick buttons + link sang job-scope applications page.
+- Rewrite `candidates/page.tsx` 249→180 LOC. Card grid 3-col → single HairlineSection Row list. Inline mono search form (skill + location inputs với border-b only, button "tìm"). Privacy notice mono. Row: Lead MonoNumber idx, Body name+headline+location+experienceCount, mono tail `✓ react, ts, python +2` matched skills.
+- Light touch `stats/page.tsx` 173→180 LOC. Drop card-dark wrapper + ScrollReveal. Wrap Recharts BarChart trong HairlineSection. Table mono với tabular-nums cells + status badge rounded-sharp. Keep chart colors (blue/purple/green theme tokens).
+- Light touch `profile/page.tsx` 145→145 LOC. Form logic + Zod + react-hook-form GIỮ NGUYÊN. Chỉ swap: ScrollReveal → HairlineSection, card-dark → section bare, input class bg-bg-3 rounded-xl → bg-transparent border rounded-sharp, gradient logo letter → border accent, btn-primary → mono outline button.
+- QA Playwright `qa-scripts/redesign-p2e/qa.js` 7 TC production với login `employer@jobhub.vn` (Demo@2026). **Pass 7/7.** TC1 dashboard shell (breadcrumb=1, tabs=7, mono=14, sidebar=0, card-dark=0). TC2 mobile 375 no overflow. TC3 tab active "Tin tuyển dụng". TC4 jobs accordion expand rowCount=10. TC5 job applications + bulk bar (verify-tc5.js confirm `seed32-j-02` rowCount=6, bulkBarVisible=true, appExpanded=true). TC6 cross-job rowCount=20. TC7 candidates search form.
+
+**Why / Rationale:**
+- **Drop sidebar → TabBar tương tự P2-D**: nhất quán với candidate layout (session 55). Sidebar 240px + emoji icon đã refused; recover full-width cho row scan. CreditBadge từ box dưới sidebar inline lên top mono — vẫn 1 click sang `/employer/billing` nhưng không chiếm vertical space.
+- **Drop List/Kanban toggle ở `jobs/[id]/applications`**: Kanban là card grid 4 column — trái thesis B "no card grid". 2 view mode tăng cognitive switch không thực sự cần (Kanban không scale > 20 đơn, mà LIST đủ với pagination 10/page). Unified accordion: 1 mode → ít state hơn (drop `viewMode`, `kanbanData`, `KANBAN_COLUMNS`), code -40%.
+- **Bulk action bar UX (multi-select checkbox + sticky bar)**: scenario thực tế của employer = duyệt 20+ đơn trong 1 lượt. Click từng row + select status từng đơn = 3 click/đơn × 20 đơn = 60 click. Multi-select + 1 nút "chấp nhận tất" = 21 click cho cả batch. Bar sticky top-16 (dưới navbar fixed) để user scroll list dài vẫn thấy được nút action. Implement client-side `Promise.all` map PATCH — KHÔNG add backend `POST /bulk` vì rủi ro migration + test, sequential PATCH chấp nhận được với 20 đơn (mỗi đơn ~80ms ⇒ 1.6s total).
+- **Bulk action bar màu accent-dim + border accent (not red)**: tránh confusion với destructive UX. Sequence: user check 2+ box → bar slide in (sticky) → click action → toast confirm → bar disappear.
+- **Profile light touch chứ không full rewrite**: form-heavy với Zod + react-hook-form values prop (sync với server data). Đụng vào structure form có thể gây race condition reset/values. Section wrapper card-dark → HairlineSection an toàn vì wrapper bên ngoài form không ảnh hưởng register/handleSubmit.
+- **Billing pages defer P2-F**: billing/page.tsx (255), billing/shop (?LOC), billing/orders/[id] — order list + credit pack purchase flow đòi context riêng (PayOS callback, credit balance state). Defer cùng cleanup P2-F.
+- **CreditInline thay CreditBadge component reuse?** Không reuse — CreditBadge styled cho sidebar box (block layout, padding box). Inline cần text-only mono 1 dòng. Inline component nội bộ layout.tsx đủ — 20 LOC, no need extract.
+- **TC5 false-fail seed32-j-01 (rowCount=0)**: first job trong list không có applications. QA tự động click first job → empty. Verify-tc5.js workaround: route qua `/employer/applications` → click row đầu → click "→ xem trong tin tuyển dụng" → land vào `seed32-j-02` (rowCount=6). Lesson: cross-page navigation cần job có data guaranteed; nếu seed có job 0 apps ở slot 1 → QA hop qua row.
+
+**Verified:** Playwright production 7/7 — `qa-scripts/redesign-p2e/{result.json, dashboard-1280.png, dashboard-375.png, jobs-accordion.png, job-applications-bulk.png, applications-cross.png}`.
+
+**Bugs phát hiện mới:**
+- Không có. Bulk PATCH sequential ổn ở scale demo (20 đơn). Nếu scale 100+ đơn → cần backend bulk endpoint.
+- 401 console noise pre-existing (axios refresh) tiếp tục — same notes session 53-55, không phải P2-E regression.
+- `profile/page.tsx` candidate 556 LOC + `billing/*` employer pages vẫn dùng card-dark/gradient — defer P2-F (đã ghi PROJECT_PLAN).
+
+**Next Action:** **P2-F Final QA + cleanup** — sweep legacy `card-dark`/`gradient-text`/`bg-brand-gradient`/`btn-primary` qua grep; refactor candidate/profile/page.tsx (556 LOC, defer P2-D) wrapper-only NOT touching form logic; rewrite employer/billing/* (defer P2-E); drop legacy CSS aliases sau khi grep 0 caller; cleanup unused components; viết REDESIGN_SUMMARY.md. Plan chi tiết trước, đợi duyệt.
+
+**Blocker:** Không có. Vercel auto-deploy ổn (~90s post-push live). Backend Render warm cả session. Working tree sạch sau wrap.
+
+---
+
 ## Session 55 — 2026-06-14
 
 **Commits:** `e739147` P2-D candidate dashboard rewrite thesis B (Breadcrumb + TabBar + Row accordion)
