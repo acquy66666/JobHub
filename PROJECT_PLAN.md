@@ -1,14 +1,17 @@
 # Project Plan: JobHub
 Created: 2026-05-25
-Last Updated: 2026-06-11 (session 51 — Stage 12 UI Redesign Phase 1 research DONE, Direction 3 + scope approved)
+Last Updated: 2026-06-11 (session 52 — Stage 12 brief + P1 tokens + P2-A foundation DONE; Thesis B terminal precision)
 
-Stage 12 — UI Redesign (anti-AI aesthetic):
-- [x] Phase 1 Research (2026-06-11) — 4 sub-agent reports saved to `.claude/redesign/phase1/` (trend, competitor, design-system, a11y). Color direction approved: **Direction 3 Deep slate + amber** (`#0F1419` base + `#FBA518` accent). Typography: Geist Variable single-font. Scope = 5 surfaces (homepage hero, job listing + JobCard, candidate dashboard, employer applicant table, globals.css token swap).
-- [ ] Phase 2 Synthesize DESIGN_BRIEF.md at project root — visual identity + color tokens + typography scale + component inventory + differentiation strategy + a11y targets
-- [ ] Phase 3 P1 Design tokens & globals — swap purple-blue gradient → amber, brighten --t2 contrast, add prefers-reduced-motion guard, install Geist Variable
-- [ ] Phase 3 P2 Shared components — Button (drop gradient, solid amber), Badge (muted skill tags), Card (border-only no glassmorphism), Input/Modal (Radix Dialog migration)
-- [ ] Phase 3 P3 Feature surfaces (5 selected) — JobCard with match score badge inline, JobList asymmetric hero, candidate dashboard sidebar, employer applicant DataTable
-- [ ] Phase 3 P4 QA — Playwright production verification + responsive 375px + WCAG AA contrast check
+Stage 12 — UI Redesign (Thesis B: terminal precision):
+- [x] Phase 1 Research (2026-06-11, session 51) — 4 sub-agent reports in `.claude/redesign/phase1/`. Direction 3 (slate+amber) + Geist + 5-surface scope approved.
+- [x] Phase 2 DESIGN_BRIEF.md (2026-06-11, `d90c659`) — source of truth: tokens, typography, component inventory, differentiation, a11y. Light auto-detect via prefers-color-scheme added.
+- [x] Phase 3 P1 Design tokens & globals (2026-06-11, `3ef75d3`) — Direction 3 amber tokens applied, Inter→Geist, prefers-reduced-motion guard, ambient radial. Tailwind colors point to CSS vars. Legacy aliases gradual.
+- [x] Phase 3 P2-A Foundation (2026-06-11, `e97f060`) — Thesis B pivot after user feedback "đổi màu chưa đủ". Add Geist Mono, grain texture replace radial, row tokens, 9 primitives (Row/MonoNumber/StatHero/CmdK+parser/SidePanel/TabBar/Breadcrumb/HairlineSection/CapsLabel) + @radix-ui/react-dialog. Build pass.
+- [ ] Phase 3 P2-B Homepage rewrite — consume CmdK + Row hot-jobs + StatHero in `app/(public)/page.tsx` + `components/home/*`. Drop centered hero + 3-col features + decorative gradient.
+- [ ] Phase 3 P2-C Jobs list rewrite — persistent CmdK + Row table + SidePanel detail. Drop filter sidebar checkbox.
+- [ ] Phase 3 P2-D Candidate dashboard — TabBar + Breadcrumb + applications table accordion. Drop sidebar nav.
+- [ ] Phase 3 P2-E Employer applicants — TabBar + applicants table + bulk action bar.
+- [ ] Phase 3 P2-F Final QA + REDESIGN_SUMMARY.md — Playwright dark+light @ 1280/375, sweep legacy purple stragglers, a11y verification, drop legacy aliases.
 
 Stage 11 — Match Optimization ✅ COMPLETE:
 
@@ -25,9 +28,9 @@ UX/Bug backlog:
 
 Stage 1-10 ✅ COMPLETE (đã wrap session 45)
 Current Stage: Stage 10 — Skill Bank ✅ COMPLETE (P1-P7 + P9 ✅, P8 skipped — admin polish low value cho demo)
-Status: Stage 1-11 ✅ COMPLETE | Stage 12 UI Redesign Phase 1 DONE, Phase 2 (DESIGN_BRIEF) là Next Action
+Status: Stage 1-11 ✅ COMPLETE | Stage 12 Phase 2 + P1 + P2-A foundation DONE (Thesis B); P2-B Homepage rewrite is Next Action
 
-Next Action (session 52): Synthesize `DESIGN_BRIEF.md` at project root từ 4 JSON reports in `.claude/redesign/phase1/`, áp dụng Direction 3 (slate + amber) + 5-surface scope đã duyệt. Brief phải có: color token mapping (old purple-blue → new slate+amber), typography scale (Geist clamp), component inventory grouped by role (5 surfaces), differentiation strategy (inline match score + dark-first), a11y targets (WCAG AA contrast + reduced-motion + Radix focus trap).
+Next Action (session 53): **P2-B Homepage rewrite** — replace `frontend/src/app/(public)/page.tsx` + `components/home/{HeroSection,FeaturedJobsSection,StatsSection,HowItWorksSection,CompaniesSection,EmployerSection,CTASection}.tsx` với Thesis B layout: (1) left-aligned h1 + meta line (mono counts) + full-width CmdK, (2) HOT NÀY HairlineSection chứa Row list 5-8 jobs, (3) StatHero section với 1 giant number + 3 inline metrics, (4) hairline Footer mono. Drop centered hero, 3-col features, gradient text, stagger fade-up cliché. Consume primitives sẵn từ `frontend/src/components/ui/` + `components/search/CmdK.tsx`. Wire CmdK submit → `/jobs?q=<raw>` route. Real job data từ existing `useFeaturedJobs` hook.
 
 ---
 

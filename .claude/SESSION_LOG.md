@@ -2,6 +2,38 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 52 — 2026-06-11
+
+**Commits:** `d90c659` DESIGN_BRIEF.md Phase 2, `3ef75d3` P1 design tokens + Geist + light auto-detect, `e97f060` P2-A thesis B foundation (9 primitives + Geist Mono + grain)
+
+**Done:**
+- Phase 2 brief duyệt — Direction 3 (slate+amber) + Geist + light mode auto-detect via `prefers-color-scheme` (option B: no manual toggle). Light accent `#B8770C` đậm hơn dark `#FBA518` để đạt 4.5:1 trên white.
+- Phase 3 P1 — `globals.css` rewrite dark + light @media, Tailwind colors → CSS vars (auto-flip), Inter → Geist Sans, prefers-reduced-motion guard, ambient amber radial. Legacy `--accent-purple/--accent-blue/--pink/--gradient` repointed sang amber (single accent) → 66 file cũ không vỡ.
+- **Pivot giữa session:** user phản hồi "đổi màu chưa đủ, cần khác hẳn AI làm" → diagnose 10 AI-tells (centered hero, card grid, sidebar filter checkbox, stagger fade-up cliché...) → propose 3 thesis (Editorial / Terminal precision / Brutalist) → user pick **Thesis B Terminal precision**.
+- Phase 3 P2-A foundation ship — Geist Mono add, replace ambient radial bằng SVG fractal-noise grain (mode-aware opacity ~4% dark / ~2.5% light, mix-blend overlay), 9 primitives ở `frontend/src/components/ui/` + `frontend/src/components/search/`: `Row` (compositional 3-col grid, hairline bottom, accent-dim hover, active border-left), `MonoNumber` (4 sizes incl. xl=`clamp(80,14vw,160px)`), `StatHero` (IntersectionObserver count-up, reduced-motion aware), `CmdK` + `cmdk-parser.ts` (parse workMode/jobType/salary/location/match từ free-form), `SidePanel` (Radix Dialog slide-from-right), `TabBar` (underline active), `Breadcrumb` (slash mono), `HairlineSection`, `CapsLabel`. Deps: + `@radix-ui/react-dialog`.
+
+**Why / Rationale:**
+- **Thesis B Terminal precision thắng A/C:** B anti-AI mạnh nhất vì không template AI nào dám bỏ card+rounded+shadow+sidebar-filter. Fit audience tech-recruitment. Match score Move #2 (đã chốt brief) tự nhiên fit "numbers as visual hero". Implementation rõ ràng — không phụ thuộc taste-call như C brutalist (sai 1mm là amateur).
+- **Light mode `B8770C` thay `FBA518`:** Raw amber `FBA518` chỉ 2.6:1 trên white — fail WCAG AA. Darker amber giữ identity nhưng đạt 4.8:1. Verified contrast trước khi commit để tránh QA fail.
+- **Legacy aliases gradual (option Q1):** Xoá ngay → 66 file cũ vỡ visual giữa P2-A và P2-B (1 session "ugly gap"). Giữ aliases 2 sessions → cleanup ở P2-C khi homepage+jobs migrate xong. Trade-off: codebase có "dead" CSS vars trong 2 sessions, nhưng app không vỡ.
+- **CmdK parser full-text fallback (Q2):** User chọn fallback search trong title+description thay vì error message. Lý do: gõ tự nhiên ("frontend hà nội") mà parser không match keyword đặc biệt → vẫn return relevant jobs là UX tốt hơn show "không hiểu, gõ lại". Implementation: parser tách token, unrecognized tokens vào `result.keywords[]` → backend dùng làm full-text query.
+- **Tailwind colors → CSS vars (`"bg-0": "var(--bg-0)"`):** Cho phép `@media (prefers-color-scheme: light)` flip toàn bộ via 1 root override. Hardcode hex thì phải duplicate class set cho light. Trade-off: lose Tailwind opacity modifiers (`bg-bg-0/50`) cho các color này — chưa quan trọng cho redesign hiện tại.
+- **SVG grain replace ambient radial:** Radial gradient là decoration AI-generic (mọi landing page hero có 1 cái). Film grain fractal-noise = Status.app signature (reference design). Single SVG data-URI inline, không cần asset, mode-aware qua CSS vars `--grain-color/--grain-opacity`.
+- **Radix Dialog cho SidePanel:** A11y report đã flag ApplyModal focus-trap broken. Install Radix Dialog luôn ở P2-A (foundation) thay vì đợi P2-C, vì SidePanel reuse Dialog primitive — installing 1 lần dùng cho cả 2 use case.
+- **Sessions chia 6 (P2-A→F) thay vì làm 1 lần:** Mỗi surface (homepage/jobs/candidate/employer) cần ~40-50k tokens cho rewrite + QA. Spread per session để giữ token budget + cho user verify visual incrementally.
+
+**Verified:** Build pass local 3 lần (P1, P2-A, P2-A foundation). KHÔNG QA visible vì P2-A là foundation primitives, chưa consume vào page nào. Vercel deploy `e97f060` chưa user-verify.
+
+**Bugs phát hiện mới:**
+- Light mode amber contrast: raw `#FBA518` fail WCAG AA trên white (2.6:1). Fix preemptively ở brief — light mode dùng `#B8770C` (4.8:1).
+- `git add -A` ở commit P2-A kéo theo `.claude/commands/session-start.md`, `.claude/commands/session-wrap.md`, `.claude/skills/session-wrap.md` đang `M` từ trước. Không phải scope P2-A nhưng đã commit cùng. Minor.
+
+**Next Action:** **P2-B Homepage rewrite** — replace `frontend/src/app/(public)/page.tsx` + 7 components trong `frontend/src/components/home/` với Thesis B layout: (1) left-aligned h1 `clamp(56,9vw,96px)` + meta line mono inline counts + full-width `<CmdK size="lg">`, (2) `<HairlineSection label="HOT NÀY">` chứa Row list 5-8 jobs từ `useFeaturedJobs`, (3) `<StatHero>` section 1 giant tabular number + 3 inline `MonoNumber size="lg"`, (4) Footer hairline mono. Drop: centered hero, 3-col features, gradient text, stagger fade-up. CmdK onSubmit → router.push(`/jobs?q=...`). Risk: existing home components import `GradientText` / `SectionTag` / `useScrollReveal` — cần check trước khi delete usage.
+
+**Blocker:** Không có. Vercel auto-deploy đang chạy `e97f060`. P2-A chưa visible nên không có gì để user verify ngoài "không broken" (homepage cũ vẫn render với legacy aliases).
+
+---
+
 ## Session 51 — 2026-06-11
 
 **Commits:** (chỉ wrap commit — no code changes session này)
