@@ -2,6 +2,36 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 54 — 2026-06-13
+
+**Commits:** `f6e39b6` P2-C jobs list rewrite thesis B (CmdK + Row + SidePanel)
+
+**Done:**
+- Rewrite `frontend/src/app/(public)/jobs/JobsContent.tsx` (194 LOC cũ → 280 LOC mới). Drop filter sidebar checkbox layout + 2-col card grid + ScrollReveal wrapper + `🎯 Lọc theo sở thích` button + emoji 🔍 empty state.
+- Layout mới: Breadcrumb mono (`~ / jobs ?q=…`) → sticky `<CmdK size="md">` top-16 z-20 với prefill defaultValue từ URL → `<HairlineSection label="KẾT QUẢ">` chứa Row list (20/page) → mono hairline pagination footer (prev/page/next với ChevronLeft/Right icons).
+- Mỗi Row: Lead = `<MonoNumber size="lg">` match score (candidate logged-in + có skills + job.requirements) hoặc index `##` muted; Body = title + mono meta (company·location·mode·type·timeAgo); End = formatted salary + tier badge nếu ≠BASIC. Click row → URL sync `?job=<id>`.
+- `<JobDetailSidePanel>` Radix Dialog slide-right, fetch `/api/jobs/:id` on demand; render description/requirements/benefits sections + "Ứng tuyển" button mở `<ApplyModal>` (reuse, signature `isOpen`/`onClose`) + "xem trang đầy đủ" link sang `/jobs/[id]` deep-route.
+- Skeleton trong `page.tsx` cũng convert sang mono hairline rows (drop animate-pulse cards).
+- QA Playwright production (`qa-scripts/redesign-p2c/qa.js`) — 5 TC: desktop 1280 CmdK+20 rows present, mobile 375 no overflow, CmdK submit "react" → `?q=react`, click row → Radix dialog opens + `?job=seed32-j-07`, pagination next → `?page=2`. **Pass 5/5.**
+
+**Why / Rationale:**
+- **SidePanel slide-right vs navigate:** thesis B "stay in flow" — user duyệt list lâu hơn (20 row/page), mở detail không mất state list/scroll/keyword. Deep-link `/jobs/[id]` route page giữ nguyên cho share URL + SEO; click row chỉ là UX shortcut. Reuse `<ApplyModal>` inline → không cần extract `<JobDetailPanel>` riêng (sẽ làm khi P2-F nếu cần).
+- **Drop filter sidebar hoàn toàn:** thesis B refuse checkbox grid. Search dùng CmdK free-form; tương lai filter sẽ là "command modifiers" (`react location:remote salary>20m`) qua CmdK parser. Đơn giản hoá URL: chỉ `?q=` + `?page=` + `?job=` (drop `keyword/location/industry/jobType/workMode/salaryMin/salaryMax/experienceTier/byPrefs`).
+- **Index `##` khi không có match score:** Row.Lead cần "anchor" visual. Guest hoặc candidate-không-skills không thấy match → fallback paddedStart(2,'0') index số toàn cục `(page-1)*LIMIT+i+1`. Giữ visual hierarchy mono numbers.
+- **Limit 20/page (vs 10 cũ):** Row compact hơn card, scan nhanh hơn → tăng density giảm số trang. Pagination footer mono inline thay Pagination component dài.
+- **Sticky CmdK z-20 dưới navbar fixed:** navbar dùng top-0; sticky search dưới navbar `top-16` để khi scroll list vẫn submit/refine được mà không cần scroll lên đầu.
+- **Trade-off bỏ qua:** Compare button + Save button trên row — drop khỏi list để row clean (compare/save chỉ còn trong SidePanel footer hoặc `/jobs/[id]` route). "Prefs apply" chip cũng drop trong P2-C — có thể restore P2-D nếu user cần.
+
+**Verified:** Playwright production 5/5 — `qa-scripts/redesign-p2c/{result.json, desktop-1280.png, mobile-375.png, side-panel.png}`.
+
+**Bugs phát hiện mới:** không có. 401 console pre-existing (axios refresh khi guest visit) tiếp tục, filter ra trong QA assertion để không false-fail.
+
+**Next Action:** P2-D Candidate dashboard rewrite. Audit `frontend/src/app/(candidate)/candidate/*` trước (dashboard, applications, saved-jobs, profile, notifications) — map components dùng card-dark/sidebar nav cũ. Apply Thesis B: Breadcrumb top + TabBar replace Sidebar nav + applications table accordion (compact row click → expand inline review). Plan chi tiết trước, đợi user duyệt.
+
+**Blocker:** Không có. Vercel auto-deploy hoạt động bình thường session này (poll ~90s deploy live).
+
+---
+
 ## Session 53 — 2026-06-12
 
 **Commits:** `58135b8` P2-B homepage thesis B (HeroPanel + HotJobsPanel + StatsHeroPanel + CTAPanel)
