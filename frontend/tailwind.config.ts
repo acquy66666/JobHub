@@ -10,30 +10,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // JobHub backgrounds
-        "bg-0": "#07070D",
-        "bg-1": "#0E0E18",
-        "bg-2": "#13131E",
-        "bg-3": "#1A1A28",
+        // Surfaces — driven by CSS vars (dark default + light @media)
+        "bg-0": "var(--bg-0)",
+        "bg-1": "var(--bg-1)",
+        "bg-2": "var(--bg-2)",
+        "bg-3": "var(--bg-3)",
         // Text
-        t0: "#F5F5FF",
-        t1: "#9494B0",
-        t2: "#55556A",
-        // Brand
-        primary: "#7C3AED",
-        accent: "#3B82F6",
-        "border-dark": "#252538",
+        t0: "var(--t0)",
+        t1: "var(--t1)",
+        t2: "var(--t2)",
+        // Brand — single amber accent (legacy keys repointed)
+        primary: "var(--accent)",
+        accent: "var(--accent)",
+        pink: "var(--accent)", // DEPRECATED
+        "border-dark": "var(--border)",
         // Status
-        success: "#22C55E",
-        warning: "#F59E0B",
-        danger: "#EF4444",
-        pink: "#F472B6",
+        success: "var(--green)",
+        warning: "var(--yellow)",
+        danger: "var(--red)",
       },
       backgroundImage: {
-        "brand-gradient": "linear-gradient(135deg, #7C3AED, #3B82F6)",
+        // DEPRECATED — single amber, migrate callers to bg-accent
+        "brand-gradient": "linear-gradient(135deg, var(--accent), var(--accent-hover))",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "sans-serif"],
+        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
       },
       maxWidth: {
         wrap: "1180px",
