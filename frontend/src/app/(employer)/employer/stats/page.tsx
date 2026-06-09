@@ -1,12 +1,13 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
 import { formatJobStatus } from "@/lib/formatters";
 import api from "@/lib/api";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid,
 } from "recharts";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { MonoNumber } from "@/components/ui/MonoNumber";
 
 interface JobStat {
   id: string;
@@ -29,11 +30,19 @@ interface StatsData {
   };
 }
 
-const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+}) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-bg-2 border border-border-dark rounded-xl p-3 text-[12px] shadow-xl">
-      <p className="font-semibold text-t0 mb-2 truncate max-w-[160px]">{label}</p>
+    <div className="bg-[var(--bg-2)] border border-[var(--border)] rounded-sharp p-3 text-[12px] font-mono">
+      <p className="font-semibold text-[var(--t0)] mb-2 truncate max-w-[160px]">{label}</p>
       {payload.map((p) => (
         <p key={p.name} style={{ color: p.color }} className="mb-0.5">
           {p.name}: <strong>{p.value}</strong>
@@ -51,7 +60,6 @@ export default function EmployerStatsPage() {
 
   const summary = data?.summary;
   const jobs = data?.jobs ?? [];
-
   const chartData = jobs.slice(0, 10).map((j) => ({
     name: j.title.length > 16 ? j.title.slice(0, 16) + "…" : j.title,
     "Lượt xem": j.viewCount,
@@ -59,115 +67,125 @@ export default function EmployerStatsPage() {
     "Chấp nhận": j.acceptedCount,
   }));
 
-  const summaryCards = [
-    { label: "Tổng tin đăng", value: summary?.totalJobs ?? 0, icon: "📋", color: "text-[#B09BF8]" },
-    { label: "Tổng lượt xem", value: summary?.totalViews ?? 0, icon: "👁", color: "text-[#60A5FA]" },
-    { label: "Tổng đơn nhận", value: summary?.totalApplications ?? 0, icon: "👥", color: "text-[#4ADE80]" },
-    { label: "Tỷ lệ ứng tuyển TB", value: `${summary?.avgConversionRate ?? 0}%`, icon: "📈", color: "text-[#FCD34D]" },
+  const summaryStats = [
+    { label: "tin đăng", value: summary?.totalJobs ?? 0 },
+    { label: "lượt xem", value: summary?.totalViews ?? 0 },
+    { label: "đơn nhận", value: summary?.totalApplications ?? 0 },
+    { label: "CV/view TB", value: `${summary?.avgConversionRate ?? 0}%` },
   ];
 
   return (
-    <div className="p-4 sm:p-8 max-w-6xl space-y-8">
-      <ScrollReveal direction="up">
-        <h1 className="text-[24px] font-extrabold text-t0 mb-1">Thống kê hiệu quả tuyển dụng</h1>
-        <p className="text-[14px] text-t1">Theo dõi lượt xem, đơn ứng tuyển và tỷ lệ chuyển đổi cho từng tin đăng.</p>
-      </ScrollReveal>
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8">
+        <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">
+          Thống kê
+        </h1>
+        <p className="font-mono text-[13px] text-[var(--t1)] mt-2">
+          {`> theo dõi lượt xem · đơn ứng tuyển · tỷ lệ chuyển đổi`}
+        </p>
+      </section>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryCards.map((c, i) => (
-          <ScrollReveal key={c.label} direction="up" delay={i * 0.07}>
-            <div className="card-dark p-5 rounded-2xl">
-              <span className="text-2xl">{c.icon}</span>
-              <p className={`text-[28px] font-extrabold mt-2 ${c.color}`}>{isLoading ? "—" : c.value}</p>
-              <p className="text-[12px] text-t2 mt-0.5">{c.label}</p>
-            </div>
-          </ScrollReveal>
+      <div className="grid grid-cols-2 md:grid-cols-4 border-t border-[var(--border)]">
+        {summaryStats.map((s, i) => (
+          <div
+            key={s.label}
+            className={`px-4 md:px-6 py-5 border-[var(--border)] ${i < 3 ? "border-r" : ""} ${
+              i < 2 ? "border-b md:border-b-0" : ""
+            }`}
+          >
+            <MonoNumber size="lg">{isLoading ? "—" : s.value}</MonoNumber>
+            <p className="font-mono text-[11px] uppercase tracking-wider text-[var(--t2)] mt-2">{s.label}</p>
+          </div>
         ))}
       </div>
 
-      {/* Bar chart */}
       {!isLoading && chartData.length > 0 && (
-        <ScrollReveal direction="up" delay={0.1}>
-          <div className="card-dark p-6 rounded-2xl">
-            <h3 className="text-[15px] font-bold text-t0 mb-6">So sánh hiệu quả các tin đăng</h3>
-            <div className="overflow-x-auto -mx-2 px-2">
-              <div style={{ minWidth: 560 }}>
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(37,37,56,.6)" />
-                    <XAxis dataKey="name" tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(124,58,237,.06)" }} />
-                    <Legend wrapperStyle={{ fontSize: 12, color: "#9494B0", paddingTop: 12 }} />
-                    <Bar dataKey="Lượt xem" fill="rgba(59,130,246,.7)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Đơn nhận" fill="rgba(124,58,237,.8)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Chấp nhận" fill="rgba(34,197,94,.7)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+        <HairlineSection label="SO SÁNH TIN ĐĂNG">
+          <div className="p-4 md:p-6 overflow-x-auto">
+            <div style={{ minWidth: 560 }}>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={chartData} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(37,37,56,.6)" />
+                  <XAxis dataKey="name" tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#55556A", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(124,58,237,.06)" }} />
+                  <Legend wrapperStyle={{ fontSize: 12, color: "#9494B0", paddingTop: 12 }} />
+                  <Bar dataKey="Lượt xem" fill="rgba(59,130,246,.7)" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Đơn nhận" fill="rgba(124,58,237,.8)" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Chấp nhận" fill="rgba(34,197,94,.7)" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </ScrollReveal>
+        </HairlineSection>
       )}
 
-      {/* Table */}
-      <ScrollReveal direction="up" delay={0.15}>
-        <div className="card-dark rounded-2xl overflow-hidden">
-          <div className="p-5 border-b border-border-dark">
-            <h3 className="text-[15px] font-bold text-t0">Chi tiết từng tin</h3>
+      <HairlineSection label="CHI TIẾT TỪNG TIN">
+        {isLoading ? (
+          <p className="px-4 md:px-6 py-8 font-mono text-[13px] text-[var(--t2)]">đang tải…</p>
+        ) : jobs.length === 0 ? (
+          <p className="px-4 md:px-6 py-10 font-mono text-[13px] text-[var(--t2)] text-center">
+            Chưa có tin tuyển dụng nào.
+          </p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px] font-mono">
+              <thead>
+                <tr className="border-b border-[var(--border)] text-left text-[11px] uppercase tracking-wider text-[var(--t2)]">
+                  <th className="px-4 md:px-6 py-3 font-medium">Vị trí</th>
+                  <th className="px-3 py-3 font-medium text-right">Lượt xem</th>
+                  <th className="px-3 py-3 font-medium text-right">Đơn</th>
+                  <th className="px-3 py-3 font-medium text-right">Nhận</th>
+                  <th className="px-3 py-3 font-medium text-right">CV/View</th>
+                  <th className="px-3 py-3 font-medium">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {jobs.map((job) => {
+                  const { label, color } = formatJobStatus(job.status);
+                  return (
+                    <tr
+                      key={job.id}
+                      className="border-b border-[var(--border)] hover:bg-[var(--accent-dim)] transition-colors"
+                    >
+                      <td className="px-4 md:px-6 py-3 font-sans font-semibold text-[var(--t0)] max-w-[220px] truncate">
+                        {job.title}
+                      </td>
+                      <td className="px-3 py-3 text-right text-[var(--t1)] tabular-nums">
+                        {job.viewCount.toLocaleString()}
+                      </td>
+                      <td className="px-3 py-3 text-right text-[var(--t1)] tabular-nums">
+                        {job.applicationCount}
+                      </td>
+                      <td className="px-3 py-3 text-right text-[var(--green)] tabular-nums">
+                        {job.acceptedCount}
+                      </td>
+                      <td className="px-3 py-3 text-right tabular-nums">
+                        <span
+                          className={
+                            job.conversionRate >= 10
+                              ? "text-[var(--green)]"
+                              : job.conversionRate >= 3
+                              ? "text-yellow-400"
+                              : "text-[var(--t2)]"
+                          }
+                        >
+                          {job.conversionRate}%
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-sharp border ${color}`}>
+                          {label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-          {isLoading ? (
-            <div className="space-y-2 p-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-10 bg-bg-3 rounded-xl animate-pulse" />
-              ))}
-            </div>
-          ) : jobs.length === 0 ? (
-            <div className="p-12 text-center">
-              <p className="text-[14px] text-t2">Chưa có tin tuyển dụng nào.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="border-b border-border-dark text-left">
-                    <th className="px-5 py-3 text-t2 font-medium">Vị trí</th>
-                    <th className="px-4 py-3 text-t2 font-medium text-right">Lượt xem</th>
-                    <th className="px-4 py-3 text-t2 font-medium text-right">Đơn nhận</th>
-                    <th className="px-4 py-3 text-t2 font-medium text-right">Chấp nhận</th>
-                    <th className="px-4 py-3 text-t2 font-medium text-right">Tỷ lệ CV/View</th>
-                    <th className="px-4 py-3 text-t2 font-medium">Trạng thái</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border-dark/50">
-                  {jobs.map((job) => {
-                    const { label, color } = formatJobStatus(job.status);
-                    return (
-                      <tr key={job.id} className="hover:bg-white/[.02] transition-colors">
-                        <td className="px-5 py-3 font-medium text-t0 max-w-[220px]">
-                          <p className="truncate">{job.title}</p>
-                        </td>
-                        <td className="px-4 py-3 text-right text-[#60A5FA] font-semibold">{job.viewCount.toLocaleString()}</td>
-                        <td className="px-4 py-3 text-right text-[#B09BF8] font-semibold">{job.applicationCount}</td>
-                        <td className="px-4 py-3 text-right text-[#4ADE80] font-semibold">{job.acceptedCount}</td>
-                        <td className="px-4 py-3 text-right">
-                          <span className={`font-semibold ${job.conversionRate >= 10 ? "text-[#4ADE80]" : job.conversionRate >= 3 ? "text-[#FCD34D]" : "text-t2"}`}>
-                            {job.conversionRate}%
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border ${color}`}>{label}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </ScrollReveal>
+        )}
+      </HairlineSection>
     </div>
   );
 }

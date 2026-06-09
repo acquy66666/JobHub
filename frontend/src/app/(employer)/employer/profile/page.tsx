@@ -1,7 +1,7 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
+import { HairlineSection } from "@/components/ui/HairlineSection";
 import api from "@/lib/api";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -21,8 +21,8 @@ type ProfileForm = z.infer<typeof profileSchema>;
 const COMPANY_SIZES = ["1-10", "11-50", "51-200", "201-500", "500+"];
 const INDUSTRIES = ["Công nghệ thông tin", "Tài chính - Ngân hàng", "Giáo dục", "Y tế", "Bán lẻ", "Marketing", "Kỹ thuật", "Nhân sự", "Kế toán", "Khác"];
 
-const inputClass = "w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2.5 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] focus:shadow-[0_0_0_3px_rgba(124,58,237,.1)] transition-all";
-const labelClass = "block text-[12px] font-semibold text-t1 uppercase tracking-wide mb-1.5";
+const inputClass = "w-full bg-transparent border border-[var(--border)] rounded-sharp px-3 py-2.5 text-[13px] text-[var(--t0)] placeholder:text-[var(--t2)] focus:outline-none focus:border-[var(--accent)] transition-colors";
+const labelClass = "block font-mono text-[11px] font-semibold text-[var(--t2)] uppercase tracking-wider mb-1.5";
 
 interface EmployerProfile {
   companyName?: string;
@@ -83,31 +83,31 @@ export default function EmployerProfilePage() {
   const logoLetter = profile?.companyName?.[0]?.toUpperCase() ?? "C";
 
   return (
-    <div className="p-8 max-w-3xl space-y-6">
-      <ScrollReveal direction="up">
-        <h1 className="text-[24px] font-extrabold text-t0 mb-1">Hồ sơ công ty</h1>
-        <p className="text-[14px] text-t1">Cập nhật thông tin công ty để thu hút ứng viên tiềm năng.</p>
-      </ScrollReveal>
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8">
+        <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">Hồ sơ công ty</h1>
+        <p className="font-mono text-[13px] text-[var(--t1)] mt-2">{`> cập nhật thông tin để thu hút ứng viên tiềm năng`}</p>
+      </section>
 
-      <ScrollReveal direction="up" delay={0.05}>
-        <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="card-dark p-6 rounded-2xl space-y-5">
+      <HairlineSection label="THÔNG TIN CÔNG TY">
+        <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="p-4 md:p-6 space-y-5">
           {/* Logo upload */}
           <div className="flex items-center gap-5">
             <button type="button" onClick={() => fileRef.current?.click()} className="relative group">
               {(logoPreview || profile?.logoUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoPreview ?? profile?.logoUrl} alt="" className="w-20 h-20 rounded-2xl object-cover" />
+                <img src={logoPreview ?? profile?.logoUrl} alt="" className="w-20 h-20 rounded-sharp object-cover border border-[var(--border)]" />
               ) : (
-                <div className="w-20 h-20 rounded-2xl bg-brand-gradient flex items-center justify-center text-[28px] font-black text-white">
+                <div className="w-20 h-20 rounded-sharp bg-[var(--bg-2)] border border-[var(--border)] flex items-center justify-center text-[28px] font-medium text-[var(--accent)]">
                   {logoLetter}
                 </div>
               )}
-              <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-medium">Đổi logo</div>
+              <div className="absolute inset-0 rounded-sharp bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-mono">đổi logo</div>
             </button>
             <input ref={fileRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
             <div>
-              <p className="text-[15px] font-bold text-t0">{profile?.companyName ?? "Tên công ty"}</p>
-              <p className="text-[12px] text-t2">Nhấn vào logo để thay đổi</p>
+              <p className="text-[15px] font-semibold text-[var(--t0)]">{profile?.companyName ?? "Tên công ty"}</p>
+              <p className="font-mono text-[12px] text-[var(--t2)]">nhấn vào logo để thay đổi</p>
             </div>
           </div>
 
@@ -133,13 +133,17 @@ export default function EmployerProfilePage() {
           </div>
 
           <div className="flex items-center gap-3 pt-2">
-            <button type="submit" disabled={updateMutation.isPending} className="btn-primary px-6 py-2.5 rounded-xl text-[14px] font-semibold disabled:opacity-60">
-              {updateMutation.isPending ? "Đang lưu..." : "Lưu thông tin"}
+            <button
+              type="submit"
+              disabled={updateMutation.isPending}
+              className="px-5 py-2 font-mono text-[13px] border border-[var(--accent)] text-[var(--accent)] rounded-sharp hover:bg-[var(--accent-dim)] disabled:opacity-60 transition-colors"
+            >
+              {updateMutation.isPending ? "đang lưu…" : "lưu thông tin"}
             </button>
-            {saved && <span className="text-[13px] text-green-400">✓ Đã lưu</span>}
+            {saved && <span className="font-mono text-[12px] text-[var(--green)]">✓ đã lưu</span>}
           </div>
         </form>
-      </ScrollReveal>
+      </HairlineSection>
     </div>
   );
 }

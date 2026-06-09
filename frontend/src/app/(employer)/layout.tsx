@@ -1,114 +1,113 @@
 "use client";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/store/authStore";
 import { Navbar } from "@/components/layout/Navbar";
-import { CreditBadge } from "@/components/billing/CreditBadge";
+import { Breadcrumb } from "@/components/ui/Breadcrumb";
+import { TabBar, type Tab } from "@/components/ui/TabBar";
+import { billingApi, CreditBalance } from "@/lib/api/billing";
 
-const NAV_ITEMS = [
-  { href: "/employer", label: "Tổng quan", icon: "⊞" },
-  { href: "/employer/profile", label: "Hồ sơ công ty", icon: "🏢" },
-  { href: "/employer/jobs/new", label: "Đăng tin", icon: "➕" },
-  { href: "/employer/jobs", label: "Quản lý tin", icon: "📋" },
-  { href: "/employer/applications", label: "Quản lý ứng viên", icon: "👥" },
-  { href: "/employer/stats", label: "Thống kê", icon: "📊" },
-  { href: "/employer/candidates", label: "Tìm ứng viên", icon: "🔍" },
-  { href: "/employer/billing", label: "Mua credits", icon: "💳" },
-  { href: "/employer/skills/propose", label: "Đề xuất kỹ năng", icon: "💡" },
+const TABS: Tab[] = [
+  { href: "/employer/dashboard", label: "Tổng quan" },
+  { href: "/employer/jobs", label: "Tin tuyển dụng" },
+  { href: "/employer/applications", label: "Ứng viên" },
+  { href: "/employer/candidates", label: "Tìm ứng viên" },
+  { href: "/employer/stats", label: "Thống kê" },
+  { href: "/employer/profile", label: "Hồ sơ" },
+  { href: "/employer/billing", label: "Credits" },
 ];
+
+const SUB_LABELS: Record<string, string> = {
+  "/employer/dashboard": "dashboard",
+  "/employer/jobs": "jobs",
+  "/employer/jobs/new": "jobs/new",
+  "/employer/applications": "applications",
+  "/employer/candidates": "candidates",
+  "/employer/stats": "stats",
+  "/employer/profile": "profile",
+  "/employer/billing": "billing",
+  "/employer/billing/shop": "billing/shop",
+  "/employer/skills/propose": "skills/propose",
+};
+
+function CreditInline() {
+  const { data } = useQuery<CreditBalance>({
+    queryKey: ["billing", "balance"],
+    queryFn: () => billingApi.getBalance(),
+    staleTime: 30_000,
+  });
+  const b = data?.basicCredits ?? 0;
+  const p = data?.premiumCredits ?? 0;
+  const v = data?.vipCredits ?? 0;
+  return (
+    <Link
+      href="/employer/billing"
+      className="font-mono text-[12px] text-[var(--t1)] hover:text-[var(--t0)] transition-colors"
+      title="Credits"
+    >
+      <span className="text-[var(--t2)]">credits:</span>{" "}
+      <span className="tabular-nums">{b}</span>
+      <span className="text-[var(--t2)]">·</span>
+      <span className="tabular-nums text-[var(--accent)]">{p}</span>
+      <span className="text-[var(--t2)]">·</span>
+      <span className="tabular-nums text-[var(--green)]">{v}</span>
+    </Link>
+  );
+}
 
 export default function EmployerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user } = useAuthStore();
-  const logoLetter = user?.profile?.companyName?.[0]?.toUpperCase() ?? "E";
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const currentLabel =
-    NAV_ITEMS.find((i) =>
-      i.href === "/employer" ? pathname === i.href : pathname.startsWith(i.href),
-    )?.label ?? "Nhà tuyển dụng";
 
-  const sidebarInner = (
-    <>
-      <div className="p-5 border-b border-border-dark">
-        <div className="flex items-center gap-3">
-          {user?.profile?.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={user.profile.logoUrl} alt="" className="w-10 h-10 rounded-xl object-cover" />
-          ) : (
-            <div className="w-10 h-10 rounded-xl bg-brand-gradient flex items-center justify-center text-[14px] font-bold text-white shrink-0">
-              {logoLetter}
-            </div>
-          )}
-          <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-t0 truncate">{user?.profile?.companyName ?? "Công ty"}</p>
-            <p className="text-[11px] text-t2">Nhà tuyển dụng</p>
-          </div>
-        </div>
-      </div>
-      <nav className="flex-1 p-3 space-y-1">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href || (item.href !== "/employer" && pathname.startsWith(item.href));
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setSidebarOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
-                active
-                  ? "bg-[rgba(124,58,237,.12)] border-l-2 border-primary text-t0 pl-[10px]"
-                  : "text-t1 hover:bg-white/[.04] hover:text-t0"
-              }`}
-            >
-              <span className="text-[16px]">{item.icon}</span>
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <CreditBadge />
-    </>
-  );
+  const activeTab =
+    TABS.map((t) => t.href)
+      .sort((a, b) => b.length - a.length)
+      .find((href) => pathname === href || pathname.startsWith(href + "/")) ?? "";
+
+  // Handle /employer root → dashboard
+  const effectiveActive =
+    activeTab || (pathname === "/employer" ? "/employer/dashboard" : "");
+
+  const subKey = Object.keys(SUB_LABELS)
+    .sort((a, b) => b.length - a.length)
+    .find((k) => pathname === k || pathname.startsWith(k + "/"));
+  const crumbLabel = subKey
+    ? SUB_LABELS[subKey]
+    : pathname === "/employer"
+    ? "dashboard"
+    : "—";
 
   return (
     <>
-    <Navbar />
-    <div className="min-h-screen flex pt-16">
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-16 bottom-0 w-[240px] bg-bg-1 border-r border-border-dark flex-col z-50 overflow-y-auto">
-        {sidebarInner}
-      </aside>
-
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/60"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar */}
-      <aside className={`md:hidden fixed left-0 top-16 bottom-0 w-[240px] bg-bg-1 border-r border-border-dark flex flex-col z-50 overflow-y-auto transition-transform duration-200 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        {sidebarInner}
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 min-w-0 md:ml-[240px] bg-bg-0 min-h-[calc(100vh-64px)]">
-        {/* Mobile hamburger */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-border-dark">
-          <button
-            onClick={() => setSidebarOpen((o) => !o)}
-            className="p-2 rounded-lg text-t1 hover:text-t0 hover:bg-white/[.06] transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <span className="text-[13px] font-semibold text-t0">{currentLabel}</span>
+      <Navbar />
+      <div className="pt-16 min-h-screen bg-[var(--bg-0)]">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-6">
+          <div className="flex items-center justify-between py-4 gap-3 flex-wrap">
+            <Breadcrumb
+              items={[
+                { label: "~", href: "/" },
+                { label: "employer", href: "/employer/dashboard" },
+                { label: crumbLabel },
+              ]}
+            />
+            <div className="flex items-center gap-4">
+              <CreditInline />
+              {user?.email && (
+                <span className="font-mono text-[12px] text-[var(--t2)] truncate hidden sm:inline">
+                  {user.email}
+                </span>
+              )}
+            </div>
+          </div>
+          <TabBar
+            tabs={TABS}
+            activeHref={effectiveActive}
+            className="-mx-4 md:mx-0 px-4 md:px-0"
+          />
         </div>
-        {children}
-      </main>
-    </div>
+        <main className="max-w-[1280px] mx-auto">{children}</main>
+      </div>
     </>
   );
 }

@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { queryKeys } from "@/lib/queryKeys";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
-import { Pagination } from "@/components/common/Pagination";
 import { formatJobStatus, formatJobType, timeAgo } from "@/lib/formatters";
 import api from "@/lib/api";
-import Link from "next/link";
 import { useToast } from "@/store/toastStore";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { MonoNumber } from "@/components/ui/MonoNumber";
 
 interface Job {
   id: string;
@@ -24,6 +25,7 @@ interface Job {
 export default function EmployerJobsPage() {
   const [page, setPage] = useState(1);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const qc = useQueryClient();
   const toast = useToast();
 
@@ -33,6 +35,7 @@ export default function EmployerJobsPage() {
   });
 
   const jobs: Job[] = data?.jobs ?? [];
+  const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
   const deleteMutation = useMutation({
@@ -52,9 +55,10 @@ export default function EmployerJobsPage() {
       const previous = qc.getQueryData(queryKeys.employerJobs(page));
       qc.setQueryData(queryKeys.employerJobs(page), (old: Record<string, unknown> | undefined) => ({
         ...old,
-        jobs: (old?.jobs as Job[] | undefined)?.map((j) =>
-          j.id === id ? { ...j, status: action === "pause" ? "PAUSED" : "ACTIVE" } : j
-        ) ?? [],
+        jobs:
+          (old?.jobs as Job[] | undefined)?.map((j) =>
+            j.id === id ? { ...j, status: action === "pause" ? "PAUSED" : "ACTIVE" } : j,
+          ) ?? [],
       }));
       return { previous };
     },
@@ -70,92 +74,169 @@ export default function EmployerJobsPage() {
   });
 
   return (
-    <div className="p-8 max-w-5xl">
-      <ScrollReveal direction="up" className="flex items-center justify-between mb-6">
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8 flex items-end justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-[24px] font-extrabold text-t0 mb-1">Quản lý tin đăng</h1>
-          <p className="text-[14px] text-t1">Xem và quản lý tất cả tin tuyển dụng của bạn.</p>
+          <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">
+            Tin tuyển dụng
+          </h1>
+          <p className="font-mono text-[13px] text-[var(--t1)] mt-2">
+            {`> ${total} tin · trang ${page}/${totalPages}`}
+          </p>
         </div>
-        <Link href="/employer/jobs/new" className="btn-primary px-5 py-2.5 rounded-xl text-[14px] font-semibold">+ Đăng tin</Link>
-      </ScrollReveal>
+        <Link
+          href="/employer/jobs/new"
+          className="font-mono text-[13px] px-4 py-2 border border-[var(--accent)] text-[var(--accent)] rounded-sharp hover:bg-[var(--accent-dim)] transition-colors"
+        >
+          + tin mới
+        </Link>
+      </section>
 
-      {isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-20 bg-bg-2 rounded-2xl animate-pulse" />)}
-        </div>
-      ) : jobs.length === 0 ? (
-        <div className="card-dark p-12 rounded-2xl text-center">
-          <div className="text-5xl mb-4">📋</div>
-          <h3 className="text-[18px] font-bold text-t0 mb-2">Chưa có tin tuyển dụng</h3>
-          <Link href="/employer/jobs/new" className="btn-primary px-6 py-2.5 rounded-xl text-[14px] inline-block">Đăng tin đầu tiên</Link>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {jobs.map((job, i) => {
+      <HairlineSection label="DANH SÁCH TIN">
+        {isLoading ? (
+          <p className="px-4 md:px-6 py-8 font-mono text-[13px] text-[var(--t2)]">đang tải…</p>
+        ) : jobs.length === 0 ? (
+          <div className="px-4 md:px-6 py-10 text-center">
+            <p className="font-mono text-[13px] text-[var(--t2)]">Bạn chưa đăng tin tuyển dụng nào.</p>
+            <Link
+              href="/employer/jobs/new"
+              className="inline-block mt-3 font-mono text-[13px] text-[var(--accent)] hover:underline"
+            >
+              → đăng tin đầu tiên
+            </Link>
+          </div>
+        ) : (
+          jobs.map((job, i) => {
             const { label, color } = formatJobStatus(job.status);
+            const idx = String((page - 1) * 10 + i + 1).padStart(2, "0");
+            const isExpanded = expanded === job.id;
+            const cr = job.viewCount > 0 ? Math.round((job._count.applications / job.viewCount) * 100) : 0;
             return (
-              <ScrollReveal key={job.id} direction="up" delay={i * 0.04}>
-                <div className="card-dark p-5 rounded-2xl flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Link href={`/employer/jobs/${job.id}/applications`} className="text-[15px] font-bold text-t0 hover:text-white transition-colors truncate">
-                        {job.title}
-                      </Link>
-                      <span className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border shrink-0 ${color}`}>{label}</span>
+              <div
+                key={job.id}
+                className={`border-b border-[var(--border)] border-l-2 ${
+                  isExpanded ? "border-l-[var(--accent)] bg-[var(--accent-dim)]" : "border-l-transparent"
+                }`}
+                data-testid="employer-job-row"
+              >
+                <button
+                  type="button"
+                  onClick={() => setExpanded(isExpanded ? null : job.id)}
+                  aria-expanded={isExpanded}
+                  className="w-full grid grid-cols-[64px_1fr_auto] md:grid-cols-[80px_1fr_auto] items-center gap-4 px-4 md:px-6 min-h-[var(--row-h)] text-left hover:bg-[var(--accent-dim)] transition-colors"
+                >
+                  <MonoNumber size="lg" tone="muted">
+                    {idx}
+                  </MonoNumber>
+                  <div className="min-w-0">
+                    <div className="text-[15px] md:text-[17px] font-semibold text-[var(--t0)] truncate">
+                      {job.title}
                     </div>
-                    <p className="text-[12px] text-t2">
-                      {formatJobType(job.jobType)} · {job.location} · Đăng {timeAgo(job.createdAt)} · Hết hạn {new Date(job.expiresAt).toLocaleDateString("vi-VN")}
-                    </p>
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-[11px] text-t1 flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                        {job.viewCount.toLocaleString()} lượt xem
-                      </span>
-                      <span className="text-[11px] text-t1 flex items-center gap-1">
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                        {job._count.applications} đơn · {job.viewCount > 0 ? Math.round(job._count.applications / job.viewCount * 100) : 0}% CR
-                      </span>
+                    <div className="font-mono text-[12px] text-[var(--t1)] truncate mt-0.5">
+                      {formatJobType(job.jobType)} · {job.location} · {timeAgo(job.createdAt)} · {job.viewCount} views ·{" "}
+                      {job._count.applications} đơn ({cr}% CR)
                     </div>
                   </div>
+                  <span className={`text-[11px] font-medium px-2.5 py-1 rounded-sharp border ${color}`}>{label}</span>
+                </button>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Link href={`/employer/jobs/${job.id}/applications`} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">
-                      Đơn ({job._count.applications})
-                    </Link>
-                    <Link href={`/employer/jobs/${job.id}/screening`} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors" title="Câu hỏi sàng lọc">
-                      ❓ Câu hỏi
-                    </Link>
-                    <Link href={`/employer/jobs/${job.id}/edit`} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t1 hover:bg-white/[.04] hover:text-t0 transition-colors">
-                      Sửa
-                    </Link>
-                    {job.status === "ACTIVE" && (
-                      <button onClick={() => toggleMutation.mutate({ id: job.id, action: "pause" })} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-yellow-400 hover:bg-yellow-400/10 transition-colors">
-                        Tạm dừng
-                      </button>
-                    )}
-                    {job.status === "PAUSED" && (
-                      <button onClick={() => toggleMutation.mutate({ id: job.id, action: "resume" })} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-green-400 hover:bg-green-400/10 transition-colors">
-                        Khôi phục
-                      </button>
-                    )}
-                    {confirmDeleteId === job.id ? (
-                      <div className="flex gap-1">
-                        <button onClick={() => { deleteMutation.mutate(job.id); setConfirmDeleteId(null); }} className="px-3 py-1.5 rounded-lg bg-red-500/15 border border-red-500/30 text-[12px] text-red-400 hover:bg-red-500/25 transition-colors">Xóa thật</button>
-                        <button onClick={() => setConfirmDeleteId(null)} className="px-3 py-1.5 rounded-lg border border-border-dark text-[12px] text-t2 hover:text-t0 transition-colors">Hủy</button>
-                      </div>
-                    ) : (
-                      <button onClick={() => setConfirmDeleteId(job.id)} className="px-3 py-1.5 rounded-lg border border-red-500/20 text-[12px] text-red-400 hover:bg-red-400/10 transition-colors">Xóa</button>
-                    )}
+                {isExpanded && (
+                  <div className="px-4 md:px-6 pb-5 pt-2 border-t border-[var(--border)]">
+                    <div className="flex flex-wrap gap-3 mt-3 font-mono text-[12px]">
+                      <Link
+                        href={`/employer/jobs/${job.id}/applications`}
+                        className="text-[var(--accent)] hover:underline"
+                      >
+                        → đơn ứng tuyển ({job._count.applications})
+                      </Link>
+                      <Link
+                        href={`/employer/jobs/${job.id}/screening`}
+                        className="text-[var(--t1)] hover:text-[var(--t0)]"
+                      >
+                        → câu hỏi sàng lọc
+                      </Link>
+                      <Link href={`/employer/jobs/${job.id}/edit`} className="text-[var(--t1)] hover:text-[var(--t0)]">
+                        → sửa tin
+                      </Link>
+                      <Link href={`/jobs/${job.id}`} className="text-[var(--t1)] hover:text-[var(--t0)]">
+                        → xem trang công khai
+                      </Link>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mt-4">
+                      {job.status === "ACTIVE" && (
+                        <button
+                          onClick={() => toggleMutation.mutate({ id: job.id, action: "pause" })}
+                          className="px-3 py-1.5 rounded-sharp border border-yellow-400/40 text-yellow-400 text-[12px] hover:bg-yellow-400/10 transition-colors"
+                        >
+                          ⏸ tạm dừng
+                        </button>
+                      )}
+                      {job.status === "PAUSED" && (
+                        <button
+                          onClick={() => toggleMutation.mutate({ id: job.id, action: "resume" })}
+                          className="px-3 py-1.5 rounded-sharp border border-green-400/40 text-green-400 text-[12px] hover:bg-green-400/10 transition-colors"
+                        >
+                          ▶ khôi phục
+                        </button>
+                      )}
+                      {confirmDeleteId === job.id ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              deleteMutation.mutate(job.id);
+                              setConfirmDeleteId(null);
+                            }}
+                            className="px-3 py-1.5 rounded-sharp bg-red-500/15 border border-red-500/40 text-red-400 text-[12px] hover:bg-red-500/25 transition-colors"
+                          >
+                            ✕ xoá thật
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteId(null)}
+                            className="px-3 py-1.5 rounded-sharp border border-[var(--border)] text-[var(--t2)] text-[12px] hover:text-[var(--t0)] transition-colors"
+                          >
+                            huỷ
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmDeleteId(job.id)}
+                          className="px-3 py-1.5 rounded-sharp border border-red-500/30 text-red-400 text-[12px] hover:bg-red-500/10 transition-colors"
+                        >
+                          xoá
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </ScrollReveal>
+                )}
+              </div>
             );
-          })}
+          })
+        )}
+      </HairlineSection>
+
+      {totalPages > 1 && (
+        <div className="px-4 md:px-6 py-6 flex items-center justify-between font-mono text-[13px] border-t border-[var(--border)]">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--t0)] disabled:opacity-30"
+          >
+            <ChevronLeft className="w-4 h-4" /> prev
+          </button>
+          <span className="text-[var(--t2)] tabular-nums">
+            page {page}/{totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="inline-flex items-center gap-1.5 text-[var(--t1)] hover:text-[var(--t0)] disabled:opacity-30"
+          >
+            next <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       )}
-
-      <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );
 }
