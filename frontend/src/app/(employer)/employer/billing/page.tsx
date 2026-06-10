@@ -2,27 +2,35 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { MonoNumber } from "@/components/ui/MonoNumber";
 import {
   billingApi,
   CreditBalance,
   CreditTransaction,
   PaymentOrder,
-  TIER_META,
   formatVnd,
 } from "@/lib/api/billing";
+
 const TX_TYPE_LABEL: Record<string, string> = {
-  PURCHASE_CREDITS: "Mua credits",
-  REFUND: "Hoàn tiền",
-  ADMIN_GRANT: "Admin cấp",
-  JOB_POST_DEDUCT: "Đăng tin",
+  PURCHASE_CREDITS: "mua credits",
+  REFUND: "hoàn tiền",
+  ADMIN_GRANT: "admin cấp",
+  JOB_POST_DEDUCT: "đăng tin",
 };
 
-const ORDER_STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  PENDING: { label: "Chờ thanh toán", color: "text-yellow-400" },
-  SUCCESS: { label: "Thành công", color: "text-green-400" },
-  FAILED: { label: "Thất bại", color: "text-red-400" },
-  CANCELLED: { label: "Đã hủy", color: "text-t2" },
-  EXPIRED: { label: "Hết hạn", color: "text-t2" },
+const ORDER_STATUS_LABEL: Record<string, { label: string; tone: "default" | "success" | "danger" | "muted" }> = {
+  PENDING: { label: "chờ thanh toán", tone: "default" },
+  SUCCESS: { label: "thành công", tone: "success" },
+  FAILED: { label: "thất bại", tone: "danger" },
+  CANCELLED: { label: "đã hủy", tone: "muted" },
+  EXPIRED: { label: "hết hạn", tone: "muted" },
+};
+
+const TIER_LABEL: Record<string, string> = {
+  BASIC: "basic",
+  PREMIUM: "premium",
+  VIP: "vip",
 };
 
 export default function EmployerBillingPage() {
@@ -55,98 +63,83 @@ export default function EmployerBillingPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
-          <p className="text-[12px] uppercase tracking-wider text-t2 mb-1">💳 Billing</p>
-          <h1 className="text-[24px] sm:text-[28px] font-bold text-t0">Quản lý credits</h1>
-          <p className="text-[13px] text-t1 mt-1">
-            Dùng credits để đăng tin. Mỗi tier có giá trị + thời hạn boost khác nhau.
-          </p>
+          <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">Credits</h1>
+          <p className="font-mono text-[13px] text-[var(--t1)] mt-2">{`> dùng credits để đăng tin · mỗi tier giá trị + thời hạn boost khác nhau`}</p>
         </div>
         <Link
           href="/employer/billing/shop"
-          className="px-5 py-2.5 rounded-xl bg-brand-gradient text-white font-semibold text-[13px] text-center"
+          className="font-mono text-[13px] border border-[var(--accent)] text-[var(--accent)] rounded-sharp px-4 py-2 hover:bg-[var(--accent-dim)] transition-colors"
         >
-          ➕ Mua thêm credits
+          + mua credits
         </Link>
-      </div>
+      </section>
 
-      {/* Balance — 3 col */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {tiers.map(([tier, count]) => {
-          const meta = TIER_META[tier];
-          return (
-            <div
-              key={tier}
-              className={`p-5 rounded-2xl border ${meta.ring} bg-gradient-to-br ${meta.gradient}`}
-            >
-              <p className={`text-[12px] uppercase tracking-wider ${meta.text} mb-2`}>
-                {meta.label}
-              </p>
-              <p className="text-[36px] font-black text-t0 leading-none">
-                {balanceLoading ? "…" : count}
-              </p>
-              <p className="text-[11px] text-t1 mt-1">credits còn lại</p>
+      <HairlineSection label="SỐ DƯ HIỆN TẠI">
+        <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-[var(--border)]">
+          {tiers.map(([tier, count]) => (
+            <div key={tier} className="px-4 md:px-6 py-5">
+              <p className="font-mono text-[11px] uppercase tracking-wider text-[var(--t2)] mb-3">{TIER_LABEL[tier]}</p>
+              <MonoNumber size="lg" tone={count > 0 ? "accent" : "muted"}>
+                {balanceLoading ? "…" : String(count).padStart(2, "0")}
+              </MonoNumber>
+              <p className="font-mono text-[11px] text-[var(--t2)] mt-2">credits còn lại</p>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      </HairlineSection>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-border-dark">
+      <div className="px-4 md:px-6 pt-6 pb-2 flex gap-4 font-mono text-[13px]">
         {(["transactions", "orders"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2.5 text-[13px] font-semibold border-b-2 transition-colors ${
-              tab === t
-                ? "border-primary text-t0"
-                : "border-transparent text-t1 hover:text-t0"
+            className={`transition-colors ${
+              tab === t ? "text-[var(--accent)]" : "text-[var(--t2)] hover:text-[var(--t0)]"
             }`}
           >
-            {t === "transactions" ? "Lịch sử credits" : "Đơn hàng"}
+            {tab === t ? "[" : " "}
+            {t === "transactions" ? "lịch sử credits" : "đơn hàng"}
+            {tab === t ? "]" : " "}
           </button>
         ))}
       </div>
 
-      {/* Transactions */}
       {tab === "transactions" && (
-        <div className="rounded-2xl border border-border-dark bg-bg-1 overflow-hidden">
+        <HairlineSection label="LỊCH SỬ GIAO DỊCH">
           {!txData ? (
-            <p className="p-6 text-center text-t2 text-[13px]">Đang tải…</p>
+            <p className="px-4 md:px-6 py-6 font-mono text-[12px] text-[var(--t2)]">đang tải…</p>
           ) : txData.transactions.length === 0 ? (
-            <p className="p-6 text-center text-t2 text-[13px]">Chưa có giao dịch nào.</p>
+            <p className="px-4 md:px-6 py-6 font-mono text-[12px] text-[var(--t2)]">chưa có giao dịch nào.</p>
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full text-[12px] min-w-[600px]">
-                  <thead className="bg-bg-2 text-t2 text-[11px] uppercase tracking-wider">
+                <table className="w-full text-[13px] min-w-[600px]">
+                  <thead className="font-mono text-[11px] uppercase tracking-wider text-[var(--t2)] border-b border-[var(--border)]">
                     <tr>
-                      <th className="text-left px-4 py-3">Loại</th>
-                      <th className="text-left px-4 py-3">Tier</th>
-                      <th className="text-right px-4 py-3">Δ</th>
-                      <th className="text-right px-4 py-3">Còn lại</th>
-                      <th className="text-left px-4 py-3">Ghi chú</th>
-                      <th className="text-right px-4 py-3">Thời gian</th>
+                      <th className="text-left px-4 md:px-6 py-3 font-normal">loại</th>
+                      <th className="text-left px-4 py-3 font-normal">tier</th>
+                      <th className="text-right px-4 py-3 font-normal">Δ</th>
+                      <th className="text-right px-4 py-3 font-normal">còn lại</th>
+                      <th className="text-left px-4 py-3 font-normal">ghi chú</th>
+                      <th className="text-right px-4 md:px-6 py-3 font-normal">thời gian</th>
                     </tr>
                   </thead>
                   <tbody>
                     {txData.transactions.map((tx: CreditTransaction) => (
-                      <tr key={tx.id} className="border-t border-border-dark">
-                        <td className="px-4 py-3 text-t0">{TX_TYPE_LABEL[tx.type] ?? tx.type}</td>
-                        <td className="px-4 py-3 text-t1">{tx.tier ?? "—"}</td>
-                        <td
-                          className={`px-4 py-3 text-right font-bold ${tx.delta >= 0 ? "text-green-400" : "text-red-400"}`}
-                        >
-                          {tx.delta >= 0 ? `+${tx.delta}` : tx.delta}
+                      <tr key={tx.id} className="border-b border-[var(--border)]">
+                        <td className="px-4 md:px-6 py-3 text-[var(--t0)]">{TX_TYPE_LABEL[tx.type] ?? tx.type}</td>
+                        <td className="px-4 py-3 font-mono text-[var(--t1)]">{tx.tier ? TIER_LABEL[tx.tier] : "—"}</td>
+                        <td className="px-4 py-3 text-right font-mono tabular-nums">
+                          <span className={tx.delta >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"}>
+                            {tx.delta >= 0 ? `+${tx.delta}` : tx.delta}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-right text-t0">{tx.balanceAfter}</td>
-                        <td className="px-4 py-3 text-t2 max-w-[200px] truncate">
-                          {tx.note ?? "—"}
-                        </td>
-                        <td className="px-4 py-3 text-right text-t2 whitespace-nowrap">
+                        <td className="px-4 py-3 text-right font-mono tabular-nums text-[var(--t0)]">{tx.balanceAfter}</td>
+                        <td className="px-4 py-3 text-[var(--t2)] max-w-[200px] truncate">{tx.note ?? "—"}</td>
+                        <td className="px-4 md:px-6 py-3 text-right font-mono text-[11px] text-[var(--t2)] whitespace-nowrap">
                           {new Date(tx.createdAt).toLocaleString("vi-VN")}
                         </td>
                       </tr>
@@ -154,62 +147,53 @@ export default function EmployerBillingPage() {
                   </tbody>
                 </table>
               </div>
-              <Pagination
-                page={txPage}
-                total={txData.total}
-                limit={10}
-                onChange={setTxPage}
-              />
+              <Pagination page={txPage} total={txData.total} limit={10} onChange={setTxPage} />
             </>
           )}
-        </div>
+        </HairlineSection>
       )}
 
-      {/* Orders */}
       {tab === "orders" && (
-        <div className="rounded-2xl border border-border-dark bg-bg-1 overflow-hidden">
+        <HairlineSection label="ĐƠN HÀNG">
           {!orderData ? (
-            <p className="p-6 text-center text-t2 text-[13px]">Đang tải…</p>
+            <p className="px-4 md:px-6 py-6 font-mono text-[12px] text-[var(--t2)]">đang tải…</p>
           ) : orderData.orders.length === 0 ? (
-            <p className="p-6 text-center text-t2 text-[13px]">Chưa có đơn hàng nào.</p>
+            <p className="px-4 md:px-6 py-6 font-mono text-[12px] text-[var(--t2)]">chưa có đơn hàng nào.</p>
           ) : (
             <>
-              <div className="divide-y divide-border-dark">
-                {orderData.orders.map((o: PaymentOrder) => {
-                  const status = ORDER_STATUS_LABEL[o.status] ?? { label: o.status, color: "text-t1" };
+              <ul className="divide-y divide-[var(--border)]">
+                {orderData.orders.map((o: PaymentOrder, i: number) => {
+                  const status = ORDER_STATUS_LABEL[o.status] ?? { label: o.status.toLowerCase(), tone: "default" as const };
                   return (
-                    <Link
-                      key={o.id}
-                      href={`/employer/billing/orders/${o.id}`}
-                      className="flex items-center justify-between px-4 py-3 hover:bg-bg-2 transition-colors"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[13px] text-t0 font-semibold truncate">
-                          {o.package?.name ?? o.packageId}
-                        </p>
-                        <p className="text-[11px] text-t2">
-                          {o.provider} · {new Date(o.createdAt).toLocaleString("vi-VN")}
-                        </p>
-                      </div>
-                      <div className="text-right ml-3">
-                        <p className="text-[13px] text-t0 font-bold">{formatVnd(o.amountNet)}</p>
-                        <p className={`text-[11px] font-semibold ${status.color}`}>
-                          {status.label}
-                        </p>
-                      </div>
-                    </Link>
+                    <li key={o.id}>
+                      <Link
+                        href={`/employer/billing/orders/${o.id}`}
+                        className="grid grid-cols-[48px_1fr_auto] gap-4 items-center px-4 md:px-6 py-4 hover:bg-[var(--bg-2)] transition-colors"
+                      >
+                        <MonoNumber size="md" tone="muted">{String(i + 1 + (orderPage - 1) * 10).padStart(2, "0")}</MonoNumber>
+                        <div className="min-w-0">
+                          <p className="text-[14px] text-[var(--t0)] truncate">{o.package?.name ?? o.packageId}</p>
+                          <p className="font-mono text-[11px] text-[var(--t2)] mt-1">
+                            {o.provider.toLowerCase()} · {new Date(o.createdAt).toLocaleString("vi-VN")}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-mono tabular-nums text-[14px] text-[var(--t0)]">{formatVnd(o.amountNet)}</p>
+                          <p className={`font-mono text-[11px] mt-1 ${
+                            status.tone === "success" ? "text-[var(--green)]" :
+                            status.tone === "danger" ? "text-[var(--red)]" :
+                            status.tone === "muted" ? "text-[var(--t2)]" : "text-[var(--t1)]"
+                          }`}>{status.label}</p>
+                        </div>
+                      </Link>
+                    </li>
                   );
                 })}
-              </div>
-              <Pagination
-                page={orderPage}
-                total={orderData.total}
-                limit={10}
-                onChange={setOrderPage}
-              />
+              </ul>
+              <Pagination page={orderPage} total={orderData.total} limit={10} onChange={setOrderPage} />
             </>
           )}
-        </div>
+        </HairlineSection>
       )}
     </div>
   );
@@ -229,27 +213,16 @@ function Pagination({
   const totalPages = Math.max(1, Math.ceil(total / limit));
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-t border-border-dark text-[12px]">
-      <p className="text-t2">
-        Trang {page} / {totalPages} · {total} bản ghi
-      </p>
-      <div className="flex gap-2">
-        <button
-          onClick={() => onChange(page - 1)}
-          disabled={page <= 1}
-          className="px-3 py-1.5 rounded-lg border border-border-dark text-t1 disabled:opacity-40"
-        >
-          ←
+    <div className="flex items-center justify-between px-4 md:px-6 py-3 border-t border-[var(--border)] font-mono text-[12px] text-[var(--t2)]">
+      <p>trang {page} / {totalPages} · {total} bản ghi</p>
+      <div className="flex gap-3">
+        <button onClick={() => onChange(page - 1)} disabled={page <= 1} className="disabled:opacity-40 hover:text-[var(--t0)]">
+          ← prev
         </button>
-        <button
-          onClick={() => onChange(page + 1)}
-          disabled={page >= totalPages}
-          className="px-3 py-1.5 rounded-lg border border-border-dark text-t1 disabled:opacity-40"
-        >
-          →
+        <button onClick={() => onChange(page + 1)} disabled={page >= totalPages} className="disabled:opacity-40 hover:text-[var(--t0)]">
+          next →
         </button>
       </div>
     </div>
   );
 }
-

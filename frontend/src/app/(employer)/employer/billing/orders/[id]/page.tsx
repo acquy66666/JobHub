@@ -2,15 +2,25 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { HairlineSection } from "@/components/ui/HairlineSection";
+import { MonoNumber } from "@/components/ui/MonoNumber";
 import { billingApi, PaymentOrder, formatVnd } from "@/lib/api/billing";
 import { useToast } from "@/store/toastStore";
 
-const STATUS_META: Record<string, { label: string; bg: string; text: string }> = {
-  PENDING: { label: "Chờ thanh toán", bg: "bg-yellow-500/15", text: "text-yellow-300" },
-  SUCCESS: { label: "Thành công", bg: "bg-green-500/15", text: "text-green-300" },
-  FAILED: { label: "Thất bại", bg: "bg-red-500/15", text: "text-red-300" },
-  CANCELLED: { label: "Đã hủy", bg: "bg-bg-3", text: "text-t2" },
-  EXPIRED: { label: "Hết hạn", bg: "bg-bg-3", text: "text-t2" },
+const STATUS_META: Record<string, { label: string; tone: "default" | "success" | "danger" | "muted" | "accent" }> = {
+  PENDING: { label: "chờ thanh toán", tone: "accent" },
+  SUCCESS: { label: "thành công", tone: "success" },
+  FAILED: { label: "thất bại", tone: "danger" },
+  CANCELLED: { label: "đã hủy", tone: "muted" },
+  EXPIRED: { label: "hết hạn", tone: "muted" },
+};
+
+const TONE_CLASS: Record<string, string> = {
+  default: "text-[var(--t0)]",
+  accent: "text-[var(--accent)]",
+  success: "text-[var(--green)]",
+  danger: "text-[var(--red)]",
+  muted: "text-[var(--t2)]",
 };
 
 function useCountdown(expiresAt: string | undefined): string {
@@ -21,10 +31,10 @@ function useCountdown(expiresAt: string | undefined): string {
   }, []);
   if (!expiresAt) return "—";
   const diff = new Date(expiresAt).getTime() - now;
-  if (diff <= 0) return "Đã hết hạn";
+  if (diff <= 0) return "00:00";
   const m = Math.floor(diff / 60_000);
   const s = Math.floor((diff % 60_000) / 1000);
-  return `${m}:${s.toString().padStart(2, "0")}`;
+  return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
 }
 
 export default function OrderDetailPage() {
@@ -62,16 +72,14 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="max-w-2xl mx-auto p-4 sm:p-8">
-        <p className="text-center text-t2 py-12">Đang tải đơn hàng…</p>
+      <div className="pb-10">
+        <p className="px-4 md:px-6 py-12 font-mono text-[12px] text-[var(--t2)] text-center">đang tải đơn hàng…</p>
       </div>
     );
   }
 
   const status = STATUS_META[order.status] ?? STATUS_META.PENDING;
   const isPending = order.status === "PENDING";
-  // Sandbox VNPay/MoMo chưa đăng ký → cho phép mock từ UI để smoke test. Tắt bằng env NEXT_PUBLIC_HIDE_DEV_PAY=true
-  // khi đã wire sandbox thật.
   const isDev =
     typeof window !== "undefined" && process.env.NEXT_PUBLIC_HIDE_DEV_PAY !== "true";
 
@@ -91,82 +99,78 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-4 sm:p-8 space-y-5">
-      <div>
-        <p className="text-[12px] uppercase tracking-wider text-t2 mb-1">Đơn hàng</p>
-        <h1 className="text-[20px] sm:text-[24px] font-bold text-t0 break-all">{order.id}</h1>
-      </div>
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8">
+        <p className="font-mono text-[12px] text-[var(--t2)]">~ / employer / billing / orders</p>
+        <h1 className="text-[clamp(22px,3vw,28px)] font-medium tracking-tight text-[var(--t0)] mt-3 break-all font-mono">{order.id}</h1>
+        <p className={`font-mono text-[13px] mt-2 ${TONE_CLASS[status.tone]}`}>
+          {`> ${status.label}`}
+          {isPending && (
+            <span className="text-[var(--t1)]">{` · còn `}<MonoNumber size="sm" tone="accent">{countdown}</MonoNumber></span>
+          )}
+        </p>
+      </section>
 
-      {/* Status */}
-      <div className={`p-4 rounded-2xl ${status.bg} border border-border-dark`}>
-        <p className={`text-[14px] font-bold ${status.text}`}>{status.label}</p>
-        {isPending && (
-          <p className="text-[11px] text-t1 mt-1">
-            Còn lại <strong className="text-t0">{countdown}</strong> để thanh toán.
-          </p>
-        )}
-      </div>
+      <HairlineSection label="CHI TIẾT ĐƠN HÀNG">
+        <dl className="divide-y divide-[var(--border)]">
+          <Row label="gói" value={order.package?.name ?? order.packageId} />
+          <Row label="provider" value={order.provider.toLowerCase()} mono />
+          <Row label="tạm tính" value={formatVnd(order.amountGross)} mono />
+          {order.discountAmount > 0 && (
+            <Row label="giảm giá" value={`-${formatVnd(order.discountAmount)}`} mono valueClass="text-[var(--green)]" />
+          )}
+          <Row label="tổng cộng" value={formatVnd(order.amountNet)} mono valueClass="text-[var(--accent)] text-[16px]" />
+        </dl>
+      </HairlineSection>
 
-      {/* Summary */}
-      <div className="p-5 rounded-2xl bg-bg-1 border border-border-dark space-y-2 text-[13px]">
-        <Row label="Gói" value={order.package?.name ?? order.packageId} />
-        <Row label="Provider" value={order.provider} />
-        <Row label="Tạm tính" value={formatVnd(order.amountGross)} />
-        {order.discountAmount > 0 && (
-          <Row label="Giảm giá" value={`-${formatVnd(order.discountAmount)}`} valueClass="text-green-400" />
-        )}
-        <div className="pt-2 border-t border-border-dark">
-          <Row label="Tổng cộng" value={formatVnd(order.amountNet)} valueClass="text-purple-300 font-bold text-[16px]" boldLabel />
-        </div>
-      </div>
-
-      {/* QR / payUrl */}
       {isPending && (order.qrCodeUrl || order.payUrl) && (
-        <div className="p-5 rounded-2xl bg-bg-1 border border-border-dark text-center space-y-3">
-          {order.qrCodeUrl && (
-            <>
-              <p className="text-[12px] text-t1">Quét QR bằng app {order.provider}</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={order.qrCodeUrl}
-                alt="QR thanh toán"
-                className="max-w-[260px] mx-auto rounded-xl bg-white p-3"
-              />
-            </>
-          )}
-          {order.payUrl && (
-            <a
-              href={order.payUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block px-5 py-2.5 rounded-xl bg-brand-gradient text-white font-semibold text-[13px]"
-            >
-              🔗 Mở trang thanh toán
-            </a>
-          )}
-        </div>
+        <HairlineSection label="THANH TOÁN">
+          <div className="px-4 md:px-6 py-6 text-center space-y-4">
+            {order.qrCodeUrl && (
+              <>
+                <p className="font-mono text-[12px] text-[var(--t1)]">{`> quét QR bằng app ${order.provider.toLowerCase()}`}</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={order.qrCodeUrl}
+                  alt="QR thanh toán"
+                  className="max-w-[260px] mx-auto bg-white p-3 rounded-sharp"
+                />
+              </>
+            )}
+            {order.payUrl && (
+              <a
+                href={order.payUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block font-mono text-[13px] border border-[var(--accent)] text-[var(--accent)] rounded-sharp px-5 py-2.5 hover:bg-[var(--accent-dim)] transition-colors"
+              >
+                → mở trang thanh toán
+              </a>
+            )}
+          </div>
+        </HairlineSection>
       )}
 
-      {/* Dev panel */}
       {isPending && isDev && (
-        <div className="p-4 rounded-2xl border border-dashed border-yellow-500/40 bg-yellow-500/5">
-          <p className="text-[11px] uppercase tracking-wider text-yellow-300 mb-2">🛠 Dev only</p>
-          <button
-            onClick={handleDevMarkPaid}
-            disabled={devLoading}
-            className="px-4 py-2 rounded-lg bg-yellow-500/20 text-yellow-200 text-[12px] font-bold border border-yellow-500/40 disabled:opacity-50"
-          >
-            {devLoading ? "Đang mock…" : "Mock thanh toán thành công"}
-          </button>
-          <p className="text-[10px] text-t2 mt-2">
-            Route /api/payments/dev/mark-paid bị disable trên production.
-          </p>
-        </div>
+        <HairlineSection label="DEV ONLY">
+          <div className="px-4 md:px-6 py-4">
+            <button
+              onClick={handleDevMarkPaid}
+              disabled={devLoading}
+              className="font-mono text-[12px] border border-dashed border-[var(--accent)] text-[var(--accent)] rounded-sharp px-4 py-2 hover:bg-[var(--accent-dim)] disabled:opacity-50 transition-colors"
+            >
+              {devLoading ? "đang mock…" : "mock thanh toán thành công"}
+            </button>
+            <p className="font-mono text-[11px] text-[var(--t2)] mt-2">
+              {`// route /api/payments/dev/mark-paid bị disable trên production.`}
+            </p>
+          </div>
+        </HairlineSection>
       )}
 
       {redirecting && (
-        <p className="text-center text-[13px] text-green-400">
-          ✓ Đang chuyển về bảng điều khiển…
+        <p className="px-4 md:px-6 py-6 text-center font-mono text-[13px] text-[var(--green)]">
+          ✓ đang chuyển về bảng điều khiển…
         </p>
       )}
     </div>
@@ -177,17 +181,17 @@ function Row({
   label,
   value,
   valueClass,
-  boldLabel,
+  mono,
 }: {
   label: string;
   value: string;
   valueClass?: string;
-  boldLabel?: boolean;
+  mono?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className={`text-t1 ${boldLabel ? "font-bold text-t0" : ""}`}>{label}</span>
-      <span className={`text-t0 ${valueClass ?? ""}`}>{value}</span>
+    <div className="flex items-center justify-between px-4 md:px-6 py-3 text-[13px]">
+      <dt className="font-mono text-[12px] text-[var(--t2)] uppercase tracking-wider">{label}</dt>
+      <dd className={`${mono ? "font-mono tabular-nums" : ""} text-[var(--t0)] ${valueClass ?? ""}`}>{value}</dd>
     </div>
   );
 }

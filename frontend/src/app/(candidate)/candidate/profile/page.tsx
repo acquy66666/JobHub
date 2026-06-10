@@ -1,7 +1,7 @@
 "use client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { ScrollReveal } from "@/components/common/ScrollReveal";
+import { HairlineSection } from "@/components/ui/HairlineSection";
 import api from "@/lib/api";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,8 +38,8 @@ const eduSchema = z.object({
 });
 type EduForm = z.infer<typeof eduSchema>;
 
-const inputClass = "w-full bg-bg-3 border border-border-dark rounded-xl px-3 py-2.5 text-[13px] text-t0 placeholder:text-t2 focus:outline-none focus:border-[rgba(124,58,237,.5)] focus:shadow-[0_0_0_3px_rgba(124,58,237,.1)] transition-all";
-const labelClass = "block text-[12px] font-semibold text-t1 uppercase tracking-wide mb-1.5";
+const inputClass = "w-full bg-transparent border border-[var(--border)] rounded-sharp px-3 py-2.5 text-[13px] text-[var(--t0)] placeholder:text-[var(--t2)] focus:outline-none focus:border-[var(--accent)] transition-colors";
+const labelClass = "block font-mono text-[11px] font-semibold text-[var(--t2)] uppercase tracking-wider mb-1.5";
 
 interface CandidateProfile {
   fullName?: string;
@@ -153,32 +153,31 @@ export default function CandidateProfilePage() {
   if (isLoading) return <div className="p-8 animate-pulse"><div className="h-8 bg-bg-2 rounded w-1/3 mb-4" /><div className="h-64 bg-bg-2 rounded-2xl" /></div>;
 
   return (
-    <div className="p-4 sm:p-8 max-w-4xl space-y-8">
-      <ScrollReveal direction="up">
-        <h1 className="text-[24px] font-extrabold text-t0 mb-1">Hồ sơ cá nhân</h1>
-        <p className="text-[14px] text-t1">Cập nhật thông tin để tăng cơ hội được tuyển dụng.</p>
-      </ScrollReveal>
+    <div className="pb-10">
+      <section className="px-4 md:px-6 py-8">
+        <h1 className="text-[clamp(26px,3.5vw,36px)] font-medium tracking-tight text-[var(--t0)]">Hồ sơ cá nhân</h1>
+        <p className="font-mono text-[13px] text-[var(--t1)] mt-2">{`> cập nhật thông tin để tăng cơ hội được tuyển dụng`}</p>
+      </section>
 
-      {/* Avatar + basic form */}
-      <ScrollReveal direction="up" delay={0.05}>
-        <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="card-dark p-6 rounded-2xl space-y-5">
+      <HairlineSection label="THÔNG TIN CƠ BẢN">
+        <form onSubmit={handleSubmit((data) => updateMutation.mutate(data))} className="p-4 md:p-6 space-y-5">
           {/* Avatar */}
           <div className="flex items-center gap-5">
             <button type="button" onClick={() => fileRef.current?.click()} className="relative group">
               {(avatarPreview || profile?.avatarUrl) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={avatarPreview ?? profile?.avatarUrl} alt="" className="w-20 h-20 rounded-full object-cover" />
+                <img src={avatarPreview ?? profile?.avatarUrl} alt="" className="w-20 h-20 rounded-sharp object-cover border border-[var(--border)]" />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-brand-gradient flex items-center justify-center text-[28px] font-black text-white">
+                <div className="w-20 h-20 rounded-sharp bg-[var(--bg-2)] border border-[var(--border)] flex items-center justify-center text-[28px] font-medium text-[var(--accent)]">
                   {profile?.fullName?.[0]?.toUpperCase() ?? "?"}
                 </div>
               )}
-              <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-medium">Đổi ảnh</div>
+              <div className="absolute inset-0 rounded-sharp bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[11px] font-mono">đổi ảnh</div>
             </button>
             <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
             <div>
-              <p className="text-[14px] font-semibold text-t0">{profile?.fullName}</p>
-              <p className="text-[12px] text-t2">{profile?.user?.email}</p>
+              <p className="text-[15px] font-semibold text-[var(--t0)]">{profile?.fullName}</p>
+              <p className="font-mono text-[12px] text-[var(--t2)]">{profile?.user?.email}</p>
             </div>
           </div>
 
@@ -223,26 +222,21 @@ export default function CandidateProfilePage() {
           </div>
 
           <div className="flex items-center gap-3 pt-2">
-            <button type="submit" disabled={updateMutation.isPending} className="btn-primary px-6 py-2.5 rounded-xl text-[14px] font-semibold disabled:opacity-60">
-              {updateMutation.isPending ? "Đang lưu..." : "Lưu thông tin"}
+            <button type="submit" disabled={updateMutation.isPending} className="px-5 py-2 font-mono text-[13px] border border-[var(--accent)] text-[var(--accent)] rounded-sharp hover:bg-[var(--accent-dim)] disabled:opacity-60 transition-colors">
+              {updateMutation.isPending ? "đang lưu…" : "lưu thông tin"}
             </button>
-            {saved && <span className="text-[13px] text-green-400">✓ Đã lưu</span>}
+            {saved && <span className="font-mono text-[12px] text-[var(--green)]">✓ đã lưu</span>}
           </div>
         </form>
-      </ScrollReveal>
+      </HairlineSection>
 
-      {/* Preferences */}
-      <ScrollReveal direction="up" delay={0.07}>
-        <div data-testid="prefs-section" className="card-dark p-6 rounded-2xl space-y-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-[15px] font-bold text-t0">🎯 Sở thích công việc</h3>
-              <p className="text-[12px] text-t1 mt-0.5">Giúp gợi ý việc làm phù hợp hơn và lọc nhanh trên trang tìm việc.</p>
-            </div>
+      <HairlineSection label="SỞ THÍCH CÔNG VIỆC" meta={<span className="font-mono">giúp lọc + gợi ý chính xác hơn</span>}>
+        <div data-testid="prefs-section" className="p-4 md:p-6 space-y-5">
+          <div className="flex items-center justify-end">
             <label className="inline-flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={openToWork} onChange={(e) => setOpenToWork(e.target.checked)} className="sr-only peer" />
-              <span className="w-10 h-5 bg-bg-3 border border-border-dark rounded-full relative peer-checked:bg-brand-gradient transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5" />
-              <span className="text-[12px] font-medium text-t1">Đang tìm việc</span>
+              <span className="w-10 h-5 bg-[var(--bg-2)] border border-[var(--border)] rounded-full relative peer-checked:bg-[var(--accent)] transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-all peer-checked:after:translate-x-5" />
+              <span className="font-mono text-[12px] text-[var(--t1)]">đang tìm việc</span>
             </label>
           </div>
 
@@ -365,106 +359,91 @@ export default function CandidateProfilePage() {
                 });
               }}
               data-testid="prefs-save"
-              className="btn-primary px-6 py-2.5 rounded-xl text-[14px] font-semibold"
+              className="px-5 py-2 font-mono text-[13px] border border-[var(--accent)] text-[var(--accent)] rounded-sharp hover:bg-[var(--accent-dim)] transition-colors"
             >
-              Lưu sở thích
+              lưu sở thích
             </button>
-            {saved && <span className="text-[13px] text-green-400">✓ Đã lưu</span>}
+            {saved && <span className="font-mono text-[12px] text-[var(--green)]">✓ đã lưu</span>}
           </div>
         </div>
-      </ScrollReveal>
+      </HairlineSection>
 
-      {/* Certificates */}
-      <ScrollReveal direction="up" delay={0.08}>
-        <CertificatesSection />
-      </ScrollReveal>
+      <CertificatesSection />
 
-      {/* Experiences */}
-      <ScrollReveal direction="up" delay={0.1}>
-        <div className="card-dark rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between p-5 border-b border-border-dark">
-            <h3 className="text-[15px] font-bold text-t0">Kinh nghiệm làm việc</h3>
-            <button onClick={() => { setEditExp(null); setShowExpModal(true); }} className="btn-primary px-4 py-1.5 rounded-lg text-[12px]">+ Thêm</button>
-          </div>
+      <HairlineSection label="KINH NGHIỆM LÀM VIỆC" meta={
+        <button onClick={() => { setEditExp(null); setShowExpModal(true); }} className="font-mono text-[12px] text-[var(--accent)] hover:underline">+ thêm</button>
+      }>
+        <div>
           {(profile?.experiences ?? []).length === 0 ? (
-            <p className="p-5 text-[13px] text-t2">Chưa có kinh nghiệm. Thêm để hồ sơ nổi bật hơn.</p>
+            <p className="px-4 md:px-6 py-5 font-mono text-[13px] text-[var(--t2)]">chưa có kinh nghiệm. thêm để hồ sơ nổi bật hơn.</p>
           ) : (
-            <div className="divide-y divide-border-dark">
+            <div className="divide-y divide-[var(--border)]">
               {(profile?.experiences ?? []).map((exp: { id: string; company: string; position: string; startDate: string; endDate?: string; isCurrent?: boolean; description?: string }) => (
-                <div key={exp.id} className="p-5 flex items-start justify-between gap-4">
+                <div key={exp.id} className="px-4 md:px-6 py-4 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[14px] font-semibold text-t0">{exp.position}</p>
-                    <p className="text-[13px] text-t1">{exp.company}</p>
-                    <p className="text-[12px] text-t2 mt-0.5">
+                    <p className="text-[14px] font-semibold text-[var(--t0)]">{exp.position}</p>
+                    <p className="text-[13px] text-[var(--t1)]">{exp.company}</p>
+                    <p className="font-mono text-[11px] text-[var(--t2)] mt-1">
                       {new Date(exp.startDate).toLocaleDateString("vi-VN", { month: "short", year: "numeric" })} —{" "}
-                      {exp.isCurrent ? "Hiện tại" : exp.endDate ? new Date(exp.endDate).toLocaleDateString("vi-VN", { month: "short", year: "numeric" }) : ""}
+                      {exp.isCurrent ? "hiện tại" : exp.endDate ? new Date(exp.endDate).toLocaleDateString("vi-VN", { month: "short", year: "numeric" }) : ""}
                     </p>
-                    {exp.description && <p className="text-[12px] text-t2 mt-1 max-w-lg">{exp.description}</p>}
+                    {exp.description && <p className="text-[12px] text-[var(--t2)] mt-2 max-w-lg">{exp.description}</p>}
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => { setEditExp({ ...exp, startDate: exp.startDate.slice(0, 7), endDate: exp.endDate?.slice(0, 7) }); setShowExpModal(true); }} className="text-[12px] text-t2 hover:text-t0 px-2 py-1 rounded border border-border-dark transition-colors">Sửa</button>
-                    <button onClick={() => deleteExpMutation.mutate(exp.id)} className="text-[12px] text-red-400 hover:text-red-300 px-2 py-1 rounded border border-red-500/20 transition-colors">Xóa</button>
+                  <div className="flex gap-3 shrink-0 font-mono text-[12px]">
+                    <button onClick={() => { setEditExp({ ...exp, startDate: exp.startDate.slice(0, 7), endDate: exp.endDate?.slice(0, 7) }); setShowExpModal(true); }} className="text-[var(--t2)] hover:text-[var(--t0)]">sửa</button>
+                    <button onClick={() => deleteExpMutation.mutate(exp.id)} className="text-[var(--red)] hover:underline">xóa</button>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </ScrollReveal>
+      </HairlineSection>
 
-      {/* Educations */}
-      <ScrollReveal direction="up" delay={0.15}>
-        <div className="card-dark rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between p-5 border-b border-border-dark">
-            <h3 className="text-[15px] font-bold text-t0">Học vấn</h3>
-            <button onClick={() => { setEditEdu(null); setShowEduModal(true); }} className="btn-primary px-4 py-1.5 rounded-lg text-[12px]">+ Thêm</button>
-          </div>
+      <HairlineSection label="HỌC VẤN" meta={
+        <button onClick={() => { setEditEdu(null); setShowEduModal(true); }} className="font-mono text-[12px] text-[var(--accent)] hover:underline">+ thêm</button>
+      }>
+        <div>
           {(profile?.educations ?? []).length === 0 ? (
-            <p className="p-5 text-[13px] text-t2">Chưa có học vấn. Thêm để hồ sơ đầy đủ hơn.</p>
+            <p className="px-4 md:px-6 py-5 font-mono text-[13px] text-[var(--t2)]">chưa có học vấn. thêm để hồ sơ đầy đủ hơn.</p>
           ) : (
-            <div className="divide-y divide-border-dark">
+            <div className="divide-y divide-[var(--border)]">
               {(profile?.educations ?? []).map((edu: { id: string; school: string; degree: string; major?: string; startYear: number; endYear?: number }) => (
-                <div key={edu.id} className="p-5 flex items-start justify-between gap-4">
+                <div key={edu.id} className="px-4 md:px-6 py-4 flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-[14px] font-semibold text-t0">{edu.school}</p>
-                    <p className="text-[13px] text-t1">{edu.degree}{edu.major ? ` — ${edu.major}` : ""}</p>
-                    <p className="text-[12px] text-t2 mt-0.5">{edu.startYear} — {edu.endYear ?? "Hiện tại"}</p>
+                    <p className="text-[14px] font-semibold text-[var(--t0)]">{edu.school}</p>
+                    <p className="text-[13px] text-[var(--t1)]">{edu.degree}{edu.major ? ` — ${edu.major}` : ""}</p>
+                    <p className="font-mono text-[11px] text-[var(--t2)] mt-1">{edu.startYear} — {edu.endYear ?? "hiện tại"}</p>
                   </div>
-                  <div className="flex gap-2 shrink-0">
-                    <button onClick={() => { setEditEdu(edu); setShowEduModal(true); }} className="text-[12px] text-t2 hover:text-t0 px-2 py-1 rounded border border-border-dark transition-colors">Sửa</button>
-                    <button onClick={() => deleteEduMutation.mutate(edu.id)} className="text-[12px] text-red-400 hover:text-red-300 px-2 py-1 rounded border border-red-500/20 transition-colors">Xóa</button>
+                  <div className="flex gap-3 shrink-0 font-mono text-[12px]">
+                    <button onClick={() => { setEditEdu(edu); setShowEduModal(true); }} className="text-[var(--t2)] hover:text-[var(--t0)]">sửa</button>
+                    <button onClick={() => deleteEduMutation.mutate(edu.id)} className="text-[var(--red)] hover:underline">xóa</button>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </ScrollReveal>
+      </HairlineSection>
 
-      {/* Public profile */}
-      <ScrollReveal direction="up" delay={0.2}>
-        <div className="card-dark rounded-2xl p-5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-[16px] ${profile?.isPublicProfile ? "bg-[rgba(34,197,94,.1)]" : "bg-bg-3"}`}>
-              {profile?.isPublicProfile ? "🌐" : "🔒"}
-            </div>
-            <div>
-              <p className="text-[13px] font-semibold text-t0">Hồ sơ công khai</p>
-              <p className="text-[12px] text-t2">
-                {profile?.isPublicProfile && profile.publicSlug
-                  ? `/u/${profile.publicSlug}`
-                  : "Chưa công khai — chỉ bạn mới thấy"}
-              </p>
-            </div>
+      <HairlineSection label="HỒ SƠ CÔNG KHAI">
+        <div className="px-4 md:px-6 py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[13px] font-semibold text-[var(--t0)]">{profile?.isPublicProfile ? "đã công khai" : "chưa công khai"}</p>
+            <p className="font-mono text-[12px] text-[var(--t2)] mt-1">
+              {profile?.isPublicProfile && profile.publicSlug
+                ? `/u/${profile.publicSlug}`
+                : "// chỉ bạn mới thấy"}
+            </p>
           </div>
           <a
             href="/candidate/preview"
-            className="shrink-0 px-4 py-2 rounded-xl border border-border-dark text-[12px] text-t1 hover:border-[rgba(124,58,237,.4)] hover:text-[#B09BF8] transition-colors"
+            className="shrink-0 font-mono text-[12px] text-[var(--accent)] hover:underline"
           >
-            Quản lý →
+            quản lý →
           </a>
         </div>
-      </ScrollReveal>
+      </HairlineSection>
 
       {/* Modals */}
       {showExpModal && <ExperienceModal initial={editExp} onClose={() => setShowExpModal(false)} onSaved={() => { setShowExpModal(false); qc.invalidateQueries({ queryKey: queryKeys.candidateProfile() }); }} />}
