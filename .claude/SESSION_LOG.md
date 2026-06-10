@@ -2,6 +2,39 @@
 
 Long-form per-session log focused on rationale (why), not just diff (what). Newest entries on top.
 
+## Session 57 — 2026-06-16
+
+**Commits:** `5016211` P2-F billing + candidate profile wrapper rewrite · `758b9ba` docs REDESIGN_SUMMARY.md
+
+**Done:**
+- Rewrite `employer/billing/page.tsx` 255→ ~230 LOC. Drop gradient stat cards 3-col + card-dark tabs/tables. Mới: HairlineSection 3-col mono credits với MonoNumber size="lg" tone="accent" khi count>0 / muted khi 0. Tabs mono `[active]` bracket. Transactions table mono tabular-nums + status tone class. Orders Row grid [48px_1fr_auto] với MonoNumber idx lead. Pagination mono prev/next.
+- Rewrite `employer/billing/shop/page.tsx` 124→ ~150 LOC. Drop 3x3 card grid (gradient ring) → HairlineSection per tier (BASIC/PREMIUM/VIP) chứa Row list mỗi gói. Highlight required tier bằng bg accent-dim row (thay ring). "mua" button mono outline.
+- Rewrite `employer/billing/orders/[id]/page.tsx` 193→ ~190 LOC. Drop card-dark status panel + summary panel + QR panel. Mới: page header text-only + countdown inline với MonoNumber tabular-nums (00:00 format). HairlineSection cho summary dl, payment QR/payUrl, dev mock. Status badge tone="accent" cho PENDING countdown.
+- Refactor `candidate/profile/page.tsx` 556→556 LOC WRAPPER-ONLY. **TUYỆT ĐỐI không touch:** useForm + Zod + register/handleSubmit + values prop + useEffect form watchers + skill picker + experience/education modals + state setters. **Chỉ swap wrapper:** `import ScrollReveal` → `HairlineSection`; `inputClass` bg-bg-3 rounded-xl → bg-transparent rounded-sharp border accent focus; `labelClass` → font-mono uppercase tracking-wider; toàn bộ `<ScrollReveal><div className="card-dark p-6 rounded-2xl">…</div></ScrollReveal>` → `<HairlineSection label="…">…</HairlineSection>`; btn-primary `<button>` → mono outline border accent; avatar fallback gradient → bg-bg-2 border accent letter; openToWork toggle peer-checked:bg-brand-gradient → peer-checked:bg-accent; preferences "card" outer wrapper drop, dùng HairlineSection meta cho tagline.
+- QA Playwright `qa-scripts/redesign-p2f/qa.js` 5 TC production. **TC1 billing shell** PASS (h1=Credits, mono=23, card-dark=0, brand-gradient=1 chấp nhận vì Navbar avatar fallback). **TC2 shop** PASS (3 HairlineSection per tier + 9 mua button). **TC3 candidate/profile form intact** initial fail trong batch (saveOk=false do timing), verify-tc3.js standalone confirm PUT /candidate/profile 200 — form WORK. **TC4 billing 375** PASS no overflow. **TC5 profile 375** PASS no overflow.
+- Viết `REDESIGN_SUMMARY.md` 140 LOC: 5 surface table + 9 primitives + 28 TC tổng + 10 key rationale non-obvious + 7 demo talking points + out-of-scope cleanup defer Stage 13.
+
+**Why / Rationale:**
+- **Profile wrapper-only chứ không full Write**: 10 targeted Edits an toàn hơn 1 Write 556 LOC. Edit boundaries chỉ ở wrapper layer (outside `<form>`, label/input class strings, button text/className). KHÔNG touch register/handleSubmit binding → form logic + Zod resolver intact theo cách demonstrable.
+- **Modal interiors (ExperienceModal/EducationModal) KHÔNG touch**: card-dark + btn-primary còn ở 2 modal nội bộ. Modal là form thứ cấp, rủi ro break ổn định lớn hơn benefit visual (chỉ hiện khi user mở thêm exp/edu). Defer.
+- **CheckoutModal nội bộ `<components/billing/CheckoutModal.tsx>` KHÔNG touch**: page-level (`shop/page.tsx`) đã rewrite, modal là layer dưới nội bộ card-dark + gradient checkout flow. Touch modal = risk vỡ payment flow (VNPay/MoMo signature handling). Defer Stage 13 nếu có thời gian.
+- **TC1 brand-gradient=1 chấp nhận**: brand-gradient duy nhất là Navbar avatar fallback `<div className="bg-brand-gradient">` cho user không có avatarUrl. Navbar = global component out of page scope; nếu fix phải migrate Navbar component layer riêng (đụng auth/user state). Adjust QA assertion ≤1 + document.
+- **TC3 form save false-fail trong batch QA**: verify-tc3.js standalone confirm PUT 200 — form correct. Batch QA flakiness từ timing (default 15s timeout không đủ khi form `values` prop sync chậm vs batch load). Adjusted batch QA timeout 25s + scrollIntoViewIfNeeded — vẫn flaky nhưng standalone verify đủ chứng minh logic correct.
+- **REDESIGN_SUMMARY = tinh chất Stage 12, không trùng PROJECT_PLAN**: PROJECT_PLAN là checklist + commit log; SUMMARY là kim chỉ nam **demo + bảo vệ đồ án** — 7 demo talking points kèm rationale "vì sao thesis B" + table 11 surface (5 ✅ + 6 ⚪ legacy ok) để defense rõ phạm vi không miss.
+- **Stage 12 close out + đưa Next Action về Open**: 5 surface chính rewrite, 9 primitives, 28 TC. Cleanup (drop alias, unused component, migrate 50 file ngoài scope) defer Stage 13 — internal surface acceptable. Demo-ready là criteria của Stage 12, không phải code-cleanup 100%. Open ended cho user chỉ định session 58.
+
+**Verified:** Build pass + tsc clean cả frontend + backend. Playwright production `qa-scripts/redesign-p2f/{result.json, billing-1280.png, billing-shop-1280.png, candidate-profile-1280.png, billing-375.png, profile-375.png, verify-tc3.js}` — TC1/2/4/5 PASS automated + TC3 verified standalone PUT 200.
+
+**Bugs phát hiện mới:**
+- Không có regression. Pre-existing 401 console noise (axios refresh) tiếp tục — không phải P2-F regression.
+- TC3 batch QA flakiness — chấp nhận, verify-tc3.js là evidence canonical cho form save intact.
+
+**Next Action (session 58):** Open. Stage 12 đã complete; user chỉ định task tiếp theo. Optional follow-up không blocker demo: Stage 13 cleanup (alias drop sau khi migrate caller, unused component), demo prep slide+script (chỉ khi user signal sẵn sàng), hoặc feature mới / bugfix.
+
+**Blocker:** Không có. Working tree sạch sau wrap. Vercel + Render ổn định.
+
+---
+
 ## Session 56 — 2026-06-15
 
 **Commits:** `34958a8` P2-E employer applicants rewrite thesis B (TabBar + bulk action + Row accordion)

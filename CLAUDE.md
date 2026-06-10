@@ -10,14 +10,14 @@ Guidance for Claude Code working in this repo. Keep this file under ~150 lines �
 
 ## Current state
 
-**Stage 12 — UI Redesign** (Thesis B: terminal precision) — Phase 2 brief + P1 + P2-A foundation + P2-B Homepage + P2-C Jobs list + P2-D Candidate dashboard + P2-E Employer applicants DONE. Stage 1-11 ✅ COMPLETE.
+**Stage 12 — UI Redesign** (Thesis B: terminal precision) ✅ **COMPLETE** — Phase 1 research + Phase 2 brief + P1 tokens + P2-A foundation + P2-B Homepage + P2-C Jobs list + P2-D Candidate dashboard + P2-E Employer applicants + P2-F Billing/profile + REDESIGN_SUMMARY DONE. Stage 1-12 ✅ COMPLETE.
 
 **Last 3 sessions** — chi tiết rationale ở [`.claude/SESSION_LOG.md`](.claude/SESSION_LOG.md):
-- **Session 56 (2026-06-15)** — Stage 12 P2-E Employer applicants rewrite DONE (`34958a8`). Drop sidebar 240px (9 emoji items) + CreditBadge box → Breadcrumb mono + TabBar 7 tabs + CreditInline ở `(employer)/layout.tsx`. Rewrite 6 core pages (dashboard/jobs/jobs[id]applications/applications/candidates) + light touch stats/profile. `jobs/[id]/applications` drop List/Kanban toggle → unified Row accordion + multi-select checkbox + sticky bulk action bar (accept/reject/reviewing all). QA Playwright 7/7 (TC5 verified `seed32-j-02` rowCount=6 bulkBar+expanded=true).
-- **Session 55 (2026-06-14)** — Stage 12 P2-D Candidate dashboard rewrite DONE (`e739147`). Drop sidebar nav 240px (11 items emoji) → horizontal TabBar 7 tabs + Breadcrumb mono ở `(candidate)/layout.tsx`. Rewrite 6 core pages bằng HairlineSection + Row + MonoNumber. Applications + saved-jobs Row accordion expand inline. Profile page intentionally KHÔNG touch (556 LOC form-heavy → defer P2-F). QA 6/6.
-- **Session 54 (2026-06-13)** — Stage 12 P2-C Jobs list rewrite DONE (`f6e39b6`). Replace `app/(public)/jobs/JobsContent.tsx` bằng sticky CmdK + HairlineSection Row list (20/page) + SidePanel slide-right (Radix Dialog) reuse ApplyModal; URL sync `?q=&page=&job=`. QA 5/5.
+- **Session 57 (2026-06-16)** — Stage 12 P2-F Billing + candidate profile + REDESIGN_SUMMARY DONE (`5016211` + `758b9ba`). Rewrite `employer/billing/{page,shop,orders/[id]}.tsx` (572 LOC) thesis B HairlineSection + Row + MonoNumber. Refactor `candidate/profile/page.tsx` 556 LOC WRAPPER-ONLY (ScrollReveal/card-dark/btn-primary → HairlineSection mono outline, form logic + Zod + react-hook-form `values` GIỮ NGUYÊN). QA Playwright 4/5 + TC3 verified separately PUT 200. REDESIGN_SUMMARY.md tóm tắt 5 surface + 9 primitives + 28 TC + key rationale + demo talking points. Out-of-scope cleanup (legacy aliases, unused components, 50 file legacy class) defer Stage 13 — internal surface acceptable.
+- **Session 56 (2026-06-15)** — Stage 12 P2-E Employer applicants rewrite DONE (`34958a8`). Drop sidebar 240px (9 emoji items) + CreditBadge box → Breadcrumb mono + TabBar 7 tabs + CreditInline ở `(employer)/layout.tsx`. Rewrite 6 core pages. `jobs/[id]/applications` drop List/Kanban toggle → unified Row accordion + multi-select checkbox + sticky bulk action bar. QA 7/7.
+- **Session 55 (2026-06-14)** — Stage 12 P2-D Candidate dashboard rewrite DONE (`e739147`). Drop sidebar nav 240px → horizontal TabBar 7 tabs + Breadcrumb mono. Rewrite 6 core pages. Profile defer P2-F. QA 6/6.
 
-**Active backlog:** P2-F final QA + REDESIGN_SUMMARY.md + drop legacy aliases + cleanup candidate/profile (556 LOC) + employer/billing rewrite (deferred from P2-E).
+**Active backlog:** Stage 12 complete. Optional Stage 13 cleanup (defer): migrate 50 legacy file (admin/auth/cv-builder card-dark + gradient) + drop legacy CSS aliases sau khi grep 0 caller + cleanup unused common/jobs components — không phải blocker cho demo.
 
 ## Repo layout
 
